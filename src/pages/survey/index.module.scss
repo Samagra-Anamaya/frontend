@@ -1,0 +1,76 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .locationItem {
+        width: 90%;
+        min-height: 10vh;
+        border-radius: 1rem;
+        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+        display: flex;
+        flex-direction: row;
+        padding: 1rem;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+        transition: all 0.3s ease-in;
+        cursor: pointer;
+
+        &:hover {
+            transform: scale(1.05);
+        }
+
+        & div:nth-child(1) {
+            img {
+                height: 5rem;
+            }
+        }
+
+        & div:nth-child(2) {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            & p:nth-child(1) {
+                font-size: 1.2rem;
+                line-height: 0.5rem;
+            }
+
+            & p:nth-child(2) {
+                line-height: 0.5rem;
+            }
+
+            & p:nth-child(3) {
+                line-height: 0.5rem;
+            }
+        }
+    }
+
+    .submitBtn {
+        width: 90%;
+        height: 15vh;
+        border-radius: 0.5rem;
+        text-align: center;
+        line-height: 60px;
+        color: #fff;
+        font-weight: bolder;
+        font-size: 1.2rem;
+        background: linear-gradient(90deg, #4a9a47, #154d48, #88dd7c, #279e86);
+        background-size: 400%;
+        z-index: 1;
+        animation: animate 20s linear infinite;
+        margin: 1rem 0rem 3rem 0rem;
+        box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    }
+}
+
+
+@keyframes animate {
+    0% {
+        background-position: 0%;
+    }
+
+    100% {
+        background-position: 400%;
+    }
+}
