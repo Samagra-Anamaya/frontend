@@ -16,3 +16,13 @@
         border-radius: 0.75rem;
     }
 }
+
+.picker {
+    border:none;
+    border-bottom: 1px solid gray;
+    width: 70vw;
+    .react-datepicker-wrapper {
+        padding: 9px 14px 8px 33px !important;
+    }
+}
+
