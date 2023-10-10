@@ -2,8 +2,6 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    width: 100%;
-    padding: 2rem;
     justify-content: center;
     align-items: center;
 
@@ -21,8 +19,8 @@
             flex-direction: column;
             align-items: center;
             color: #007922;
-            margin: 3rem 0rem;
-            font-size: 2.3rem;
+            font-size: 1.8rem;
+            text-decoration: underline;
             font-weight: 600;
         }
 
@@ -30,7 +28,7 @@
             text-align: center;
             color: #007922;
             margin: 1rem 0rem 2rem 0rem;
-            font-size: 1.7rem;
+            font-size: 1.3rem;
             font-weight: bolder
         }
 
@@ -38,7 +36,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 100%;
+            width: 80%;
 
             .loginForm {
                 display: flex;
