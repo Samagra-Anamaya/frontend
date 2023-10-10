@@ -39,6 +39,7 @@
 @media screen and (max-width: 768px) {
     .container {
         width: 90%;
+        max-width: 90%;
         min-height: 45%;
         overflow: hidden;
     }
