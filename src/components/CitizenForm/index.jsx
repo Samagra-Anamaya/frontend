@@ -11,7 +11,7 @@ const CitizenForm = (props) => {
         <form onSubmit={handleSubmit} className={styles.userForm}>
             <TextField
                 variant='standard'
-                label={!formEditable ? "" : "Beneficiary Name"}
+                label={"Beneficiary Name"}
                 onChange={e => setFormState((prevState) => ({ ...prevState, beneficiaryName: e.target.value }))}
                 value={formState?.beneficiaryName}
                 required
@@ -22,7 +22,7 @@ const CitizenForm = (props) => {
             <TextField
                 type={"text"}
                 variant='standard'
-                label={!formEditable ? "" : "Aadhar Number"}
+                label={"Aadhar Number"}
                 onChange={e => {
                     if (/^[0-9]*$/.test(e.target.value))
                         setFormState((prevState) => ({ ...prevState, aadharNumber: e.target.value })
@@ -37,7 +37,7 @@ const CitizenForm = (props) => {
             <TextField
                 type="date"
                 variant='standard'
-                label={!formEditable ? "" : formState?.dateOfBirth ? 'Date Of Birth' : ''}
+                label={formState?.dateOfBirth ? 'Date Of Birth' : ''}
                 onChange={e => setFormState((prevState) => ({ ...prevState, dateOfBirth: e.target.value }))}
                 value={formState?.dateOfBirth}
                 required
@@ -50,6 +50,7 @@ const CitizenForm = (props) => {
                 <TextField
                     type="text"
                     variant='standard'
+                    label="Gender"
                     value={formState?.gender}
                     required
                     disabled={true}

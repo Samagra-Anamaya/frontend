@@ -12,6 +12,7 @@ const AssignedLocations = () => {
   const [hydrated, setHydrated] = React.useState(false);
   const assignedLocations = useSelector((state) => state?.userData?.assignedLocations);
   const user = useSelector((state) => state?.userData?.user);
+  const userData = useSelector((state) => state?.userData);
   const submissions = useSelector((state) => state?.userData?.submissions);
   const [locations, setLocations] = useState([]);
   const dispatch = useDispatch();
@@ -29,7 +30,7 @@ const AssignedLocations = () => {
   })
 
   console.log("AL ----->", locations)
-  console.log("User", user)
+  console.log("State", userData)
 
   return !hydrated ? null : (
     <div className={styles.container + " animate__animated animate__fadeIn"} ref={containerRef}>

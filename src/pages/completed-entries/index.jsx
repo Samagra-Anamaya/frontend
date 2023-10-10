@@ -159,6 +159,7 @@ const CompletedEntries = ({ params }) => {
                             ),
                         }}
                     />
+                    <p className={styles.aadhaarText}>* Please enter the complete AADHAAR if searching by it</p>
                     {fetching && <CircularProgress color="success" />}
                     {!fetching && prevSubmissions?.length > 0 && prevSubmissions?.map(el =>
                         <SelectionItem
@@ -169,7 +170,7 @@ const CompletedEntries = ({ params }) => {
                             mainSubtext={dateInYyyyMmDdHhMmSs(new Date(el?.updatedAt))}
                             sx={{ background: '#fff', marginBottom: '1rem' }}
                             mode={1}
-                            onClick={() => { dispatch(setCurrentCitizen(el)); router.push(`/pages/citizen-survey`) }}
+                            onClick={() => { dispatch(setCurrentCitizen(el)); router.push(`/citizen-survey`) }}
                         />)}
                 </div>
                 {!searchQuery && <Pagination count={totalPages} color="success" onChange={(event, page) => setCurrPage(page)} className={styles.paginationContainer} />}
