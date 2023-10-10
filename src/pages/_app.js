@@ -17,7 +17,7 @@ export default function App({ Component, pageProps }) {
       console.log("sync response -->", response)
     toast(`☁️  ${response?.data?.data?.submissionData?.beneficiaryName}'s data synced with server `, {
       position: "top-center",
-      autoClose: 5000,
+      autoClose: 2500,
       hideProgressBar: false,
       closeOnClick: true,
       pauseOnHover: true,
@@ -32,7 +32,7 @@ export default function App({ Component, pageProps }) {
     window.addEventListener('offline', () => {
       toast.error('Operating now in offline mode!', {
         position: "top-right",
-        autoClose: 5000,
+        autoClose: 2500,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
@@ -44,7 +44,7 @@ export default function App({ Component, pageProps }) {
     window.addEventListener('online', () => {
       toast.success('App is back online', {
         position: "top-right",
-        autoClose: 5000,
+        autoClose: 2500,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,

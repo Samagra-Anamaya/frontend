@@ -5,7 +5,7 @@ import { TextField, Button, InputLabel, Select, MenuItem, FormControl } from '@m
 import CircularProgress from '@mui/material/CircularProgress';
 
 const CitizenForm = (props) => {
-    const { handleSubmit, setFormState, formState, currCitizen, submittedModal, loading, formEditable, mode } = props;
+    const { handleSubmit, setFormState, formState, currCitizen, submittedModal, loading, formEditable, mode, savedEntries = false } = props;
     console.log("FORM EDITABLE -->", formEditable)
     return (
         <form onSubmit={handleSubmit} className={styles.userForm}>
@@ -28,7 +28,7 @@ const CitizenForm = (props) => {
                         setFormState((prevState) => ({ ...prevState, aadharNumber: e.target.value })
                         )
                 }}
-                value={formState?.aadharNumber}
+                value={savedEntries ? "**** **** " + formState?.aadharNumber.slice(8) : formState?.aadharNumber}
                 required
                 inputProps={{ maxLength: 12, minLength: 12 }}
                 disabled={!formEditable ? true : false}

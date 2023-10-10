@@ -10,6 +10,7 @@ import { useOfflineSyncContext } from 'offline-sync-handler-test';
 import GovtBanner from "../../components/GovtBanner";
 import SelectionItem from '../../components/SelectionItem';
 import CircularProgress from '@mui/material/CircularProgress';
+import { toast } from 'react-toastify';
 import CommonModal from "../../components/Modal";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
@@ -135,12 +136,20 @@ const SurveyPage = ({ params }) => {
             />
             <SelectionItem
                 key={_currLocation.id}
-                onClick={() => { }}
+                onClick={() => toast.warn('Unresolved Flags will unlock after evaluation', {
+                    position: "top-right",
+                    autoClose: 2500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                })}
                 leftImage={'/assets/unresolvedFlags.png'}
-                sx={{ width: '90%' }}
+                sx={{ width: '90%', background: '#b2b2b2' }}
                 mainText={'Unresolved Flags'}
                 rightImage={'/assets/circleArrow.png'}
-                href="/unresolved-flags"
             />
 
             {submitModal && <CommonModal sx={{ maxHeight: '30vh', overflow: 'scroll' }}>
