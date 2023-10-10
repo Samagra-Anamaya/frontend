@@ -122,7 +122,7 @@ const SavedEntries = ({ params }) => {
                             mainText={el?.submissionData?.beneficiaryName}
                             sx={{ background: '#fff', marginBottom: '1rem' }}
                             mode={1}
-                            onClick={() => { dispatch(setCurrentCitizen(el)); router.push(`/pages/citizen-survey`) }}
+                            onClick={() => { dispatch(setCurrentCitizen(el)); router.push(`/citizen-survey`) }}
                         />)}
                 </div>
                 {!searchQuery && !fetching && <Pagination count={totalPages} color="success" onChange={(event, page) => setCurrPage(page)} className={styles.paginationContainer} />}
