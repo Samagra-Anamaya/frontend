@@ -9,6 +9,8 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { login } from '../../redux/store';
 import GovtBanner from '../../components/GovtBanner';
+import { CircularProgress } from "@mui/material";
+import { toast } from "react-toastify";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -19,6 +21,7 @@ const Home = () => {
   const [passwordError, setPasswordError] = useState(false)
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [apiCall, setApiCall] = useState(false);
 
   // Utility function to check if user is admin
   function userIsAdminForPortal(registrations) {
@@ -37,26 +40,33 @@ const Home = () => {
   }, [])
 
   const handleSubmit = async (event) => {
+    if (apiCall) return;
     event.preventDefault()
+    setApiCall(true);
 
     setUsernameError(false)
     setPasswordError(false)
 
     if (username == '') {
       setUsernameError(true)
+      return;
     }
     if (password == '') {
       setPasswordError(true)
+      return;
     }
 
     const loginRes = await userLogin(username, password);
+    console.log({loginRes})
 
+  
     if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
-      setError(loginRes?.params?.errMsg);
-
-      setTimeout(() => {
-        setError("");
-      }, 3000);
+      setApiCall(false);
+     // setError(loginRes?.params?.errMsg);
+      toast.error(loginRes?.params?.errMsg)
+      // setTimeout(() => {
+      //   setError("");
+      // }, 3000);
       return;
     }
     if (loginRes.responseCode == "OK" && loginRes.result) {
@@ -70,7 +80,7 @@ const Home = () => {
       }
       return;
     }
-
+    setApiCall(false);
     setError("An internal server error occured");
     setTimeout(() => {
       setError("");
@@ -83,13 +93,13 @@ const Home = () => {
   return (
     <div className={styles.root}>
       {loading ?
-        <div className="animate__animated animate__fadeIn">
+        <div className={styles.loginContainer + " animate__animated animate__fadeIn"} style={{ alignItems: 'center', justifyContent: 'center' }}>
           <GovtBanner />
         </div>
         :
         <>
           <div className={styles.loginContainer}>
-            <GovtBanner />
+            <GovtBanner sx={{ padding: '3rem' }} />
             <div className={styles.text + " animate__animated animate__fadeInDown"}>
               <p> Data Collection App</p>
             </div>
@@ -117,7 +127,8 @@ const Home = () => {
                   fullWidth
                   sx={{ mb: 3 }}
                 />
-                <Button variant="contained" color="success" type="submit" sx={{ padding: 1, width: '80%', height: '4rem', fontSize: 16, marginTop: 5 }}>Login</Button>
+                <Button variant="contained" color="success" type="submit" sx={{ padding: 1, width: '80%', height: '3rem', fontSize: 16, marginTop: 5 }}>{apiCall ? <CircularProgress color="inherit" /> : 'Login'} </Button>
+                {error?.length > 0 && <p style={{ color: 'red' }}>{error}</p>}
               </form>
             </div>
           </div>
