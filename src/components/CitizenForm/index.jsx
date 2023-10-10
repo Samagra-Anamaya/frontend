@@ -8,6 +8,7 @@ import {
   Select,
   MenuItem,
   FormControl,
+  Tooltip,
 } from "@mui/material";
 
 import CircularProgress from "@mui/material/CircularProgress";
@@ -27,7 +28,7 @@ const CitizenForm = (props) => {
     mode,
   } = props;
   console.log("FORM EDITABLE -->", formEditable);
-  console.log({formState})
+  console.log({ formState });
   return (
     <form onSubmit={handleSubmit} className={styles.userForm}>
       <TextField
@@ -44,43 +45,44 @@ const CitizenForm = (props) => {
         sx={{ mb: 4, width: "80%" }}
         disabled={!formEditable ? true : false}
       />
-      <TextField
-        type={"text"}
-        variant="standard"
-        label={!formEditable ? "" : "Aadhar Number"}
-        onChange={(e) => {
-          if (/^[0-9]*$/.test(e.target.value))
-            setFormState((prevState) => ({
-              ...prevState,
-              aadharNumber: e.target.value,
-            }));
-        }}
-        value={formState?.aadharNumber}
-        required
-        inputProps={{ maxLength: 12, minLength: 12 }}
-        disabled={!formEditable ? true : false}
-        sx={{ mb: 4, width: "80%" }}
-      />
-
+      <Tooltip title={!formEditable ? "Aadhar will be display in hashed format":''}>
+        <TextField
+          type={"text"}
+          variant="standard"
+          label={!formEditable ? "" : "Aadhar Number"}
+          onChange={(e) => {
+            if (/^[0-9]*$/.test(e.target.value))
+              setFormState((prevState) => ({
+                ...prevState,
+                aadharNumber: e.target.value,
+              }));
+          }}
+          value={formState?.aadharNumber}
+          required
+          inputProps={{ maxLength: 12, minLength: 12 }}
+          disabled={!formEditable ? true : false}
+          sx={{ mb: 4, width: "80%" }}
+        />
+      </Tooltip>
       <DatePicker
-      showIcon
-      
-        selected={formState?.dateOfBirth ? new Date(formState?.dateOfBirth): new Date()}
-       className={styles.picker}
-       placeholderText="Click to select a date"
+        showIcon
+        selected={
+          formState?.dateOfBirth ? new Date(formState?.dateOfBirth) : new Date()
+        }
+        className={formEditable ? styles.picker : styles.disabledPicker}
+        placeholderText="Click to select a date"
         onChange={(date) =>
           setFormState((prevState) => ({
             ...prevState,
-            dateOfBirth: moment(date).format('YYYY-MM-DD'),
+            dateOfBirth: moment(date).format("YYYY-MM-DD"),
           }))
         }
         peekNextMonth
         showMonthDropdown
         showYearDropdown
         dropdownMode="select"
-    
-       
         maxDate={new Date()}
+        disabled={!formEditable ? true : false}
       />
       {/* <TextField
         type="date"
