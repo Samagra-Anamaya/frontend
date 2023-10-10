@@ -1,9 +1,21 @@
-"use client"
+"use client";
 import React from "react";
-import styles from './index.module.scss';
-import { TextField, Button, InputLabel, Select, MenuItem, FormControl } from '@mui/material';
-import CircularProgress from '@mui/material/CircularProgress';
+import styles from "./index.module.scss";
+import {
+    TextField,
+    Button,
+    InputLabel,
+    Select,
+    MenuItem,
+    FormControl,
+    Tooltip,
+} from "@mui/material";
 
+import CircularProgress from "@mui/material/CircularProgress";
+import DatePicker from "react-datepicker";
+
+import "react-datepicker/dist/react-datepicker.css";
+import moment from "moment";
 const CitizenForm = (props) => {
     const { handleSubmit, setFormState, formState, currCitizen, submittedModal, loading, formEditable, mode, savedEntries = false } = props;
     console.log("FORM EDITABLE -->", formEditable)
@@ -19,22 +31,26 @@ const CitizenForm = (props) => {
                 disabled={!formEditable ? true : false}
 
             />
-            <TextField
-                type={"text"}
-                variant='standard'
-                label={"Aadhar Number"}
-                onChange={e => {
-                    if (/^[0-9]*$/.test(e.target.value))
-                        setFormState((prevState) => ({ ...prevState, aadharNumber: e.target.value })
-                        )
-                }}
-                value={savedEntries ? "**** **** " + formState?.aadharNumber.slice(8) : formState?.aadharNumber}
-                required
-                inputProps={{ maxLength: 12, minLength: 12 }}
-                disabled={!formEditable ? true : false}
-                sx={{ mb: 4, width: '80%' }}
-            />
-            <TextField
+            <Tooltip title={!formEditable ? "Aadhar will be display in hashed format" : ''}>
+                <TextField
+                    type={"text"}
+                    variant="standard"
+                    label={!formEditable ? "" : "Aadhar Number"}
+                    onChange={(e) => {
+                        if (/^[0-9]*$/.test(e.target.value))
+                            setFormState((prevState) => ({
+                                ...prevState,
+                                aadharNumber: e.target.value,
+                            }));
+                    }}
+                    value={savedEntries ? "**** **** " + formState?.aadharNumber.slice(8) : formState?.aadharNumber}
+                    required
+                    inputProps={{ maxLength: 12, minLength: 12 }}
+                    disabled={!formEditable ? true : false}
+                    sx={{ mb: 4, width: "80%" }}
+                />
+            </Tooltip>
+            {/* <TextField
                 type="date"
                 variant='standard'
                 label={formState?.dateOfBirth ? 'Date Of Birth' : ''}
@@ -44,6 +60,26 @@ const CitizenForm = (props) => {
                 disabled={!formEditable ? true : false}
                 sx={{ mb: 4, width: '80%' }}
 
+            /> */}
+            <DatePicker
+                showIcon
+                selected={
+                    formState?.dateOfBirth ? new Date(formState?.dateOfBirth) : new Date()
+                }
+                className={formEditable ? styles.picker : styles.disabledPicker}
+                placeholderText="Click to select a date"
+                onChange={(date) =>
+                    setFormState((prevState) => ({
+                        ...prevState,
+                        dateOfBirth: moment(date).format("YYYY-MM-DD"),
+                    }))
+                }
+                peekNextMonth
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                maxDate={new Date()}
+                disabled={!formEditable ? true : false}
             />
             {!formEditable
                 ?
@@ -79,7 +115,7 @@ const CitizenForm = (props) => {
                 formEditable && !submittedModal && <Button variant="contained" color="success" size="large" type="submit" className={styles.submitBtn}>{loading ? <CircularProgress color="inherit" /> : 'Submit Form'} </Button>
             }
         </form>
-    )
+    );
 };
 
 export default CitizenForm;
