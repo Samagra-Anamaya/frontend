@@ -106,7 +106,7 @@ const CitizenSurveyPage = ({ params }) => {
                 submissionData: formState,
                 spdpVillageId: _currLocation.villageCode,
                 citizenId: currCitizen.citizenId,
-                submitterId: user.id,
+                submitterId: user.username,
                 capturedAt
             }))
             setLoading(false);
