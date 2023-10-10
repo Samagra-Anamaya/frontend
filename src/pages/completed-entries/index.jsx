@@ -34,7 +34,6 @@ const CompletedEntries = ({ params }) => {
     const [fetching, setFetching] = useState(false);
     const router = useRouter();
     const dispatch = useDispatch();
-    const containerRef = useRef();
 
     /* Use Effects */
     useEffect(() => {
@@ -55,9 +54,12 @@ const CompletedEntries = ({ params }) => {
 
     useEffect(() => {
         async function searchCitizens() {
+            console.log("search query->", searchQuery)
             if (searchQuery?.length) {
+                setFetching(true)
                 let res = await searchCitizen(_currLocation.villageCode, searchQuery)
                 setPrevSubmissions(res?.result?.submissions || []);
+                setFetching(false);
             } else setPrevSubmissions(prevTempSubmissions)
         }
         searchCitizens();
@@ -98,19 +100,6 @@ const CompletedEntries = ({ params }) => {
         dispatch(updateSearchQuery({ villageId: _currLocation.villageCode, query: e.target.value }))
     }
 
-    function a11yProps(index) {
-        return {
-            id: `simple-tab-${index}`,
-            'aria-controls': `simple-tabpanel-${index}`,
-        };
-    }
-
-    useEffect(() => {
-        if (containerRef.current) {
-            containerRef.current.scrollIntoView();
-        }
-    })
-
     function padTwoDigits(num) {
         return num.toString().padStart(2, "0");
     }
@@ -142,7 +131,7 @@ const CompletedEntries = ({ params }) => {
     }
 
     return !hydrated ? null : (
-        <div className={styles.container} ref={containerRef}>
+        <div className={styles.container} >
             <GovtBanner sx={{ paddingTop: '2rem' }} />
             <CommonHeader
                 onBack={() => router.back()}
@@ -173,7 +162,7 @@ const CompletedEntries = ({ params }) => {
                     {fetching && <CircularProgress color="success" />}
                     {!fetching && prevSubmissions?.length > 0 && prevSubmissions?.map(el =>
                         <SelectionItem
-                            key={el.citizenId}
+                            key={el.id}
                             leftImage={'/assets/citizen.png'}
                             rightImage={'/assets/verified.png'}
                             mainText={el?.submissionData?.beneficiaryName}
@@ -183,7 +172,7 @@ const CompletedEntries = ({ params }) => {
                             onClick={() => { dispatch(setCurrentCitizen(el)); router.push(`/pages/citizen-survey`) }}
                         />)}
                 </div>
-                {!searchQuery && !fetching && <Pagination count={totalPages} color="success" onChange={(event, page) => setCurrPage(page)} className={styles.paginationContainer} />}
+                {!searchQuery && <Pagination count={totalPages} color="success" onChange={(event, page) => setCurrPage(page)} className={styles.paginationContainer} />}
 
             </div>
 
