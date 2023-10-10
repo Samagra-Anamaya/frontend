@@ -33,7 +33,7 @@ const AssignedLocations = () => {
 
   return !hydrated ? null : (
     <div className={styles.container + " animate__animated animate__fadeIn"} ref={containerRef}>
-      <GovtBanner sx={{paddingTop: '2rem'}}/>
+      <GovtBanner sx={{ paddingTop: '2rem' }} />
       <div className={styles.mainContent}>
         <CommonHeader
           text={'Hello there 👋'}
@@ -54,7 +54,6 @@ const AssignedLocations = () => {
             <div>Total Unresolved Flags</div>
             <div>0</div>
           </div>
-          {Object.keys(submissions)?.length > 0 && <div className={styles.submitBtn} onClick={() => showSubmitModal(true)}>Submit Saved Entries</div>}
         </div>
         <div className={styles.assignedLocations}>
           <p>Assigned Villages</p>
