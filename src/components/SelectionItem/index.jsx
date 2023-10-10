@@ -18,7 +18,7 @@ const SelectionItem = (props) => {
 
     return href?.length ?
         (
-            <Link href={href} className={styles.container} onClick={onClick} style={{ ...props.sx, textDecoration: 'none' }}>
+            <Link href={href} className={styles.container} onClick={onClick} style={{ ...props.sx }}>
                 <div >
                     <img src={leftImage} />
                 </div>

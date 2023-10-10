@@ -12,7 +12,6 @@ const AssignedLocations = () => {
   const [hydrated, setHydrated] = React.useState(false);
   const assignedLocations = useSelector((state) => state?.userData?.assignedLocations);
   const user = useSelector((state) => state?.userData?.user);
-  const userData = useSelector((state) => state?.userData);
   const submissions = useSelector((state) => state?.userData?.submissions);
   const [locations, setLocations] = useState([]);
   const dispatch = useDispatch();
@@ -30,11 +29,11 @@ const AssignedLocations = () => {
   })
 
   console.log("AL ----->", locations)
-  console.log("State", userData)
+  console.log("User", user)
 
   return !hydrated ? null : (
     <div className={styles.container + " animate__animated animate__fadeIn"} ref={containerRef}>
-      <GovtBanner sx={{ paddingTop: '2rem' }} />
+      <GovtBanner sx={{paddingTop: '2rem'}}/>
       <div className={styles.mainContent}>
         <CommonHeader
           text={'Hello there 👋'}
@@ -55,6 +54,7 @@ const AssignedLocations = () => {
             <div>Total Unresolved Flags</div>
             <div>0</div>
           </div>
+          {Object.keys(submissions)?.length > 0 && <div className={styles.submitBtn} onClick={() => showSubmitModal(true)}>Submit Saved Entries</div>}
         </div>
         <div className={styles.assignedLocations}>
           <p>Assigned Villages</p>

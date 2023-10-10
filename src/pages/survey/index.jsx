@@ -87,7 +87,7 @@ const SurveyPage = ({ params }) => {
 
     return !hydrated ? null : (
         <div className={styles.container} ref={containerRef} >
-            <GovtBanner />
+            <GovtBanner sx={{ padding: '2rem' }} />
             <CommonHeader
                 onBack={() => router.back()}
                 text={'Hello there 👋'}
