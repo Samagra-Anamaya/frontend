@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { login } from '../../redux/store';
 import GovtBanner from '../../components/GovtBanner';
 import { CircularProgress } from "@mui/material";
+import { toast } from "react-toastify";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -56,14 +57,16 @@ const Home = () => {
     }
 
     const loginRes = await userLogin(username, password);
-    console.log(loginRes)
+    console.log({loginRes})
 
+  
     if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
       setApiCall(false);
-      setError(loginRes?.params?.errMsg);
-      setTimeout(() => {
-        setError("");
-      }, 3000);
+     // setError(loginRes?.params?.errMsg);
+      toast.error(loginRes?.params?.errMsg)
+      // setTimeout(() => {
+      //   setError("");
+      // }, 3000);
       return;
     }
     if (loginRes.responseCode == "OK" && loginRes.result) {
