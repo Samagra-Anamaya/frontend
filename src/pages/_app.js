@@ -15,6 +15,7 @@ export default function App({ Component, pageProps }) {
 
   const onSyncSuccess = (response) => {
     console.log("sync response -->", response)
+    alert(JSON.stringify(response));
     for (let el in response?.config?.data) {
       toast(`☁️  Village ${el}'s data synced with server `, {
         position: "top-center",
