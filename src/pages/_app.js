@@ -1,7 +1,7 @@
 import '@/styles/globals.css'
 import { OfflineSyncProvider } from 'offline-sync-handler-test';
 import { Provider } from 'react-redux';
-import { store } from '../redux/store'
+import { clearSubmissions, clearSubmissionsFunc, store } from '../redux/store'
 import { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,20 +11,27 @@ import 'animate.css';
 
 export default function App({ Component, pageProps }) {
   const [hydrated, setHydrated] = useState(false);
-  const onSyncSuccess = (response) => {
+  // const dispatch = useDispatch();
 
-    if (navigator.onLine)
-      console.log("sync response -->", response)
-    toast(`☁️  ${response?.data?.data?.submissionData?.beneficiaryName}'s data synced with server `, {
-      position: "top-center",
-      autoClose: 2500,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
+  const onSyncSuccess = (response) => {
+    console.log("sync response -->", response)
+    for (let el in response?.config?.data) {
+      toast(`☁️  Village ${el}'s data synced with server `, {
+        position: "top-center",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+    }
+    console.log(response?.data?.status)
+    if (response?.data?.status == 201) {
+      console.log("Clearing Submission for ->", Object.keys(response?.config?.data)?.[0])
+      store.dispatch(clearSubmissions(Object.keys(response?.config?.data)?.[0]))
+    }
   };
 
 
@@ -59,7 +66,8 @@ export default function App({ Component, pageProps }) {
 
 
   return hydrated ? <Provider store={store} data-testid="redux-provider">
-    <OfflineSyncProvider onSyncSuccess={onSyncSuccess}>
+    <OfflineSyncProvider onCallback={onSyncSuccess}>
+      {/* <OfflineSyncProvider > */}
       <Component {...pageProps} />
     </OfflineSyncProvider>
     <ToastContainer

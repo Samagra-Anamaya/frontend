@@ -66,6 +66,23 @@
         margin: 1rem 0rem 3rem 0rem;
         box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
     }
+
+    .submitBtnDisabled {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 90%;
+        height: 10vh;
+        border-radius: 0.5rem;
+        text-align: center;
+        line-height: 60px;
+        color: #2b2b2b;
+        font-weight: bolder;
+        font-size: 1.2rem;
+        background: #b2b2b2;
+        margin: 1rem 0rem 3rem 0rem;
+        box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    }
 }
 
 

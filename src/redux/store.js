@@ -54,6 +54,9 @@ const userDataSlice = createSlice({
       state.currentLocation = {};
       state.currentCitizen = {};
       state.forms = {};
+      state.searchQuery = {};
+      state.searchSavedQuery = {};
+      state.submissions = {};
     },
     setCurrentLocation: (state, action) => {
       state.currentLocation = action.payload;
