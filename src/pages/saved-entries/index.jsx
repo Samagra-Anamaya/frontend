@@ -122,6 +122,7 @@ const SavedEntries = ({ params }) => {
                             mainText={el?.submissionData?.beneficiaryName}
                             sx={{ background: '#fff', marginBottom: '1rem' }}
                             mode={1}
+                            imgWidth="70%"
                             onClick={() => { dispatch(setCurrentCitizen(el)); router.push(`/citizen-survey`) }}
                         />)}
                 </div>

@@ -213,6 +213,7 @@ const CompletedEntries = ({ params }) => {
                 mainSubtext={dateInYyyyMmDdHhMmSs(new Date(el?.updatedAt))}
                 sx={{ background: "#fff", marginBottom: "1rem" }}
                 mode={1}
+                imgWidth={'70%'}
                 onClick={() => {
                   dispatch(setCurrentCitizen(el));
                   router.push(`/citizen-survey`);

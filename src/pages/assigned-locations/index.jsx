@@ -7,33 +7,33 @@ import { useDispatch } from "react-redux";
 import GovtBanner from "../../components/GovtBanner";
 import { clearSubmissions, setCurrentLocation } from "../../redux/store";
 import CommonHeader from '../../components/Commonheader';
+import { getEntriesMade } from "@/services/api";
 
 const AssignedLocations = () => {
   const [hydrated, setHydrated] = React.useState(false);
   const assignedLocations = useSelector((state) => state?.userData?.assignedLocations);
   const user = useSelector((state) => state?.userData?.user);
   const userData = useSelector((state) => state?.userData);
-  const submissions = useSelector((state) => state?.userData?.submissions);
+  const [entries, setEntries] = useState(0);
   const [locations, setLocations] = useState([]);
   const dispatch = useDispatch();
-  const containerRef = useRef();
 
   useEffect(() => {
+    async function getEntries() {
+      let res = await getEntriesMade(user?.user?.uniqueUsername);
+      setEntries(res?.result?.totalCount || "NA");
+    }
+    getEntries();
     setHydrated(true);
     setLocations(assignedLocations || []);
   }, [])
 
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollIntoView();
-    }
-  })
 
   console.log("AL ----->", locations)
   console.log("State", userData)
 
   return !hydrated ? null : (
-    <div className={styles.container + " animate__animated animate__fadeIn"} ref={containerRef}>
+    <div className={styles.container + " animate__animated animate__fadeIn"}>
       <GovtBanner sx={{ paddingTop: '2rem' }} />
       <div className={styles.mainContent}>
         <CommonHeader
@@ -49,7 +49,7 @@ const AssignedLocations = () => {
           </div>
           <div className={styles.infoitem}>
             <div>Total Entries Made</div>
-            <div>6</div>
+            <div>{entries}</div>
           </div>
           <div className={styles.infoitem}>
             <div>Total Unresolved Flags</div>

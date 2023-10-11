@@ -81,8 +81,8 @@ dependencies:
     specifier: ^5.6.0
     version: 5.6.0(@babel/core@7.22.20)(next@13.5.2)(webpack@5.88.2)
   offline-sync-handler-test:
-    specifier: ^0.1.55
-    version: 0.1.55(react@18.2.0)
+    specifier: ^0.1.56
+    version: 0.1.56(react@18.2.0)
   postcss:
     specifier: 8.4.25
     version: 8.4.25
@@ -6725,8 +6725,8 @@ packages:
       has-symbols: 1.0.3
       object-keys: 1.1.1
 
-  /offline-sync-handler-test@0.1.55(react@18.2.0):
-    resolution: {integrity: sha512-P2vnZUoGx0o9f8pvKuSrmk2eBF9jEpnHOPD7Zp8UTei05Ble6rk2Y/MDnKB16RHV0vHuqkVfchEBjomPcpmNSw==}
+  /offline-sync-handler-test@0.1.56(react@18.2.0):
+    resolution: {integrity: sha512-jceWdMt5dRyJpac08dYkNtsYCMgaqwHK8Yzb99IUclApUF7CnHLa50y4yenUbDsudGejT2ic1Ts4iE+zbUebuw==}
     engines: {node: '>=10'}
     peerDependencies:
       react: '>=16'

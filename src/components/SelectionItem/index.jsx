@@ -12,7 +12,8 @@ const SelectionItem = (props) => {
         mainText,
         mainSubtext,
         onClick,
-        href
+        href,
+        imgWidth
     } = props
     const router = useRouter();
 
@@ -27,7 +28,7 @@ const SelectionItem = (props) => {
                     {mainSubtext && <p className={styles.mainSubText}>{mainSubtext}</p>}
                 </div>
                 {rightImage && <div>
-                    <img src={rightImage} />
+                    <img src={rightImage} style={{ width: imgWidth ? imgWidth : '' }} />
                 </div>}
             </Link>
         ) : (
@@ -40,7 +41,7 @@ const SelectionItem = (props) => {
                     {mainSubtext && <p className={styles.mainSubText} style={{ color: mode == 1 ? '#017922' : '#fff' }}>{mainSubtext}</p>}
                 </div>
                 <div>
-                    <img src={rightImage} />
+                    <img src={rightImage} style={{ width: imgWidth ? imgWidth : '' }} />
                 </div>
             </div>
         )
