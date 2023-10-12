@@ -1,5 +1,5 @@
 import axios from "axios";
-import { addFormUri } from "../../redux/store";
+import { addFormUri, store } from "../../redux/store";
 import { getFromLocalForage, makeHasuraCalls } from "../utils";
 
 const BASE_URL = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
@@ -7,6 +7,7 @@ const applicationId = process.env.NEXT_PUBLIC_APPLICATION_ID;
 const ENKETO_URL = process.env.NEXT_PUBLIC_ENKETO_EXPRESS_URL;
 const CENTRO_API = process.env.NEXT_PUBLIC_CENTRO_URL;
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
+const USER = store.getState().userData.user;
 
 export const userLogin = async (username, pass) => {
   try {
@@ -373,32 +374,13 @@ export const getOfflineCapableForm = async (formId, dispatch) => {
   }
 }
 
-export const getEnumeratorSchedule = async (userId) => {
-  try {
-    let res = await axios.get(BACKEND_SERVICE_URL + `/schedule/enumerator/${userId}`);
-    return res.data;
-  } catch (err) {
-    console.log(err);
-    return null;
-  }
-}
-
-export const submitCitizenRecord = async (submissionData, submitterId) => {
-  try {
-    let res = await axios.post(BACKEND_SERVICE_URL + `/submissions`, {
-      submissionData,
-      submitterId
-    });
-    return res;
-  } catch (err) {
-    console.log(err);
-    return null;
-  }
-}
-
 export const getVillageDetails = async (id) => {
   try {
-    let res = await axios.get(BACKEND_SERVICE_URL + `/utils/villageData/${id}`);
+    let res = await axios.get(BACKEND_SERVICE_URL + `/utils/villageData/${id}`, {
+      headers: {
+        Authorization: `Bearer ${USER.token}`
+      }
+    });
     return res.data;
   } catch (err) {
     console.log(err);
@@ -408,7 +390,11 @@ export const getVillageDetails = async (id) => {
 
 export const getVillageSubmissions = async (id, page) => {
   try {
-    let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/${id}?limit=5&page=${page}`);
+    let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/${id}?limit=5&page=${page}`, {
+      headers: {
+        Authorization: `Bearer ${USER.token}`
+      }
+    });
     return res.data;
   } catch (err) {
     console.log(err);
@@ -418,7 +404,11 @@ export const getVillageSubmissions = async (id, page) => {
 
 export const searchCitizen = async (villageId, query) => {
   try {
-    let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/search/${villageId}/${query}`);
+    let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/search/${villageId}/${query}`, {
+      headers: {
+        Authorization: `Bearer ${USER.token}`
+      }
+    });
     return res.data;
   } catch (err) {
     console.log(err);
@@ -428,7 +418,11 @@ export const searchCitizen = async (villageId, query) => {
 
 export const getEntriesMade = async (submitterId) => {
   try {
-    let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/enumerator/${submitterId}?page=1&limit=1`);
+    let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/enumerator/${submitterId}?page=1&limit=1`, {
+      headers: {
+        Authorization: `Bearer ${USER.token}`
+      }
+    });
     return res.data;
   } catch (err) {
     console.log(err);
