@@ -8,6 +8,8 @@ import GovtBanner from "../../components/GovtBanner";
 import { clearSubmissions, setCurrentLocation } from "../../redux/store";
 import CommonHeader from '../../components/Commonheader';
 import { getEntriesMade } from "@/services/api";
+import { logEvent } from "firebase/analytics";
+import { analytics } from "@/services/firebase/firebase";
 
 const AssignedLocations = () => {
   const [hydrated, setHydrated] = React.useState(false);
@@ -60,7 +62,13 @@ const AssignedLocations = () => {
           <p>Assigned Villages</p>
           {locations?.length > 0 && locations?.map(el => <SelectionItem
             key={el.villageCode}
-            onClick={() => { dispatch(setCurrentLocation(el)) }}
+            onClick={() => {
+              logEvent(analytics, "village_clicked", {
+                villageId: el.villageCode,
+                villageName: el.villageName,
+                user_id: user?.user?.username
+              }); dispatch(setCurrentLocation(el))
+            }}
             leftImage={'/assets/villageIcon.png'}
             mainText={el.villageName}
             mainSubtext={"Village Code - " + el.villageCode}

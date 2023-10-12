@@ -20,10 +20,10 @@ const CommonHeader = (props) => {
 
     return (
         <div className={styles.header} style={{ ...sx }}>
-            {showBack ? <div className={styles.backBtn} onClick={onBack}><img src="/assets/backArrow.png" /></div> : <div></div>
+            {showBack ? <div className={styles.backBtn} style={{ marginTop: subText ? '' : '0rem' }} onClick={onBack}><img src="/assets/backArrow.png" /></div> : <div></div>
             }
-            <div>
-                <p className={styles.mainText}>{text}</p>
+            <div >
+                <p className={styles.mainText} >{text}</p>
                 {subText && <p className={styles.subText}>{subText}</p>}
             </div>
             {showLogout ? <div className={styles.logoutBtn} onClick={() => showLogoutModal(true)}><LogoutIcon style={{ color: '#007922', fontSize: 40 }} /></div> : <div style={{ width: '20%' }}></div>}
