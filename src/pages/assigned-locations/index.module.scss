@@ -32,7 +32,7 @@
 
             .infoitem {
                 display: flex;
-                width: 75%;
+                width: 85%;
                 height: 7vh;
                 border-radius: 0.5rem;
                 align-items: center;
@@ -48,14 +48,16 @@
                     width: 85%;
                     display: flex;
                     align-items: center;
-                    justify-content: center;
+                    justify-content: flex-start;
+                    padding-left: 1rem;
                 }
 
                 & div:nth-child(2) {
                     width: 20%;
                     display: flex;
                     align-items: center;
-                    justify-content: center;
+                    justify-content: flex-end;
+                    padding-right: 1rem;
                 }
 
                 &:nth-child(4) {

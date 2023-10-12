@@ -22,6 +22,11 @@
         margin-top: -2rem;
     }
 
+    &>div:nth-child(2) {
+        display: flex;
+        flex-direction: column;
+    }
+
     .mainText {
         font-size: 1.5rem;
         color: #007922;

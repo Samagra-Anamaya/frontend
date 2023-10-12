@@ -161,19 +161,19 @@ const CitizenSurveyPage = ({ params }) => {
             setShowForm(true);
         }
     };
-    
+
     //dummy commit
-    
+
     return !hydrated ? null : (
         <div className={styles.root}>
-            <GovtBanner sx={{ paddingTop: "2rem" }} />
+            <GovtBanner />
             <CommonHeader
                 onBack={() => router.back()}
                 text={"Citizen Survey"}
                 showLogout={false}
                 sx={{
                     justifyContent: "space-between !important",
-                    padding: "2rem 1rem",
+                    padding: "0rem 1rem 1rem 1rem",
                 }}
             />
 
