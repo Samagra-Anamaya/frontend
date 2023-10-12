@@ -11,6 +11,8 @@ import { login } from '../../redux/store';
 import GovtBanner from '../../components/GovtBanner';
 import { CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
+import { logEvent } from "firebase/analytics";
+import { analytics } from "@/services/firebase/firebase";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -36,7 +38,7 @@ const Home = () => {
     setTimeout(() => {
       setLoading(false);
     }, 2000)
-
+    logEvent(analytics, "page_view")
   }, [])
 
   const handleSubmit = async (event) => {
@@ -57,12 +59,15 @@ const Home = () => {
     }
 
     const loginRes = await userLogin(username, password);
-    console.log({loginRes})
+    console.log({ loginRes })
 
-  
+
     if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
+      logEvent(analytics, "login_failure", {
+        user_id: username
+      })
       setApiCall(false);
-     // setError(loginRes?.params?.errMsg);
+      // setError(loginRes?.params?.errMsg);
       toast.error(loginRes?.params?.errMsg)
       // setTimeout(() => {
       //   setError("");
@@ -72,6 +77,9 @@ const Home = () => {
     if (loginRes.responseCode == "OK" && loginRes.result) {
       let loggedInUser = loginRes.result.data.user;
       console.log("logged in user-->", loggedInUser)
+      logEvent(analytics, "login_success", {
+        user_id: username
+      })
       dispatch(login(loggedInUser));
       if (userIsAdminForPortal(loggedInUser.user.registrations)) {
         router.push(ROUTE_MAP.admin);

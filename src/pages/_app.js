@@ -61,7 +61,7 @@ export default function App({ Component, pageProps }) {
       });
     })
     setHydrated(true);
-    logEvent(analytics, 'Test Logger');
+    logEvent(analytics, 'page_view');
   }, [])
 
 

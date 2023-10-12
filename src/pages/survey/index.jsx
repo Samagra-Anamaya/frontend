@@ -12,6 +12,8 @@ import SelectionItem from '../../components/SelectionItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import { toast } from 'react-toastify';
 import CommonModal from "../../components/Modal";
+import { logEvent } from "firebase/analytics";
+import { analytics } from "@/services/firebase/firebase";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -137,19 +139,40 @@ const SurveyPage = ({ params }) => {
 
             {disableSubmitEntries
                 ? <div className={styles.submitBtnDisabled} >Pending Submission to Server</div>
-                : submissions?.length > 0 && <div className={styles.submitBtn} onClick={() => showSubmitModal(true)}>Submit Saved Entries</div>}
+                : submissions?.length > 0 && <div className={styles.submitBtn} onClick={() => {
+                    logEvent(analytics, "submit_entries_clicked", {
+                        villageId: _currLocation.villageCode,
+                        villageName: _currLocation.villageName,
+                        user_id: userData?.user?.user?.username,
+                        app_status: navigator.onLine ? 'online' : 'offline'
+                    }),
+                        showSubmitModal(true)
+                }}>Submit Saved Entries</div>}
 
             <SelectionItem
                 key={_currLocation.id}
                 leftImage={'/assets/citizen.png'}
                 sx={{ width: '90%' }}
                 rightImage={'/assets/circleArrow.png'}
-                onClick={addNewCitizen}
+                onClick={() => {
+                    logEvent(analytics, "add_new_citizen_clicked", {
+                        villageId: _currLocation.villageCode,
+                        villageName: _currLocation.villageName,
+                        user_id: userData?.user?.user?.username
+                    });
+                    addNewCitizen()
+                }}
                 mainText={'Add New Citizen'}
             />
             <SelectionItem
                 key={_currLocation.id}
-                onClick={() => { }}
+                onClick={() => {
+                    logEvent(analytics, "completed_entries_clicked", {
+                        villageId: _currLocation.villageCode,
+                        villageName: _currLocation.villageName,
+                        user_id: userData?.user?.user?.username
+                    })
+                }}
                 leftImage={'/assets/assessment.png'}
                 rightImage={'/assets/circleArrow.png'}
                 sx={{ width: '90%' }}
@@ -158,7 +181,13 @@ const SurveyPage = ({ params }) => {
             />
             <SelectionItem
                 key={_currLocation.id}
-                onClick={() => { }}
+                onClick={() => {
+                    logEvent(analytics, "saved_entries_clicked", {
+                        villageId: _currLocation.villageCode,
+                        villageName: _currLocation.villageName,
+                        user_id: userData?.user?.user?.username
+                    })
+                }}
                 leftImage={'/assets/assessment.png'}
                 rightImage={'/assets/circleArrow.png'}
                 sx={{ width: '90%' }}
@@ -194,9 +223,23 @@ const SurveyPage = ({ params }) => {
                         <p style={modalStyles.warningText}>Please ensure you are in good internet connectivity before submitting</p>
                         <div style={modalStyles.btnContainer}>
                             <div style={modalStyles.confirmBtn} onClick={() => {
+                                logEvent(analytics, "submit_entries_confirm", {
+                                    villageId: _currLocation.villageCode,
+                                    villageName: _currLocation.villageName,
+                                    user_id: userData?.user?.user?.username,
+                                    app_status: navigator.onLine ? 'online' : 'offline'
+                                });
                                 submitData();
                             }}>Submit</div>
-                            <div style={modalStyles.exitBtn} onClick={() => showSubmitModal(false)}>Cancel</div>
+                            <div style={modalStyles.exitBtn} onClick={() => {
+                                logEvent(analytics, "submit_entries_cancelled", {
+                                    villageId: _currLocation.villageCode,
+                                    villageName: _currLocation.villageName,
+                                    user_id: userData?.user?.user?.username,
+                                    app_status: navigator.onLine ? 'online' : 'offline'
+                                })
+                                showSubmitModal(false)
+                            }}>Cancel</div>
                         </div>
                     </div>}
 
