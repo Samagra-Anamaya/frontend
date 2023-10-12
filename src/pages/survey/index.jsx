@@ -99,6 +99,12 @@ const SurveyPage = ({ params }) => {
                 dispatch(clearSubmissions(_currLocation?.villageCode));
                 setLoading(false);
                 showSubmitModal(false);
+                logEvent(analytics, "submission_successfull", {
+                    villageId: _currLocation.villageCode,
+                    villageName: _currLocation.villageName,
+                    user_id: userData?.user?.user?.username,
+                    app_status: navigator.onLine ? 'online' : 'offline'
+                })
             } else {
                 // Either an error or offline
                 if (!navigator.onLine) {
@@ -107,11 +113,23 @@ const SurveyPage = ({ params }) => {
                     setLoading(false);
                     showSubmitModal(false);
                     checkSavedRequests();
+                    logEvent(analytics, "submission_queued", {
+                        villageId: _currLocation.villageCode,
+                        villageName: _currLocation.villageName,
+                        user_id: userData?.user?.user?.username,
+                        app_status: navigator.onLine ? 'online' : 'offline'
+                    })
                 } else {
                     alert("An error occured while submitting form. Please try again \nError String : " + JSON.stringify(response))
                     showSubmitModal(false);
                     setLoading(false);
                     checkSavedRequests();
+                    logEvent(analytics, "submission_failure", {
+                        villageId: _currLocation.villageCode,
+                        villageName: _currLocation.villageName,
+                        user_id: userData?.user?.user?.username,
+                        app_status: navigator.onLine ? 'online' : 'offline'
+                    })
                 }
             }
         } catch (err) {

@@ -13,6 +13,8 @@ import CitizenForm from "../../components/CitizenForm";
 // import QrReader from 'react-qr-scanner'
 import { QrScanner } from "@yudiel/react-qr-scanner";
 import GovtBanner from "../../components/GovtBanner";
+import { logEvent } from "firebase/analytics";
+import { analytics } from "@/services/firebase/firebase";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -75,37 +77,11 @@ const CitizenSurveyPage = ({ params }) => {
     const handleSubmit = async (e) => {
         if (loading) return;
         try {
+
             setLoading(true);
             e.preventDefault();
             let capturedAt = new Date();
             capturedAt.toISOString().slice(0, 19).replace("T", " ");
-            // const config = {
-            //     method: 'POST',
-            //     url: BACKEND_SERVICE_URL + `/submissions`,
-            //     data: {
-            // submissionData: formState,
-            // spdpVillageId: _currLocation.villageCode,
-            // citizenId: currCitizen.citizenId,
-            // submitterId: user.id,
-            // capturedAt
-            //     },
-            // };
-            // const response = await sendRequest(config);
-            // if (response?.result?.submission?.status == 'SUBMITTED') {
-            //     dispatch(saveCitizenFormData({ id: currCitizen.citizenId, data: formState, capturedAt: capturedAt }))
-            //     setLoading(false);
-            //     showSubmittedModal(true);
-            // } else {
-            //     // Either an error or offline
-            //     if (!navigator.onLine) {
-            //         // Submitted Offline
-            //         dispatch(saveCitizenFormData({ id: currCitizen.citizenId, data: formState, capturedAt: capturedAt }))
-            //         setLoading(false);
-            //         showSubmittedModal(true);
-            //     } else
-            //         alert("An error occured while submitting form. Please try again")
-            //     setLoading(false);
-            // }
             dispatch(
                 saveCitizenFormData({
                     submissionData: formState,
@@ -117,6 +93,14 @@ const CitizenSurveyPage = ({ params }) => {
             );
             setLoading(false);
             showSubmittedModal(true);
+            logEvent(analytics, "form_saved", {
+                villageId: _currLocation.villageCode,
+                villageName: _currLocation.villageName,
+                user_id: user?.username,
+                app_status: navigator.onLine ? 'online' : 'offline',
+                mode: mode,
+                capturedAt: capturedAt
+            });
         } catch (err) {
             console.log(err);
             setLoading(false);
@@ -179,7 +163,16 @@ const CitizenSurveyPage = ({ params }) => {
 
             {!mode ? (
                 <>
-                    <div className={styles.collectionMode} onClick={() => setMode("qr")}>
+                    <div className={styles.collectionMode} onClick={() => {
+                        logEvent(analytics, "mode_selected", {
+                            villageId: _currLocation.villageCode,
+                            villageName: _currLocation.villageName,
+                            user_id: user?.username,
+                            app_status: navigator.onLine ? 'online' : 'offline',
+                            mode: 'qr'
+                        });
+                        setMode("qr")
+                    }}>
                         <div>
                             <img src="/assets/qr.png" />
                         </div>
@@ -191,7 +184,16 @@ const CitizenSurveyPage = ({ params }) => {
                     </div>
                     <div
                         className={styles.collectionMode}
-                        onClick={() => setMode("manual")}
+                        onClick={() => {
+                            logEvent(analytics, "mode_selected", {
+                                villageId: _currLocation.villageCode,
+                                villageName: _currLocation.villageName,
+                                user_id: user?.username,
+                                app_status: navigator.onLine ? 'online' : 'offline',
+                                mode: 'manual'
+                            });
+                            setMode("manual")
+                        }}
                     >
                         <div>
                             <img src="/assets/docFill.png" />
