@@ -89,6 +89,9 @@ const SurveyPage = ({ params }) => {
                 method: 'POST',
                 url: BACKEND_SERVICE_URL + `/submissions/bulk`,
                 data: submissionData,
+                headers: {
+                    Authorization: `Bearer ${userData?.user?.token}`
+                }
             };
             const response = await offlinePackage?.sendRequest(config);
             if (response && Object.keys(response)?.length) {
