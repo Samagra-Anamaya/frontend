@@ -103,13 +103,12 @@ const SurveyPage = ({ params }) => {
                     showSubmitModal(false);
                     checkSavedRequests();
                 } else {
-                    alert("An error occured while submitting form. Please try again")
+                    alert("An error occured while submitting form. Please try again \nError String : " + JSON.stringify(response))
                     showSubmitModal(false);
                     setLoading(false);
                     checkSavedRequests();
                 }
             }
-
         } catch (err) {
             console.error("ERR", err);
         }
