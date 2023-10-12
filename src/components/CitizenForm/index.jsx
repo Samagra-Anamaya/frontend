@@ -43,7 +43,7 @@ const CitizenForm = (props) => {
                                 aadharNumber: e.target.value,
                             }));
                     }}
-                    value={savedEntries ? "**** **** " + formState?.aadharNumber.slice(8) : formEditable ? formState?.aadharNumber : "**** **** " + formState.lastDigits}
+                    value={savedEntries ? "**** **** " + formState?.aadharNumber.slice(8) : formEditable ? formState?.aadharNumber : mode == 'qr' ? formState?.aadharNumber : "**** **** " + formState.lastDigits}
                     required
                     inputProps={{ maxLength: 12, minLength: 12 }}
                     disabled={!formEditable ? true : false}
