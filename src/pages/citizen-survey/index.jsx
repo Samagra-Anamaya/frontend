@@ -50,7 +50,6 @@ const CitizenSurveyPage = ({ params }) => {
     const [submittedModal, showSubmittedModal] = useState(false);
     const [isMobile, setIsMobile] = useState(true);
     const [loading, setLoading] = useState(false);
-    const [mode, setMode] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [formEditable, setFormEditable] = useState(false);
 
@@ -62,13 +61,11 @@ const CitizenSurveyPage = ({ params }) => {
         if (window.innerWidth < 769) setIsMobile(true);
         else setIsMobile(false);
         if (currCitizen?.status == "SUBMITTED") {
-            setMode("manual");
             setFormState(currCitizen.submissionData);
         } else if (
             currCitizen?.submissionData &&
             Object.keys(currCitizen?.submissionData)?.length > 0
         ) {
-            setMode("manual");
             setFormState(currCitizen.submissionData);
         }
     }, []);
@@ -107,47 +104,6 @@ const CitizenSurveyPage = ({ params }) => {
         }
     };
 
-    const handleScannedAadhaar = async (data) => {
-        if (data?.length) {
-            var XMLParser = require("react-xml-parser");
-            var xml = new XMLParser().parseFromString(data);
-            console.log(xml);
-            let dob = "";
-            let gender = "";
-
-            // Handling DOB discrepancy
-            if (xml?.attributes?.dob?.includes("/")) {
-                let dobArr = xml?.attributes?.dob.split("/");
-                dob = `${dobArr[2]}-${dobArr[1]}-${dobArr[0]}`;
-            } else {
-                let dobArr = xml?.attributes?.dob.split("-");
-                dob = `${dobArr[0]}-${dobArr[1]}-${dobArr[2]}`;
-            }
-
-            // Handling gender discrepancy
-            if (xml?.attributes?.gender?.length == 1) {
-                gender =
-                    xml?.attributes?.gender == "F"
-                        ? "female"
-                        : xml?.attributes?.gender == "M"
-                            ? "male"
-                            : "other";
-            } else {
-                gender = xml?.attributes?.gender?.toLowerCase();
-            }
-
-            setFormState({
-                beneficiaryName: xml?.attributes?.name,
-                aadharNumber: xml?.attributes?.uid,
-                dateOfBirth: dob,
-                gender: gender,
-            });
-            setShowForm(true);
-        }
-    };
-
-    //dummy commit
-
     return !hydrated ? null : (
         <div className={styles.root}>
             <GovtBanner />
@@ -161,94 +117,26 @@ const CitizenSurveyPage = ({ params }) => {
                 }}
             />
 
-            {!mode ? (
-                <>
-                    <div className={styles.collectionMode} onClick={() => {
-                        logEvent(analytics, "mode_selected", {
-                            villageId: _currLocation.villageCode,
-                            villageName: _currLocation.villageName,
-                            user_id: user?.username,
-                            app_status: navigator.onLine ? 'online' : 'offline',
-                            mode: 'qr'
-                        });
-                        setMode("qr")
-                    }}>
-                        <div>
-                            <img src="/assets/qr.png" />
-                        </div>
-                        <p>Scan Aadhar QR</p>
-                        <div>
-                            <span>Scan</span>
-                            <img src="/assets/circleArrowGreen.png" />
-                        </div>
-                    </div>
-                    <div
-                        className={styles.collectionMode}
-                        onClick={() => {
-                            logEvent(analytics, "mode_selected", {
-                                villageId: _currLocation.villageCode,
-                                villageName: _currLocation.villageName,
-                                user_id: user?.username,
-                                app_status: navigator.onLine ? 'online' : 'offline',
-                                mode: 'manual'
-                            });
-                            setMode("manual")
-                        }}
-                    >
-                        <div>
-                            <img src="/assets/docFill.png" />
-                        </div>
-                        <p>Fill Form Manually</p>
-                        <div>
-                            <span>Fill Form</span>
-                            <img src="/assets/circleArrowGreen.png" />
-                        </div>
-                    </div>
-                </>
-            ) : mode == "manual" && !showForm ? (
-                <CitizenForm
-                    mode={mode}
-                    formEditable={
-                        currCitizen?.status == "SUBMITTED" ||
-                            (
-                                currCitizen?.submissionData &&
-                                Object?.keys(currCitizen?.submissionData)
-                            )?.length > 0
-                            ? false
-                            : true
-                    }
-                    handleSubmit={handleSubmit}
-                    setFormState={setFormState}
-                    formState={formState}
-                    currCitizen={currCitizen}
-                    submittedModal={submittedModal}
-                    loading={loading}
-                    savedEntries={(currCitizen?.submissionData && Object?.keys(currCitizen?.submissionData)?.length > 0 && currCitizen?.status != "SUBMITTED") || false}
-                />
-            ) : (
-                !showForm && (
-                    <div className={styles.qrContainer}>
-                        <QrScanner
-                            onDecode={(result) => handleScannedAadhaar(result)}
-                            onError={(error) => console.log(error?.message)}
-                        />
-                        <p>Align QR Code within the scanner</p>
-                    </div>
-                )
-            )}
 
-            {showForm && (
-                <CitizenForm
-                    mode={mode}
-                    formEditable={formEditable}
-                    handleSubmit={handleSubmit}
-                    setFormState={setFormState}
-                    formState={formState}
-                    currCitizen={currCitizen}
-                    submittedModal={submittedModal}
-                    loading={loading}
-                />
-            )}
+            <CitizenForm
+                formEditable={
+                    currCitizen?.status == "SUBMITTED" ||
+                        (
+                            currCitizen?.submissionData &&
+                            Object?.keys(currCitizen?.submissionData)
+                        )?.length > 0
+                        ? false
+                        : true
+                }
+                handleSubmit={handleSubmit}
+                setFormState={setFormState}
+                formState={formState}
+                currCitizen={currCitizen}
+                submittedModal={submittedModal}
+                loading={loading}
+                savedEntries={(currCitizen?.submissionData && Object?.keys(currCitizen?.submissionData)?.length > 0 && currCitizen?.status != "SUBMITTED") || false}
+            />
+
 
             {submittedModal && (
                 <CommonModal sx={{ maxHeight: "40vh", overflow: "scroll" }}>
@@ -296,6 +184,13 @@ const CitizenSurveyPage = ({ params }) => {
                     </div>
                 </CommonModal>
             )}
+            <style>
+                {`
+                    .MuiInputLabel-outlined {
+                        margin-left: -14px;
+                    }
+                `}
+            </style>
         </div>
     );
 };

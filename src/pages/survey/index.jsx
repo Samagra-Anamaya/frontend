@@ -183,7 +183,7 @@ const SurveyPage = ({ params }) => {
                     });
                     addNewCitizen()
                 }}
-                mainText={'Add New Citizen'}
+                mainText={'Add New Land Record'}
             />
             <SelectionItem
                 key={_currLocation.id}
