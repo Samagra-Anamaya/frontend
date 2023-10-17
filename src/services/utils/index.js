@@ -6,6 +6,7 @@ import { getMedicalAssessments, getPrefillXML, getSubmissionXML } from "../api";
 import axios from "axios";
 // import { userData } from "@/app/pages/Default/page";
 // import { useUserData } from "@/app/hooks/useAuth";
+import imageCompression from 'browser-image-compression';
 
 export const makeHasuraCalls = async (query, userData) => {
   return fetch(process.env.NEXT_PUBLIC_HASURA_URL, {
@@ -202,3 +203,17 @@ export const getFormData = async ({ loading, scheduleId, formSpec, startingForm,
 //   console.log("Trans form:", transformedForm.data)
 //   setToLocalForage(formName, transformedForm.data);
 // }
+
+export const compressImage = async (imageFile) => {
+  const options = {
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1920,
+    useWebWorker: true,
+  }
+
+  const compressedFile = await imageCompression(imageFile, options);
+  console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+  console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+
+  return compressedFile;
+}

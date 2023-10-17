@@ -15,6 +15,7 @@ import { QrScanner } from "@yudiel/react-qr-scanner";
 import GovtBanner from "../../components/GovtBanner";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "@/services/firebase/firebase";
+import { compressImage } from "@/services/utils";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -91,6 +92,14 @@ const CitizenSurveyPage = ({ params }) => {
             // dispatch(
             //     saveCitizenFormData({ spdpVillageId: _currLocation.villageCode, formData: formData })
             // );
+            for (let el in landImages) {
+                const compressedImg = await compressImage(landImages[el].file);
+                landImages[el] = compressedImg;
+            }
+            for (let el in rorImages) {
+                const compressedImg = await compressImage(rorImages[el].file);
+                rorImages[el] = compressedImg;
+            }
             let newFormState = formState;
             newFormState['landRecords'] = landImages;
             newFormState['rorRecords'] = rorImages;
