@@ -24,26 +24,12 @@ import moment from "moment";
 import { toast } from "react-toastify";
 
 const CitizenForm = (props) => {
-    const { handleSubmit, setFormState, formState, currCitizen, submittedModal, loading, formEditable, mode, savedEntries = false } = props;
-    const [landImages, setLandImages] = useState([]);
-    const [rorImages, setRorImages] = useState([]);
+    const { handleSubmit, setFormState, formState, currCitizen, submittedModal, loading, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
+
     const [activeStep, setActiveStep] = useState(0);
 
     console.log("FORM EDITABLE -->", formEditable)
     console.log("formState ->", formState)
-
-    const handleCapture = ({ target }) => {
-        const fileReader = new FileReader();
-        const name = target.accept.includes('image') ? 'images' : 'videos';
-
-        fileReader.readAsDataURL(target.files[0]);
-        fileReader.onload = (e) => {
-            // this.setState((prevState) => ({
-            //     [name]: [...prevState[name], e.target.result]
-            // }));
-            console.log(e.target.result)
-        };
-    };
 
     const handleLandImages = (imageList, addUpdateIndex) => {
         // data for submit
@@ -151,7 +137,7 @@ const CitizenForm = (props) => {
                                 <Button
                                     onClick={onImageUpload}
                                     {...dragProps}
-                                    variant="contained"
+                                    variant="outlined"
                                 >
                                     Upload Land Records
                                 </Button>
@@ -160,7 +146,7 @@ const CitizenForm = (props) => {
                                         <div key={index} className="image-item">
                                             <img src={image['land_records']} alt="" width="100" />
                                             <div className="image-item__btn-wrapper">
-                                                <Button color="error" variant="contained" onClick={() => onImageRemove(index)}>Remove</Button>
+                                                <Button color="error" variant="outlined" onClick={() => onImageRemove(index)}>Remove</Button>
                                             </div>
                                         </div>
                                     ))}
@@ -273,15 +259,15 @@ const CitizenForm = (props) => {
             }
             {activeStep == 2 && <form
                 onSubmit={(e) => {
-                    e.preventDefault();
-                    setActiveStep(1);
-                    if (!landImages?.length) {
-                        toast("Please upload land records!", {
+                    console.log("Submitting form -> ", e)
+                    e?.preventDefault();
+                    if (!rorImages.length) {
+                        toast("Please upload ROR records!", {
                             type: 'error'
                         })
                         return;
                     }
-                    setActiveStep(2);
+                    handleSubmit();
                 }}
                 className={styles.userForm}>
                 <TextField
@@ -349,7 +335,7 @@ const CitizenForm = (props) => {
                                 <Button
                                     onClick={onImageUpload}
                                     {...dragProps}
-                                    variant="contained"
+                                    variant="outlined"
                                 >
                                     Upload ROR Records
                                 </Button>
@@ -358,7 +344,7 @@ const CitizenForm = (props) => {
                                         <div key={index} className="image-item">
                                             <img src={image['ror_records']} alt="" width="100" />
                                             <div className="image-item__btn-wrapper">
-                                                <Button color="error" variant="contained" onClick={() => onImageRemove(index)}>Remove</Button>
+                                                <Button variant="outlined" color="error" onClick={() => onImageRemove(index)}>Remove</Button>
                                             </div>
                                         </div>
                                     ))}

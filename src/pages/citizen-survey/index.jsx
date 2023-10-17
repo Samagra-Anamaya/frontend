@@ -36,12 +36,9 @@ const CitizenSurveyPage = ({ params }) => {
 
     /* Use States */
     const [hydrated, setHydrated] = React.useState(false);
-    const [formState, setFormState] = useState({
-        beneficiaryName: "",
-        aadharNumber: "",
-        dateOfBirth: "",
-        gender: "",
-    });
+    const [formState, setFormState] = useState({});
+    const [landImages, setLandImages] = useState([]);
+    const [rorImages, setRorImages] = useState([]);
     const user = useSelector((state) => state?.userData?.user?.user);
     const _currLocation = useSelector(
         (state) => state?.userData?.currentLocation
@@ -71,17 +68,36 @@ const CitizenSurveyPage = ({ params }) => {
     }, []);
 
     /* Util Functions */
-    const handleSubmit = async (e) => {
+    const handleSubmit = async () => {
         if (loading) return;
         try {
 
             setLoading(true);
-            e.preventDefault();
             let capturedAt = new Date();
             capturedAt.toISOString().slice(0, 19).replace("T", " ");
+            // const formData = new FormData();
+            // let newSubmissionData = formState;
+            // console.log("landRecordsImages ->", landImages)
+            // console.log("rorRecordsImages ->", rorImages)
+            // formData.append('landRecordsImages', landImages);
+            // formData.append('rorRecordsImages', rorImages);
+            // formData.append('submissionData', newSubmissionData);
+            // formData.append('spdpVillageId', _currLocation.villageCode);
+            // formData.append('citizenId', currCitizen.citizenId);
+            // formData.append('submitterId', user.id);
+            // formData.append('capturedAt', capturedAt);
+
+            // console.log("FORM DATA FOR SUBMITTING -->", Object.fromEntries(formData.entries()))
+            // dispatch(
+            //     saveCitizenFormData({ spdpVillageId: _currLocation.villageCode, formData: formData })
+            // );
+            let newFormState = formState;
+            newFormState['landRecords'] = landImages;
+            newFormState['rorRecords'] = rorImages;
+            console.log("Final Submission Object: ", newFormState)
             dispatch(
                 saveCitizenFormData({
-                    submissionData: formState,
+                    submissionData: newFormState,
                     spdpVillageId: _currLocation.villageCode,
                     citizenId: currCitizen.citizenId,
                     submitterId: user.id,
@@ -95,7 +111,6 @@ const CitizenSurveyPage = ({ params }) => {
                 villageName: _currLocation.villageName,
                 user_id: user?.username,
                 app_status: navigator.onLine ? 'online' : 'offline',
-                mode: mode,
                 capturedAt: capturedAt
             });
         } catch (err) {
@@ -135,6 +150,10 @@ const CitizenSurveyPage = ({ params }) => {
                 submittedModal={submittedModal}
                 loading={loading}
                 savedEntries={(currCitizen?.submissionData && Object?.keys(currCitizen?.submissionData)?.length > 0 && currCitizen?.status != "SUBMITTED") || false}
+                rorImages={rorImages}
+                setRorImages={setRorImages}
+                landImages={landImages}
+                setLandImages={setLandImages}
             />
 
 

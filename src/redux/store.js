@@ -79,22 +79,7 @@ const userDataSlice = createSlice({
       state.forms = { ...state.forms, [action.payload.formId]: action.payload.formUrl }
     },
     saveCitizenFormData: (state, action) => {
-      // const currLocIndex = state.assignedLocations.findIndex((el) => el.villageCode == state.currentLocation.villageCode)
-      // console.log("Save citizenFormDat --->", current(state.currentLocation), action.payload)
-      // if (state?.currentLocation?.citizens?.length) {
-      //   let citArray = state?.currentLocation?.citizens;
-
-      //   const currCitIndex = citArray.findIndex((el) => el.citizenId == action.payload.id)
-
-      //   let newCitizenArray = [...citArray.slice(0, currCitIndex), { ...citArray[currCitIndex], status: 'SUBMITTED', submissionData: action.payload.data, capturedAt: action.payload.capturedAt }, ...citArray.slice(currCitIndex + 1)]
-
-      //   let newCurrLocation = {
-      //     ...state.currentLocation,
-      //     citizens: newCitizenArray
-      //   }
-      //   state.currentLocation = newCurrLocation
-      //   state.assignedLocations = [...state.assignedLocations.slice(0, currLocIndex), newCurrLocation, ...state.assignedLocations.slice(currLocIndex + 1)]
-      // }
+      // state.submissions = { ...state?.submissions, [action.payload.spdpVillageId]: [...(state?.submissions?.[action.payload.spdpVillageId] || []), action.payload.formData] }
       state.submissions = { ...state?.submissions, [action.payload.spdpVillageId]: [...(state?.submissions?.[action.payload.spdpVillageId] || []), action.payload] }
 
     },
