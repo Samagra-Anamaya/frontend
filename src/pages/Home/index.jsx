@@ -105,6 +105,7 @@ const Home = () => {
                   fullWidth
                   value={username}
                   error={usernameError}
+                  id="username"
                 />
                 <TextField
                   label="Password"
@@ -116,8 +117,14 @@ const Home = () => {
                   error={passwordError}
                   fullWidth
                   sx={{ mb: 3 }}
+                  id="password"
                 />
+<<<<<<< Updated upstream
                 <Button variant="contained" color="success" type="submit" sx={{ padding: 1, width: '80%', height: '4rem', fontSize: 16, marginTop: 5 }}>Login</Button>
+=======
+                <Button variant="contained" color="success"  type="submit"  id="login-btn" sx={{ padding: 1, width: '80%', height: '3rem', fontSize: 16, marginTop: 5 }}>{apiCall ? <CircularProgress color="inherit" /> : 'LOGIN'} </Button>
+                {error?.length > 0 && <p style={{ color: 'red' }}>{error}</p>}
+>>>>>>> Stashed changes
               </form>
             </div>
           </div>
