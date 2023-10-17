@@ -435,7 +435,8 @@ export const uploadMedia = async (files) => {
     console.log({ files })
     let data = new FormData();
     files.forEach(file => {
-      data.append('files', file?.file || file?.land_records || file?.ror_records);
+      // data.append('files', file?.file || file?.land_records || file?.ror_records);
+      data.append('files', file);
     })
     let res = await axios.post(BACKEND_SERVICE_URL + `/upload/multiple`, data, {
       headers: {
