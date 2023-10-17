@@ -94,6 +94,7 @@ const CitizenSurveyPage = ({ params }) => {
             let newFormState = formState;
             newFormState['landRecords'] = landImages;
             newFormState['rorRecords'] = rorImages;
+            newFormState['imageUploaded'] = false;
             console.log("Final Submission Object: ", newFormState)
             dispatch(
                 saveCitizenFormData({

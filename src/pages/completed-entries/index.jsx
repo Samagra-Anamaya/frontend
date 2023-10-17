@@ -207,6 +207,9 @@ const CompletedEntries = ({ params }) => {
             prevSubmissions?.map((el) => (
               <SelectionItem
                 key={el.id}
+                onSubBtnClick={()=>{
+                  console.log("sub btn clicked")
+              }}
                 leftImage={"/assets/citizen.png"}
                 rightImage={"/assets/verified.png"}
                 mainText={el?.submissionData?.beneficiaryName}

@@ -1,7 +1,7 @@
-import { configureStore, createSlice, current } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
-
+import { configureStore, createSlice, current } from "@reduxjs/toolkit";
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
+import { cloneDeep } from "lodash";
 // const authSlice = createSlice({
 //   name: 'auth',
 //   initialState: {
@@ -29,7 +29,7 @@ import storage from 'redux-persist/lib/storage'; // defaults to localStorage for
 // });
 
 const userDataSlice = createSlice({
-  name: 'userData',
+  name: "userData",
   initialState: {
     isAuthenticated: false,
     user: null,
@@ -39,13 +39,13 @@ const userDataSlice = createSlice({
     forms: {},
     searchQuery: {},
     searchSavedQuery: {},
-    submissions: {}
+    submissions: {},
   },
   reducers: {
     login: (state, action) => {
       state.isAuthenticated = true;
       state.user = action.payload;
-      state.assignedLocations = action.payload?.user?.data?.villages
+      state.assignedLocations = action.payload?.user?.data?.villages;
     },
     logoutUser: (state) => {
       state.isAuthenticated = false;
@@ -65,23 +65,61 @@ const userDataSlice = createSlice({
       state.assignedLocations = action.payload;
     },
     addCitizen: (state, action) => {
-      const currLocIndex = state.assignedLocations.findIndex((el) => el.villageCode == state.currentLocation.villageCode)
-      console.log("FIND CURRENT-->", currLocIndex)
-      console.log("Add Citizen --->", current(state.currentLocation), action.payload)
+      const currLocIndex = state.assignedLocations.findIndex(
+        (el) => el.villageCode == state.currentLocation.villageCode
+      );
+      console.log("FIND CURRENT-->", currLocIndex);
+      console.log(
+        "Add Citizen --->",
+        current(state.currentLocation),
+        action.payload
+      );
       let newCurrLocation = {
         ...state.currentLocation,
-        citizens: [...(state?.currentLocation?.citizens || []), { citizenId: action.payload.id }]
-      }
-      state.currentLocation = newCurrLocation
-      state.assignedLocations = [...state.assignedLocations.slice(0, currLocIndex), newCurrLocation, ...state.assignedLocations.slice(currLocIndex + 1)]
+        citizens: [
+          ...(state?.currentLocation?.citizens || []),
+          { citizenId: action.payload.id },
+        ],
+      };
+      state.currentLocation = newCurrLocation;
+      state.assignedLocations = [
+        ...state.assignedLocations.slice(0, currLocIndex),
+        newCurrLocation,
+        ...state.assignedLocations.slice(currLocIndex + 1),
+      ];
     },
     addFormUri: (state, action) => {
-      state.forms = { ...state.forms, [action.payload.formId]: action.payload.formUrl }
+      state.forms = {
+        ...state.forms,
+        [action.payload.formId]: action.payload.formUrl,
+      };
     },
     saveCitizenFormData: (state, action) => {
       // state.submissions = { ...state?.submissions, [action.payload.spdpVillageId]: [...(state?.submissions?.[action.payload.spdpVillageId] || []), action.payload.formData] }
-      state.submissions = { ...state?.submissions, [action.payload.spdpVillageId]: [...(state?.submissions?.[action.payload.spdpVillageId] || []), action.payload] }
+      state.submissions = {
+        ...state?.submissions,
+        [action.payload.spdpVillageId]: [
+          ...(state?.submissions?.[action.payload.spdpVillageId] || []),
+          action.payload,
+        ],
+      };
+    },
+    updateCitizenFormData: (state, action) => {
+      let submissionArray = state.submissions[action.payload.spdpVillageId];
+      const submissionIndex = submissionArray.findIndex(
+        (submission) => submission.citizenId === action.payload.citizenId
+      );
 
+      if (submissionIndex !== -1) {
+        submissionArray[submissionIndex] = {
+          ...action.payload,
+        };
+      }
+
+      state.submissions = {
+        ...state.submissions,
+        [action.payload.spdpVillageId]: submissionArray,
+      };
     },
     clearSubmissions: (state, action) => {
       let tempState = state?.submissions;
@@ -89,33 +127,41 @@ const userDataSlice = createSlice({
       state.submissions = tempState;
     },
     setCurrentCitizen: (state, action) => {
-      state.currentCitizen = action.payload
+      state.currentCitizen = action.payload;
     },
     updateSearchQuery: (state, action) => {
-      state.searchQuery = { ...state.searchQuery, [action.payload.villageId]: action.payload.query }
+      state.searchQuery = {
+        ...state.searchQuery,
+        [action.payload.villageId]: action.payload.query,
+      };
     },
     updateSearchSavedQuery: (state, action) => {
-      state.searchSavedQuery = { ...state.searchSavedQuery, [action.payload.villageId]: action.payload.query }
+      state.searchSavedQuery = {
+        ...state.searchSavedQuery,
+        [action.payload.villageId]: action.payload.query,
+      };
     },
-  }
-})
+  },
+});
 
 const persistConfig = {
-  key: 'root', // key for the root of the storage
+  key: "root", // key for the root of the storage
   storage, // storage to use (e.g., localStorage)
 };
 
-const persistedUserDataReduces = persistReducer(persistConfig, userDataSlice.reducer);
+const persistedUserDataReduces = persistReducer(
+  persistConfig,
+  userDataSlice.reducer
+);
 
 const store = configureStore({
   reducer: {
-    // Using persisted reducers 
-    userData: persistedUserDataReduces
+    // Using persisted reducers
+    userData: persistedUserDataReduces,
   },
 });
 
 const persistor = persistStore(store);
-
 
 export const {
   login,
@@ -128,7 +174,8 @@ export const {
   setCurrentCitizen,
   updateSearchQuery,
   updateSearchSavedQuery,
-  clearSubmissions
+  clearSubmissions,
+  updateCitizenFormData,
 } = userDataSlice.actions;
 
 export { store, persistor };
