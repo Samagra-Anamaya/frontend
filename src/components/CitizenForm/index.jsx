@@ -12,12 +12,7 @@ import {
 } from "@mui/material";
 
 import MobileStepper from '@mui/material/MobileStepper';
-import { useTheme } from '@mui/material/styles';
 import ImageUploading from 'react-images-uploading';
-import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
-import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
-import CircularProgress from "@mui/material/CircularProgress";
-import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
@@ -127,14 +122,13 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />
-                    {formState?.landRecords?.length > 0 && !formEditable && <div>
+                    {landImages.length > 0 && !formEditable && <div>
                         <p>Land Record Images</p>
                         <div>
-                            {formState?.landRecords?.map(el => {
-                                console.log("landrecord ->", el);
-                                // let objectURL = URL.createObjectURL(el);
-                                // console.log(objectURL)
-                                // return <img src={objectURL} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                            {landImages?.map(el => {
+                                let objectURL = URL.createObjectURL(el);
+                                console.log(objectURL)
+                                return <img src={objectURL} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
                             })}
                         </div>
                     </div>}
@@ -407,6 +401,17 @@ const CitizenForm = (props) => {
                             </div>
                         )}
                     </ImageUploading>}
+                    {rorImages.length > 0 && !formEditable && <div>
+                        <p>ROR Record Images</p>
+                        <div>
+                            {rorImages?.map(el => {
+                                console.log("landrecord ->", el);
+                                let objectURL = URL.createObjectURL(el);
+                                console.log(objectURL)
+                                return <img src={objectURL} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                            })}
+                        </div>
+                    </div>}
                 </> : <></>}
                 {!submittedModal && formEditable && <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Submit</Button>}
             </form>}

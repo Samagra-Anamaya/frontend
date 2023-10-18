@@ -15,7 +15,7 @@ import { QrScanner } from "@yudiel/react-qr-scanner";
 import GovtBanner from "../../components/GovtBanner";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "@/services/firebase/firebase";
-import { compressImage } from "@/services/utils";
+import { compressImage, getImages, storeImages } from "@/services/utils";
 import CircularProgress from "@mui/material/CircularProgress";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
@@ -54,6 +54,7 @@ const CitizenSurveyPage = ({ params }) => {
 
     console.log("CURR CITIZEN -->", currCitizen);
 
+
     /* Use Effects */
     useEffect(() => {
         setHydrated(true);
@@ -67,6 +68,7 @@ const CitizenSurveyPage = ({ params }) => {
         ) {
             setFormState(currCitizen.submissionData);
         }
+        getImagesFromStore();
     }, []);
 
     /* Util Functions */
@@ -102,9 +104,12 @@ const CitizenSurveyPage = ({ params }) => {
                 const compressedImg = await compressImage(rorImages[el].file);
                 rorImages[el] = compressedImg;
             }
+            if (landImages?.length) await storeImages(`${_currLocation.villageCode}_${currCitizen.citizenId}_landImages`, landImages);
+            if (rorImages?.length) await storeImages(`${_currLocation.villageCode}_${currCitizen.citizenId}_rorImages`, rorImages);
+
             let newFormState = formState;
-            newFormState['landRecords'] = landImages;
-            newFormState['rorRecords'] = rorImages;
+            // newFormState['landRecords'] = landImages;
+            // newFormState['rorRecords'] = rorImages;
             newFormState['imageUploaded'] = false;
             if (!formState?.isAadhaarAvailable) {
                 delete formState?.aadharNumber;
@@ -140,6 +145,16 @@ const CitizenSurveyPage = ({ params }) => {
             setLoading(false);
         }
     };
+
+
+    const getImagesFromStore = async () => {
+        if (currCitizen?.submissionData && Object.keys(currCitizen?.submissionData)?.length > 0) {
+            let landImages = await getImages(`${_currLocation.villageCode}_${currCitizen.citizenId}_landImages`);
+            let rorImages = await getImages(`${_currLocation.villageCode}_${currCitizen.citizenId}_rorImages`);
+            if (landImages?.length) setLandImages(landImages)
+            if (rorImages?.length) setRorImages(rorImages)
+        }
+    }
 
     return !hydrated ? null : (
         <div className={styles.root}>

@@ -7,6 +7,7 @@ import axios from "axios";
 // import { userData } from "@/app/pages/Default/page";
 // import { useUserData } from "@/app/hooks/useAuth";
 import imageCompression from 'browser-image-compression';
+import localForage from "localforage";
 
 export const makeHasuraCalls = async (query, userData) => {
   return fetch(process.env.NEXT_PUBLIC_HASURA_URL, {
@@ -216,4 +217,12 @@ export const compressImage = async (imageFile) => {
   console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
 
   return compressedFile;
+}
+
+export const storeImages = async (key, data) => {
+  return await localForage.setItem(key, data);
+}
+
+export const getImages = async (key) => {
+  return await localForage.getItem(key);
 }
