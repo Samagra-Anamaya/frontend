@@ -54,7 +54,7 @@ const CitizenForm = (props) => {
             />
             {
                 activeStep == 0 && <form onSubmit={(e) => { e.preventDefault(), setActiveStep(1) }} className={styles.userForm}>
-                    <FormControl sx={{ mb: 4, width: '80%' }}>
+                    {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
                         <InputLabel id="aadhar-select-label">Is Aadhaar Available?</InputLabel>
                         <Select
                             labelId="aadhar-select-label"
@@ -69,13 +69,22 @@ const CitizenForm = (props) => {
                             <MenuItem value={true}>Yes</MenuItem>
                             <MenuItem value={false}>No</MenuItem>
                         </Select>
-                    </FormControl>
+                    </FormControl> : <TextField
+                        type={"text"}
+                        variant="standard"
+                        label={"Is Aadhaar Available?"}
+                        value={formState?.isAadhaarAvailable ? 'Yes' : 'No'}
+                        required
+                        inputProps={{ maxLength: 12, minLength: 12 }}
+                        disabled={true}
+                        sx={{ mb: 4, width: "80%" }}
+                    />}
                     {formState?.isAadhaarAvailable ?
                         <Tooltip title={!formEditable ? "Aadhar will be display in hashed format" : ''}>
                             <TextField
                                 type={"text"}
                                 variant="standard"
-                                label={!formEditable ? "" : "Aadhar Number"}
+                                label={"Aadhar Number"}
                                 onChange={(e) => {
                                     if (/^[0-9]*$/.test(e.target.value))
                                         setFormState((prevState) => ({
@@ -99,7 +108,7 @@ const CitizenForm = (props) => {
                     onSubmit={(e) => {
                         e.preventDefault();
                         setActiveStep(1);
-                        if (!landImages?.length) {
+                        if (formEditable && !landImages?.length) {
                             toast("Please upload land records!", {
                                 type: 'error'
                             })
@@ -118,7 +127,18 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />
-                    {formState?.landTitleSerialNumber && <ImageUploading
+                    {formState?.landRecords?.length > 0 && !formEditable && <div>
+                        <p>Land Record Images</p>
+                        <div>
+                            {formState?.landRecords?.map(el => {
+                                console.log("landrecord ->", el);
+                                // let objectURL = URL.createObjectURL(el);
+                                // console.log(objectURL)
+                                // return <img src={objectURL} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                            })}
+                        </div>
+                    </div>}
+                    {formState?.landTitleSerialNumber && formEditable && <ImageUploading
                         multiple
                         value={landImages}
                         onChange={handleLandImages}
@@ -169,7 +189,7 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />
-                    <FormControl sx={{ mb: 4, width: '80%' }}>
+                    {formEditable && <FormControl sx={{ mb: 4, width: '80%' }}>
                         <InputLabel id="co-claimant-select-label">Co-Claimant Available?</InputLabel>
                         <Select
                             labelId="co-claimant-select-label"
@@ -183,7 +203,24 @@ const CitizenForm = (props) => {
                             <MenuItem value={true}>Yes</MenuItem>
                             <MenuItem value={false}>No</MenuItem>
                         </Select>
-                    </FormControl>
+                    </FormControl>}
+
+                    {!formEditable && <FormControl sx={{ mb: 4, width: '80%' }}>
+                        <InputLabel id="co-claimant-select-label">Co-Claimant Available?</InputLabel>
+                        <Select
+                            labelId="co-claimant-select-label"
+                            id="co-claimant-select"
+                            value={formState?.coClaimantAvailable}
+                            variant="standard"
+                            label="Co-Claimant Available"
+                            required
+                            disabled
+                            onChange={e => setFormState((prevState) => ({ ...prevState, coClaimantAvailable: e.target.value }))}
+                        >
+                            <MenuItem value={true}>Yes</MenuItem>
+                            <MenuItem value={false}>No</MenuItem>
+                        </Select>
+                    </FormControl>}
                     {formState?.coClaimantAvailable ? <TextField
                         variant='standard'
                         label={"Co-Claimant Name"}
@@ -219,7 +256,7 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />
-                    <FormControl sx={{ mb: 4, width: '80%' }}>
+                    {formEditable && <FormControl sx={{ mb: 4, width: '80%' }}>
                         <InputLabel id="social-category-label">Social Category</InputLabel>
                         <Select
                             labelId="social-category-label"
@@ -233,7 +270,16 @@ const CitizenForm = (props) => {
                             <MenuItem value={'FDST'}>Forest Dwelling Scheduled Tribe {'(FDST)'}</MenuItem>
                             <MenuItem value={'OTFD'}>Other Tribal Forest Dwellers {`(OTFD)`}</MenuItem>
                         </Select>
-                    </FormControl>
+                    </FormControl>}
+                    {!formEditable && <TextField
+                        variant='standard'
+                        label={"Social Category"}
+                        value={formState?.socialCategory}
+                        required
+                        sx={{ mb: 4, width: '80%' }}
+                        disabled={!formEditable ? true : false}
+
+                    />}
                     <TextField
                         variant='standard'
                         label={"Tribe Name"}
@@ -292,7 +338,7 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
                     />
                 })}
-                <FormControl sx={{ mb: 4, width: '80%' }}>
+                {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
                     <InputLabel id="ror-updated-label">Has ROR been updated? *</InputLabel>
                     <Select
                         labelId="ror-updated-label"
@@ -306,7 +352,16 @@ const CitizenForm = (props) => {
                         <MenuItem value={true}>Yes</MenuItem>
                         <MenuItem value={false}>No</MenuItem>
                     </Select>
-                </FormControl>
+                </FormControl> : <TextField
+                    variant='standard'
+                    label={"Has ROR been updated?"}
+                    onChange={e => setFormState((prevState) => ({ ...prevState, address: e.target.value }))}
+                    value={formState?.rorUpdated ? 'Yes' : 'No'}
+                    required
+                    sx={{ mb: 4, width: '80%' }}
+                    disabled={!formEditable ? true : false}
+
+                />}
                 {formState?.rorUpdated ? <>
                     <TextField
                         variant='standard'
@@ -317,7 +372,7 @@ const CitizenForm = (props) => {
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
                     />
-                    <ImageUploading
+                    {formEditable && <ImageUploading
                         multiple
                         value={rorImages}
                         onChange={handleRorImages}
@@ -351,9 +406,9 @@ const CitizenForm = (props) => {
                                 </div>
                             </div>
                         )}
-                    </ImageUploading>
+                    </ImageUploading>}
                 </> : <></>}
-                {!submittedModal && <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Submit</Button>}
+                {!submittedModal && formEditable && <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Submit</Button>}
             </form>}
         </>
     );
