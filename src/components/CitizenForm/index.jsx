@@ -24,7 +24,7 @@ import moment from "moment";
 import { toast } from "react-toastify";
 
 const CitizenForm = (props) => {
-    const { handleSubmit, setFormState, formState, currCitizen, submittedModal, loading, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
+    const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
 
     const [activeStep, setActiveStep] = useState(0);
 
@@ -261,7 +261,7 @@ const CitizenForm = (props) => {
                 onSubmit={(e) => {
                     console.log("Submitting form -> ", e)
                     e?.preventDefault();
-                    if (!rorImages.length) {
+                    if (formState?.rorUpdated && !rorImages.length) {
                         toast("Please upload ROR records!", {
                             type: 'error'
                         })
@@ -353,15 +353,8 @@ const CitizenForm = (props) => {
                         )}
                     </ImageUploading>
                 </> : <></>}
-                <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Submit</Button>
+                {!submittedModal && <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Submit</Button>}
             </form>}
-
-
-            {/* {mode == 'qr' ?
-                !submittedModal && <Button variant="contained" color="success" size="large" type="submit" className={styles.submitBtn}>{loading ? <CircularProgress color="inherit" /> : 'Submit Form'} </Button>
-                :
-                formEditable && !submittedModal && <Button variant="contained" color="success" size="large" type="submit" className={styles.submitBtn}>{loading ? <CircularProgress color="inherit" /> : 'Submit Form'} </Button>
-            } */}
         </>
     );
 };

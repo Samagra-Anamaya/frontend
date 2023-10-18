@@ -16,6 +16,7 @@ import GovtBanner from "../../components/GovtBanner";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "@/services/firebase/firebase";
 import { compressImage } from "@/services/utils";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -74,6 +75,7 @@ const CitizenSurveyPage = ({ params }) => {
         try {
 
             setLoading(true);
+            showSubmittedModal(true);
             let capturedAt = new Date();
             capturedAt.toISOString().slice(0, 19).replace("T", " ");
             // const formData = new FormData();
@@ -104,6 +106,17 @@ const CitizenSurveyPage = ({ params }) => {
             newFormState['landRecords'] = landImages;
             newFormState['rorRecords'] = rorImages;
             newFormState['imageUploaded'] = false;
+            if (!formState?.isAadhaarAvailable) {
+                delete formState?.aadharNumber;
+            }
+            if (!formState?.rorUpdated) {
+                delete formState?.khataNumber;
+                delete formState?.landImages;
+            }
+            if (!formState?.coClaimantAvailable) {
+                delete formState?.coClaimantName;
+            }
+
             console.log("Final Submission Object: ", newFormState)
             dispatch(
                 saveCitizenFormData({
@@ -115,7 +128,6 @@ const CitizenSurveyPage = ({ params }) => {
                 })
             );
             setLoading(false);
-            showSubmittedModal(true);
             logEvent(analytics, "form_saved", {
                 villageId: _currLocation.villageCode,
                 villageName: _currLocation.villageName,
@@ -158,7 +170,6 @@ const CitizenSurveyPage = ({ params }) => {
                 formState={formState}
                 currCitizen={currCitizen}
                 submittedModal={submittedModal}
-                loading={loading}
                 savedEntries={(currCitizen?.submissionData && Object?.keys(currCitizen?.submissionData)?.length > 0 && currCitizen?.status != "SUBMITTED") || false}
                 rorImages={rorImages}
                 setRorImages={setRorImages}
@@ -169,49 +180,58 @@ const CitizenSurveyPage = ({ params }) => {
 
             {submittedModal && (
                 <CommonModal sx={{ maxHeight: "50vh", overflow: "scroll" }}>
-                    <div className={styles.submitModal}>
-                        <div>
-                            <Lottie
-                                options={defaultOptions}
-                                style={{ marginTop: -40 }}
-                                height={200}
-                                width={200}
-                            />
-                        </div>
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                width: "100%",
-                                justifyContent: "center",
-                                alignItems: "center",
-                            }}
-                        >
-                            <p
-                                style={{ fontSize: "1.5rem", marginTop: -40, fontWeight: 600 }}
-                            >
-                                Citizen Data Saved
-                            </p>
-                            <p>You will get edit access after next cycle</p>
-                            <p>Please get the filled form validated by GP/Tehsildar before syncing</p>
+                    {loading ? <div style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        width: "100%",
+                        height: '100%',
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}><CircularProgress color="success" size={50} /> </div> :
+                        <div className={styles.submitModal}>
+                            <div>
+                                <Lottie
+                                    options={defaultOptions}
+                                    style={{ marginTop: -40 }}
+                                    height={200}
+                                    width={200}
+                                />
+                            </div>
                             <div
-                                onClick={() => router.back()}
                                 style={{
-                                    width: "100%",
                                     display: "flex",
+                                    flexDirection: "column",
+                                    width: "100%",
                                     justifyContent: "center",
                                     alignItems: "center",
-                                    background: "#017922",
-                                    height: "3.5rem",
-                                    borderRadius: "0.75rem",
-                                    color: "#fff",
-                                    marginTop: 30,
                                 }}
                             >
-                                End Survey
+                                <p
+                                    style={{ fontSize: "1.5rem", marginTop: -40, fontWeight: 600 }}
+                                >
+                                    Citizen Data Saved
+                                </p>
+                                <p>You will get edit access after next cycle</p>
+                                <p>Please get the filled form validated by GP/Tehsildar before syncing</p>
+                                <div
+                                    onClick={() => router.back()}
+                                    style={{
+                                        width: "100%",
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        background: "#017922",
+                                        height: "3.5rem",
+                                        borderRadius: "0.75rem",
+                                        color: "#fff",
+                                        marginTop: 30,
+                                    }}
+                                >
+                                    End Survey
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    }
                 </CommonModal>
             )}
             <style>
