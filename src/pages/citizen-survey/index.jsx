@@ -103,6 +103,7 @@ const CitizenSurveyPage = ({ params }) => {
             let newFormState = formState;
             newFormState['landRecords'] = landImages;
             newFormState['rorRecords'] = rorImages;
+            newFormState['imageUploaded'] = false;
             console.log("Final Submission Object: ", newFormState)
             dispatch(
                 saveCitizenFormData({
@@ -167,7 +168,7 @@ const CitizenSurveyPage = ({ params }) => {
 
 
             {submittedModal && (
-                <CommonModal sx={{ maxHeight: "40vh", overflow: "scroll" }}>
+                <CommonModal sx={{ maxHeight: "50vh", overflow: "scroll" }}>
                     <div className={styles.submitModal}>
                         <div>
                             <Lottie
@@ -192,6 +193,7 @@ const CitizenSurveyPage = ({ params }) => {
                                 Citizen Data Saved
                             </p>
                             <p>You will get edit access after next cycle</p>
+                            <p>Please get the filled form validated by GP/Tehsildar before syncing</p>
                             <div
                                 onClick={() => router.back()}
                                 style={{

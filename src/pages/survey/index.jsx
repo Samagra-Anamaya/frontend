@@ -14,7 +14,7 @@ import { toast } from 'react-toastify';
 import CommonModal from "../../components/Modal";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "@/services/firebase/firebase";
-
+import {  uploadMedia } from "../../services/api";
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
 const SurveyPage = ({ params }) => {
@@ -80,10 +80,44 @@ const SurveyPage = ({ params }) => {
     }
 
     const submitData = async () => {
+
         try {
             setLoading(true);
+            let newSubmissionData = [];
+            for (const submission of submissions) {
+                let newSubmission = Object.assign({}, submission);
+               
+                if (!submission?.submissionData.imageUploaded) {
+                    let landRecords, rorRecords;
+    
+                    if (submission.submissionData.landRecords) {
+                        landRecords = await uploadMedia(submission.submissionData.landRecords);
+                        if (landRecords.err) {
+                            toast.error(landRecords?.err?.response?.data?.message);
+                        }
+                    }
+                    if (submission.submissionData.rorRecords) {
+                        rorRecords = await uploadMedia(submission.submissionData.rorRecords);
+                        if (rorRecords.err) {
+                            toast.error(rorRecords?.err?.response?.data?.message);
+                        }
+                    }
+                    newSubmission = {
+                        ...newSubmission,
+                        submissionData: {
+                            ...newSubmission?.submissionData,
+                            landRecords,
+                            rorRecords,
+                            imageUploaded: true,
+                        },
+                    };
+                    newSubmissionData.push(newSubmission)
+                   // dispatch(updateCitizenFormData(newSubmission));
+                }else {
+                newSubmissionData.push(newSubmission)}
+            }
             const submissionData = {
-                [_currLocation.villageCode]: submissions
+                [_currLocation.villageCode]: newSubmissionData
             }
             const config = {
                 method: 'POST',
