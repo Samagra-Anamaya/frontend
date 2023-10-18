@@ -1,6 +1,7 @@
 import { configureStore, createSlice, current } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
+// import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
+import storage from 'redux-persist-indexeddb-storage';
 
 // const authSlice = createSlice({
 //   name: 'auth',
@@ -102,7 +103,7 @@ const userDataSlice = createSlice({
 
 const persistConfig = {
   key: 'root', // key for the root of the storage
-  storage, // storage to use (e.g., localStorage)
+  storage: storage('myDB') // storage to use (e.g., localStorage)
 };
 
 const persistedUserDataReduces = persistReducer(persistConfig, userDataSlice.reducer);

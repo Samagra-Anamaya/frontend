@@ -51,6 +51,7 @@
     "react-xml-parser": "^1.1.8",
     "redux": "^4.2.1",
     "redux-persist": "^6.0.0",
+    "redux-persist-indexeddb-storage": "^1.0.4",
     "sass": "^1.68.0",
     "semantic-ui-css": "^2.5.0",
     "semantic-ui-react": "^2.1.4",
