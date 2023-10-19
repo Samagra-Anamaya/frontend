@@ -25,6 +25,7 @@ import GovtBanner from "../../components/GovtBanner";
 import SelectionItem from "../../components/SelectionItem";
 import SearchIcon from "@mui/icons-material/Search";
 import { toast } from "react-toastify";
+import { getImages } from "@/services/utils";
 
 const SavedEntries = ({ params }) => {
   /* Component States and Refs*/
@@ -119,15 +120,20 @@ const SavedEntries = ({ params }) => {
   const onMediaUpload = useCallback(async (el) => {
     let newSubmission = Object.assign({}, el);
     let landRecords, rorRecords;
+    console.log(el);
 
-    if (el.submissionData.landRecords) {
-      landRecords = await uploadMedia(el.submissionData.landRecords);
+    let landRecordsBlob = await getImages(`${el.spdpVillageId}_${el.citizenId}_landImages`);
+    let rorRecordsBlob = await getImages(`${el.spdpVillageId}_${el.citizenId}_rorImages`);
+    console.log(landRecordsBlob, rorRecordsBlob)
+
+    if (landRecordsBlob?.length) {
+      landRecords = await uploadMedia(landRecordsBlob);
       if (landRecords.err) {
         toast.error(landRecords?.err?.response?.data?.message);
       }
     }
-    if (el.submissionData.rorRecords) {
-      rorRecords = await uploadMedia(el.submissionData.rorRecords);
+    if (rorRecordsBlob?.length) {
+      rorRecords = await uploadMedia(rorRecordsBlob);
       if (rorRecords.err) {
         toast.error(rorRecords?.err?.response?.data?.message);
       }
