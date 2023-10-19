@@ -17,6 +17,7 @@ import ImageUploading from 'react-images-uploading';
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 import { toast } from "react-toastify";
+import { MDBContainer } from "mdbreact";
 
 const CitizenForm = (props) => {
     const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
@@ -47,7 +48,9 @@ const CitizenForm = (props) => {
                 activeStep={activeStep}
                 sx={{ width: '170vw', marginRight: '-85vw', marginBottom: '1rem' }}
             />
+            
             {
+               
                 activeStep == 0 && <form onSubmit={(e) => { e.preventDefault(), setActiveStep(1) }} className={styles.userForm}>
                     {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
                         <InputLabel id="aadhar-select-label">Is Aadhaar Available?</InputLabel>

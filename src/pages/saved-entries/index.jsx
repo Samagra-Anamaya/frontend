@@ -1,9 +1,14 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import styles from "./index.module.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import CommonHeader from "../../components/Commonheader";
 import { v4 as uuidv4 } from "uuid";
 import {
   addCitizen,
@@ -21,11 +26,15 @@ import {
 import Pagination from "@mui/material/Pagination";
 import { TextField, InputAdornment, CircularProgress } from "@mui/material";
 import { debounce } from "debounce";
-import GovtBanner from "../../components/GovtBanner";
-import SelectionItem from "../../components/SelectionItem";
 import SearchIcon from "@mui/icons-material/Search";
 import { toast } from "react-toastify";
-import { getImages } from "@/services/utils";
+import { getImages } from "../../services/utils";
+import Breadcrumb from "../../components/Breadcrumb";
+import { MDBListGroup } from "mdbreact";
+import ListItem from "../../components/ListItem";
+import { dateInYyyyMmDdHhMmSs } from "../completed-entries";
+import moment from "moment";
+import Banner from "../../components/Banner";
 
 const SavedEntries = ({ params }) => {
   /* Component States and Refs*/
@@ -34,6 +43,7 @@ const SavedEntries = ({ params }) => {
   const _currLocation = useSelector(
     (state) => state?.userData?.currentLocation
   );
+  const [fileUploading, setFileUploading] = useState(false);
   const [limit, setLimit] = useState(5);
   const [hydrated, setHydrated] = React.useState(false);
   const [citizens, setCitizens] = useState(_currLocation?.citizens || []);
@@ -78,7 +88,7 @@ const SavedEntries = ({ params }) => {
       setPrevSubmissions(paginatedSubmissions);
       prevTempSubmissions.current = paginatedSubmissions;
     }
-  }, [currPage]);
+  }, [currPage, submissions]);
 
   useEffect(() => {
     if (searchQuery?.length) {
@@ -118,42 +128,95 @@ const SavedEntries = ({ params }) => {
   });
 
   const onMediaUpload = useCallback(async (el) => {
+
+    setFileUploading(true);
     let newSubmission = Object.assign({}, el);
-    let landRecords, rorRecords;
-    console.log(el);
+    let landRecords, rorRecords, landSuccess = false, rorSuccess = false;
 
     let landRecordsBlob = await getImages(`${el.spdpVillageId}_${el.citizenId}_landImages`);
     let rorRecordsBlob = await getImages(`${el.spdpVillageId}_${el.citizenId}_rorImages`);
     console.log(landRecordsBlob, rorRecordsBlob)
 
     if (landRecordsBlob?.length) {
-      landRecords = await uploadMedia(landRecordsBlob);
-      if (landRecords.err) {
+      try {
+        let landUploadRes = await uploadMedia(landRecordsBlob);
+        if (landUploadRes.err) {
+          toast.error(landRecords?.err?.response?.data?.message);
+        } else {
+          landRecords = landUploadRes;
+          landSuccess = true;
+        };
+      } catch (error) {
         toast.error(landRecords?.err?.response?.data?.message);
       }
     }
+
     if (rorRecordsBlob?.length) {
-      rorRecords = await uploadMedia(rorRecordsBlob);
-      if (rorRecords.err) {
+      try {
+        let rorUploadRes = await uploadMedia(rorRecordsBlob);
+        if (rorUploadRes.err) {
+          toast.error(rorRecords?.err?.response?.data?.message);
+        } else {
+          rorRecords = rorUploadRes;
+          rorSuccess = true;
+        }
+      } catch (err) {
         toast.error(rorRecords?.err?.response?.data?.message);
       }
     }
+
+
+    // if (el.submissionData.landRecords) {
+    //   try {
+    //     let landUploadRes = await uploadMedia(el.submissionData.landRecords);
+    //     console.log({ landUploadRes })
+    //     if (landUploadRes.err) {
+    //       toast.error(landRecords?.err?.response?.data?.message);
+    //     } else {
+    //       landRecords = landUploadRes;
+    //       landSuccess = true;
+    //     };
+    //   } catch (error) {
+    //     toast.error(landRecords?.err?.response?.data?.message);
+    //   }
+    // }
+    // if (el.submissionData.rorRecords) {
+    //   let rorUploadRes = await uploadMedia(el.submissionData.rorRecords);
+    //   console.log({ rorUploadRes })
+    //   if (rorUploadRes.err) {
+    //     toast.error(rorUploadRes?.err?.response?.data?.message);
+    //   } else {
+    //     rorRecords = rorUploadRes;
+    //     rorSuccess = true;
+    //   }
+    // }
     newSubmission = {
       ...newSubmission,
       submissionData: {
         ...newSubmission?.submissionData,
         landRecords,
         rorRecords,
-        imageUploaded: true,
+        imageUploaded: rorSuccess && landSuccess,
       },
     };
     dispatch(updateCitizenFormData(newSubmission));
+    setFileUploading(false);
   }, []);
-  console.log("pevSubmissions : ", prevSubmissions);
+
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Home", to: "/" },
+      { label: `${_currLocation.villageName}`, to: "/survey" },
+      { label: "Saved Entries" },
+    ],
+    []
+  );
+
+  console.log({ prevSubmissions });
   return !hydrated ? null : (
     <div className={styles.container} ref={containerRef}>
-      <GovtBanner sx={{ paddingTop: "1rem" }} />
-      <CommonHeader
+      <Banner />
+      {/* <CommonHeader
         onBack={() => router.back()}
         text={`${_currLocation.villageName}`}
         subText={`Saved Entries`}
@@ -162,11 +225,13 @@ const SavedEntries = ({ params }) => {
           justifyContent: "space-between !important",
           padding: "2rem 1rem",
         }}
-      />
+      /> */}
+
+      <Breadcrumb items={breadcrumbItems} />
 
       <div
         className={
-          styles.citizenContainer + ` animate__animated animate__fadeInUp`
+          styles.citizenContainer + ` animate__animated animate__fadeInUp pb-2`
         }
       >
         <div className={styles.submissionContainer}>
@@ -180,7 +245,7 @@ const SavedEntries = ({ params }) => {
             sx={{
               marginBottom: "2rem",
               border: "none",
-              border: "2px solid #007922",
+              // border: "2px solid #007922",
               borderRadius: "1rem",
             }}
             fullWidth
@@ -192,30 +257,45 @@ const SavedEntries = ({ params }) => {
               ),
             }}
           />
+          {fileUploading && "loading"}
           {fetching && <CircularProgress color="success" />}
-          {!fetching &&
-            prevSubmissions?.length > 0 &&
-            prevSubmissions?.map((el) => (
-              <SelectionItem
-                key={el.citizenId}
-                leftImage={"/assets/citizen.png"}
-                //rightImage={"/assets/upload-icon.png"}
-                rightActionLogo={"/assets/upload-icon.png"}
-                mainText={el?.submissionData?.parentName}
-                onSubBtnClick={
-                  el?.submissionData?.imageUploaded
-                    ? null
-                    : () => onMediaUpload(el)
-                }
-                sx={{ background: "#fff", marginBottom: "1rem" }}
-                mode={1}
-                imgWidth="70%"
-                onClick={() => {
-                  dispatch(setCurrentCitizen(el));
-                  router.push(`/citizen-survey`);
-                }}
-              />
-            ))}
+          <MDBListGroup style={{ minWidth: "22rem" }} className="mb-1" light>
+            {!fetching &&
+              prevSubmissions?.length > 0 &&
+              prevSubmissions?.map((el) => (
+                <ListItem
+                  // <SelectionItem
+                  key={el.citizenId}
+                  leftImage={"/assets/citizen.svg"}
+                  //rightImage={"/assets/upload-icon.png"}
+                  secondaryLoading={fileUploading}
+                  secondaryImage={el?.submissionData?.imageUploaded ? null : "/assets/upload-icon.png"}
+
+                  mainSubtext={moment(el?.capturedAt).format(
+                    "DD MMM YYYY, hh:mm a"
+                  )}
+                  mainText={el?.submissionData?.parentName}
+                  onSecondaryAction={
+
+                    el?.submissionData?.imageUploaded
+                      ? null
+                      : () => onMediaUpload(el)
+                  }
+                  sx={{
+                    background: "#fff",
+                    marginBottom: "0.5rem",
+                    padding: "0.5rem",
+                    border: "1px solid lightgray",
+                  }}
+                  mode={1}
+                  imgWidth="70%"
+                  onClick={() => {
+                    dispatch(setCurrentCitizen(el));
+                    router.push(`/citizen-survey`);
+                  }}
+                />
+              ))}
+          </MDBListGroup>
         </div>
         {!searchQuery && !fetching && (
           <Pagination

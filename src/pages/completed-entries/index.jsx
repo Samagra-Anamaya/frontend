@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./index.module.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
@@ -16,15 +16,15 @@ import {
   searchCitizen,
 } from "../../services/api";
 import Pagination from "@mui/material/Pagination";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
 import { TextField, InputAdornment, CircularProgress } from "@mui/material";
 import { debounce } from "debounce";
-import GovtBanner from "../../components/GovtBanner";
-import SelectionItem from "../../components/SelectionItem";
+
 import SearchIcon from "@mui/icons-material/Search";
+import { MDBListGroup } from "mdbreact";
+import ListItem from "../../components/ListItem";
+import Banner from "../../components/Banner";
+import Breadcrumb from "../../components/Breadcrumb";
+import moment from "moment";
 
 const CompletedEntries = ({ params }) => {
   /* Component States and Refs*/
@@ -138,7 +138,7 @@ const CompletedEntries = ({ params }) => {
     // The function takes a Date object as a parameter and formats the date as YYYY-MM-DD hh:mm:ss.
     // 👇️ 2023-04-11 16:21:23 (yyyy-mm-dd hh:mm:ss)
     //console.log(dateInYyyyMmDdHhMmSs(new Date()));
-
+  
     //  👇️️ 2025-05-04 05:24:07 (yyyy-mm-dd hh:mm:ss)
     // console.log(dateInYyyyMmDdHhMmSs(new Date('May 04, 2025 05:24:07')));
     // Date divider
@@ -158,11 +158,12 @@ const CompletedEntries = ({ params }) => {
       ].join(":")
     );
   }
-
+const breadcrumbItems=useMemo(()=>([{label:"Home" ,to:"/"},{label:_currLocation?.villageName,to:"/survey"},{label:"Completed Entries"}]),[_currLocation?.villageName])
   return !hydrated ? null : (
     <div className={styles.container}>
-      <GovtBanner sx={{ paddingTop: "2rem" }} />
-      <CommonHeader
+      <Banner/>
+      <Breadcrumb items={breadcrumbItems}/>
+      {/* <CommonHeader
         onBack={() => router.back()}
         text={`${_currLocation.villageName}`}
         subText={`Completed Entries`}
@@ -171,11 +172,11 @@ const CompletedEntries = ({ params }) => {
           justifyContent: "space-between !important",
           padding: "2rem 1rem",
         }}
-      />
+      /> */}
 
       <div
         className={
-          styles.citizenContainer + ` animate__animated animate__fadeInUp`
+          styles.citizenContainer + ` animate__animated animate__fadeInUp p-2`
         }
       >
         <div className={styles.submissionContainer}>
@@ -187,9 +188,9 @@ const CompletedEntries = ({ params }) => {
             value={searchQuery}
             onChange={searchCitizenSubmission}
             sx={{
-              marginBottom: "2rem",
+              marginBottom: ".75rem",
               border: "none",
-              border: "2px solid #007922",
+              // border: "2px solid #007922",
               borderRadius: "1rem",
             }}
             fullWidth
@@ -202,19 +203,22 @@ const CompletedEntries = ({ params }) => {
             }}
           />
           {fetching && <CircularProgress color="success" />}
+          <MDBListGroup style={{ minWidth: '22rem' }} light>
           {!fetching &&
             prevSubmissions?.length > 0 &&
             prevSubmissions?.map((el) => (
-              <SelectionItem
+              <ListItem
                 key={el.id}
                 onSubBtnClick={()=>{
                   console.log("sub btn clicked")
               }}
-                leftImage={"/assets/citizen.png"}
+                leftImage={"/assets/citizen.svg"}
                 rightImage={"/assets/verified.png"}
                 mainText={el?.submissionData?.beneficiaryName}
-                mainSubtext={dateInYyyyMmDdHhMmSs(new Date(el?.updatedAt))}
-                sx={{ background: "#fff", marginBottom: "1rem" }}
+                mainSubtext={moment(el?.updatedAt).format(
+                  "DD MMM YYYY, hh:mm a"
+                )}
+                sx={{ background: "#fff"}}
                 mode={1}
                 imgWidth={'70%'}
                 onClick={() => {
@@ -223,6 +227,7 @@ const CompletedEntries = ({ params }) => {
                 }}
               />
             ))}
+            </MDBListGroup>
         </div>
         {!searchQuery && (
           <Pagination

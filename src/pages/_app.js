@@ -1,4 +1,4 @@
-import '@/styles/globals.css'
+import '../styles/globals.css'
 import { OfflineSyncProvider } from 'offline-sync-handler-test';
 import { Provider } from 'react-redux';
 import { clearSubmissions, clearSubmissionsFunc, store } from '../redux/store'
@@ -8,6 +8,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { analytics } from '../services/firebase/firebase';
 import { logEvent } from "firebase/analytics";
 import 'animate.css';
+import 'bootstrap-css-only/css/bootstrap.min.css';
+import 'mdbreact/dist/css/mdb.css';
 
 export default function App({ Component, pageProps }) {
   const [hydrated, setHydrated] = useState(false);
