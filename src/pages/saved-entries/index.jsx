@@ -9,7 +9,6 @@ import React, {
 import styles from "./index.module.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import CommonHeader from "../../components/Commonheader";
 import { v4 as uuidv4 } from "uuid";
 import {
   addCitizen,
@@ -27,16 +26,14 @@ import {
 import Pagination from "@mui/material/Pagination";
 import { TextField, InputAdornment, CircularProgress } from "@mui/material";
 import { debounce } from "debounce";
-import GovtBanner from "../../components/GovtBanner";
-import SelectionItem from "../../components/SelectionItem";
 import SearchIcon from "@mui/icons-material/Search";
 import { toast } from "react-toastify";
-import Breadcrumb from "@/components/Breadcrumb";
+import Breadcrumb from "../../components/Breadcrumb";
 import { MDBListGroup } from "mdbreact";
-import ListItem from "@/components/ListItem";
+import ListItem from "../../components/ListItem";
 import { dateInYyyyMmDdHhMmSs } from "../completed-entries";
 import moment from "moment";
-import Banner from "@/components/Banner";
+import Banner from "../../components/Banner";
 
 const SavedEntries = ({ params }) => {
   /* Component States and Refs*/

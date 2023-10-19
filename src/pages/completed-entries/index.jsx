@@ -16,19 +16,14 @@ import {
   searchCitizen,
 } from "../../services/api";
 import Pagination from "@mui/material/Pagination";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
 import { TextField, InputAdornment, CircularProgress } from "@mui/material";
 import { debounce } from "debounce";
-import GovtBanner from "../../components/GovtBanner";
-import SelectionItem from "../../components/SelectionItem";
+
 import SearchIcon from "@mui/icons-material/Search";
 import { MDBListGroup } from "mdbreact";
-import ListItem from "@/components/ListItem";
-import Banner from "@/components/Banner";
-import Breadcrumb from "@/components/Breadcrumb";
+import ListItem from "../../components/ListItem";
+import Banner from "../../components/Banner";
+import Breadcrumb from "../../components/Breadcrumb";
 import moment from "moment";
 
 const CompletedEntries = ({ params }) => {

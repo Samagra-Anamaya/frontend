@@ -13,10 +13,10 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { toast } from "react-toastify";
 import CommonModal from "../../components/Modal";
 import { logEvent } from "firebase/analytics";
-import { analytics } from "@/services/firebase/firebase";
+import { analytics } from "../../services/firebase/firebase";
 import { uploadMedia } from "../../services/api";
-import Banner from "@/components/Banner";
-import Breadcrumb from "@/components/Breadcrumb";
+import Banner from "../../components/Banner";
+import Breadcrumb from "../../components/Breadcrumb";
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
 const SurveyPage = ({ params }) => {

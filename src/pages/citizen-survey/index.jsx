@@ -11,13 +11,12 @@ import Lottie from "react-lottie";
 import { useOfflineSyncContext } from "offline-sync-handler-test";
 import CitizenForm from "../../components/CitizenForm";
 // import QrReader from 'react-qr-scanner'
-import { QrScanner } from "@yudiel/react-qr-scanner";
-import GovtBanner from "../../components/GovtBanner";
+// import { QrScanner } from "@yudiel/react-qr-scanner";
 import { logEvent } from "firebase/analytics";
-import { analytics } from "@/services/firebase/firebase";
-import { compressImage } from "@/services/utils";
-import Banner from "@/components/Banner";
-import Breadcrumb from "@/components/Breadcrumb";
+import { analytics } from "../../services/firebase/firebase";
+import { compressImage } from "../../services/utils";
+import Banner from "../../components/Banner";
+import Breadcrumb from "../../components/Breadcrumb";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 

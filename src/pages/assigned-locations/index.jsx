@@ -7,10 +7,10 @@ import { useDispatch } from "react-redux";
 import GovtBanner from "../../components/GovtBanner";
 import { clearSubmissions, setCurrentLocation } from "../../redux/store";
 import CommonHeader from '../../components/Commonheader';
-import { getEntriesMade } from "@/services/api";
+import { getEntriesMade } from "../../services/api";
 import { logEvent } from "firebase/analytics";
-import { analytics } from "@/services/firebase/firebase";
-import Banner from "@/components/Banner";
+import { analytics } from "../../services/firebase/firebase";
+import Banner from "../../components/Banner";
 
 
 const AssignedLocations = () => {

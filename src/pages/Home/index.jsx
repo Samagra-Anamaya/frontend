@@ -8,12 +8,11 @@ import { userLogin } from "../../services/api";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { login } from '../../redux/store';
-import GovtBanner from '../../components/GovtBanner';
 import { CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
 import { logEvent } from "firebase/analytics";
-import { analytics } from "@/services/firebase/firebase";
-import Banner from "@/components/Banner";
+import { analytics } from "../../services/firebase/firebase";
+import Banner from "../../components/Banner";
 
 const Home = () => {
   const dispatch = useDispatch();
