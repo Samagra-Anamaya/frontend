@@ -13,6 +13,7 @@ import { CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "@/services/firebase/firebase";
+import Banner from "@/components/Banner";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -102,16 +103,14 @@ const Home = () => {
     <div className={styles.root}>
       {loading ?
         <div className={styles.loginContainer + " animate__animated animate__fadeIn"} style={{ alignItems: 'center', justifyContent: 'center' }}>
-          <GovtBanner />
+          <Banner />
         </div>
         :
         <>
-          <div className={styles.loginContainer}>
-            <GovtBanner sx={{ padding: '3rem' }} />
-            <div className={styles.text + " animate__animated animate__fadeInDown"}>
-              <p> Data Collection App</p>
-            </div>
-            <div className={styles.loginFormContainer}>
+          <div className={`${styles.loginContainer} card`}>
+            <Banner />
+            <div className={`${styles.loginFormContainer} my-auto text-left`}>
+              <h3 className="">Data Collection App</h3>
               <p className={styles.loginText}><strong>Login to your account</strong></p>
               <form autoComplete="off" onSubmit={handleSubmit} className={styles.loginForm + " animate__animated animate__fadeInDown"}>
                 <TextField
