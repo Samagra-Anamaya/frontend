@@ -28,7 +28,7 @@ import { TextField, InputAdornment, CircularProgress } from "@mui/material";
 import { debounce } from "debounce";
 import SearchIcon from "@mui/icons-material/Search";
 import { toast } from "react-toastify";
-import { getImages } from "../../services/utils";
+import { getCitizenImageRecords, getImages } from "../../services/utils";
 import Breadcrumb from "../../components/Breadcrumb";
 import { MDBListGroup } from "mdbreact";
 import ListItem from "../../components/ListItem";
@@ -43,6 +43,7 @@ const SavedEntries = ({ params }) => {
   const _currLocation = useSelector(
     (state) => state?.userData?.currentLocation
   );
+  const currCitizen = useSelector((state) => state?.userData?.currentCitizen);
   const [fileUploading, setFileUploading] = useState(false);
   const [limit, setLimit] = useState(5);
   const [hydrated, setHydrated] = React.useState(false);
@@ -131,10 +132,11 @@ const SavedEntries = ({ params }) => {
 
     setFileUploading(true);
     let newSubmission = Object.assign({}, el);
-    let landRecords, rorRecords, landSuccess = false, rorSuccess = false;
+    let landSuccess = false, rorSuccess = false;
+    let { landRecords, rorRecords } = await getCitizenImageRecords(currCitizen.citizenId);
 
-    let landRecordsBlob = await getImages(`${el.spdpVillageId}_${el.citizenId}_landImages`);
-    let rorRecordsBlob = await getImages(`${el.spdpVillageId}_${el.citizenId}_rorImages`);
+    let landRecordsBlob = landRecords?.images;
+    let rorRecordsBlob = rorRecords?.images;
     console.log(landRecordsBlob, rorRecordsBlob)
 
     if (landRecordsBlob?.length) {
@@ -164,32 +166,6 @@ const SavedEntries = ({ params }) => {
         toast.error(rorRecords?.err?.response?.data?.message);
       }
     }
-
-
-    // if (el.submissionData.landRecords) {
-    //   try {
-    //     let landUploadRes = await uploadMedia(el.submissionData.landRecords);
-    //     console.log({ landUploadRes })
-    //     if (landUploadRes.err) {
-    //       toast.error(landRecords?.err?.response?.data?.message);
-    //     } else {
-    //       landRecords = landUploadRes;
-    //       landSuccess = true;
-    //     };
-    //   } catch (error) {
-    //     toast.error(landRecords?.err?.response?.data?.message);
-    //   }
-    // }
-    // if (el.submissionData.rorRecords) {
-    //   let rorUploadRes = await uploadMedia(el.submissionData.rorRecords);
-    //   console.log({ rorUploadRes })
-    //   if (rorUploadRes.err) {
-    //     toast.error(rorUploadRes?.err?.response?.data?.message);
-    //   } else {
-    //     rorRecords = rorUploadRes;
-    //     rorSuccess = true;
-    //   }
-    // }
     newSubmission = {
       ...newSubmission,
       submissionData: {

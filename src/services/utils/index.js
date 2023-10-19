@@ -219,10 +219,23 @@ export const compressImage = async (imageFile) => {
   return compressedFile;
 }
 
-export const storeImages = async (key, data) => {
-  return await localForage.setItem(key, data);
+export const storeImages = async (data) => {
+  let imageRecords = await localForage.getItem("imageRecords") || [];
+  imageRecords.push(data);
+  return await localForage.setItem("imageRecords", imageRecords);
 }
 
 export const getImages = async (key) => {
-  return await localForage.getItem(key);
+  return await localForage.getItem("imageRecords");
+}
+
+export const getCitizenImageRecords = async (citizenId) => {
+  let imageRecords = await getImages();
+  if (imageRecords?.length > 0) {
+    let landRecords = imageRecords.filter(el => el.citizenId == citizenId)?.[0]
+    let rorRecords = imageRecords.filter(el => el.citizenId == citizenId)?.[0]
+    return { landRecords, rorRecords };
+  }
+  return {}
+
 }

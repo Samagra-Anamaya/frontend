@@ -15,7 +15,7 @@ import CitizenForm from "../../components/CitizenForm";
 import { logEvent } from "firebase/analytics";
 import CircularProgress from "@mui/material/CircularProgress";
 import { analytics } from "../../services/firebase/firebase";
-import { compressImage, getImages, storeImages } from "../../services/utils";
+import { compressImage, getCitizenImageRecords, getImages, storeImages } from "../../services/utils";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
 import moment from "moment";
@@ -79,7 +79,7 @@ const CitizenSurveyPage = ({ params }) => {
     try {
       setLoading(true);
       showSubmittedModal(true);
-      let capturedAt = moment().format("YYYY-MM-DDTHH:mm:ss");
+      let capturedAt = moment().utc();
       for (let el in landImages) {
         const compressedImg = await compressImage(landImages[el].file);
         landImages[el] = compressedImg;
@@ -88,8 +88,20 @@ const CitizenSurveyPage = ({ params }) => {
         const compressedImg = await compressImage(rorImages[el].file);
         rorImages[el] = compressedImg;
       }
-      if (landImages?.length) await storeImages(`${_currLocation.villageCode}_${currCitizen.citizenId}_landImages`, landImages);
-      if (rorImages?.length) await storeImages(`${_currLocation.villageCode}_${currCitizen.citizenId}_rorImages`, rorImages);
+      if (landImages?.length) await storeImages(
+        {
+          citizenId: currCitizen.citizenId,
+          images: landImages,
+          isLandRecord: true
+        }
+      );
+      if (rorImages?.length) await storeImages(
+        {
+          citizenId: currCitizen.citizenId,
+          images: rorImages,
+          isLandRecord: false
+        }
+      );
 
       let newFormState = formState;
       // newFormState['landRecords'] = landImages;
@@ -132,11 +144,10 @@ const CitizenSurveyPage = ({ params }) => {
 
 
   const getImagesFromStore = async () => {
+    let { landRecords, rorRecords } = await getCitizenImageRecords(currCitizen.citizenId);
     if (currCitizen?.submissionData && Object.keys(currCitizen?.submissionData)?.length > 0) {
-      let landImages = await getImages(`${_currLocation.villageCode}_${currCitizen.citizenId}_landImages`);
-      let rorImages = await getImages(`${_currLocation.villageCode}_${currCitizen.citizenId}_rorImages`);
-      if (landImages?.length) setLandImages(landImages)
-      if (rorImages?.length) setRorImages(rorImages)
+      if (landRecords?.images?.length) setLandImages(landRecords.images)
+      if (rorRecords?.images?.length) setRorImages(rorRecords.images)
     }
   }
 

@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import CommonHeader from "../../components/Commonheader";
 import { v4 as uuidv4 } from "uuid";
-import { clearSubmissions, setCurrentCitizen } from "../../redux/store";
+import { clearSubmissions, setCurrentCitizen, updateCitizenFormData } from "../../redux/store";
 import { useOfflineSyncContext } from "offline-sync-handler-test";
 import GovtBanner from "../../components/GovtBanner";
 import SelectionItem from "../../components/SelectionItem";
@@ -17,6 +17,7 @@ import { analytics } from "../../services/firebase/firebase";
 import { uploadMedia } from "../../services/api";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
+import { getCitizenImageRecords } from "../../services/utils";
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
 const SurveyPage = ({ params }) => {
@@ -63,6 +64,8 @@ const SurveyPage = ({ params }) => {
     }
   }
 
+  console.log(submissions)
+
   useEffect(() => {
     checkSavedRequests();
   }, []);
@@ -94,19 +97,19 @@ const SurveyPage = ({ params }) => {
         let newSubmission = Object.assign({}, submission);
 
         if (!submission?.submissionData.imageUploaded) {
-          let landRecords, rorRecords;
+          let { landRecords, rorRecords } = await getCitizenImageRecords(submission.citizenId);
 
-          if (submission.submissionData.landRecords) {
+          if (landRecords?.images?.length) {
             landRecords = await uploadMedia(
-              submission.submissionData.landRecords
+              landRecords?.images
             );
             if (landRecords.err) {
               toast.error(landRecords?.err?.response?.data?.message);
             }
           }
-          if (submission.submissionData.rorRecords) {
+          if (rorRecords?.images?.length) {
             rorRecords = await uploadMedia(
-              submission.submissionData.rorRecords
+              rorRecords?.images
             );
             if (rorRecords.err) {
               toast.error(rorRecords?.err?.response?.data?.message);
@@ -122,7 +125,7 @@ const SurveyPage = ({ params }) => {
             },
           };
           newSubmissionData.push(newSubmission);
-          // dispatch(updateCitizenFormData(newSubmission));
+          dispatch(updateCitizenFormData(newSubmission));
         } else {
           newSubmissionData.push(newSubmission);
         }
@@ -167,7 +170,7 @@ const SurveyPage = ({ params }) => {
         } else {
           alert(
             "An error occured while submitting form. Please try again \nError String : " +
-              JSON.stringify(response)
+            JSON.stringify(response)
           );
           showSubmitModal(false);
           setLoading(false);
@@ -185,7 +188,7 @@ const SurveyPage = ({ params }) => {
     }
   };
 
-  const breadcrumbItems=useMemo(()=>([{label:"Home" ,to:"/"},{label:_currLocation?.villageName}]),[_currLocation?.villageName])
+  const breadcrumbItems = useMemo(() => ([{ label: "Home", to: "/" }, { label: _currLocation?.villageName }]), [_currLocation?.villageName])
   return !hydrated ? null : (
     <div className={styles.container} ref={containerRef}>
       <Banner />
@@ -200,7 +203,7 @@ const SurveyPage = ({ params }) => {
           margin: "2rem !important",
         }}
       /> */}
-     
+
       <div className="px-3">
         <SelectionItem
           key={_currLocation.id}
