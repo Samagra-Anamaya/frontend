@@ -17,7 +17,7 @@ import { analytics } from "../../services/firebase/firebase";
 import { uploadMedia } from "../../services/api";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
-import { getCitizenImageRecords } from "../../services/utils";
+import { getCitizenImageRecords, removeCitizenImageRecord } from "../../services/utils";
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
 const SurveyPage = ({ params }) => {
@@ -126,6 +126,7 @@ const SurveyPage = ({ params }) => {
           };
           newSubmissionData.push(newSubmission);
           dispatch(updateCitizenFormData(newSubmission));
+          await removeCitizenImageRecord(submission.citizenId);
         } else {
           newSubmissionData.push(newSubmission);
         }

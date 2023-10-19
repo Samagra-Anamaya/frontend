@@ -232,10 +232,18 @@ export const getImages = async (key) => {
 export const getCitizenImageRecords = async (citizenId) => {
   let imageRecords = await getImages();
   if (imageRecords?.length > 0) {
-    let landRecords = imageRecords.filter(el => el.citizenId == citizenId)?.[0]
-    let rorRecords = imageRecords.filter(el => el.citizenId == citizenId)?.[0]
+    let landRecords = imageRecords.filter(el => (el.citizenId == citizenId && el.isLandRecord))?.[0]
+    let rorRecords = imageRecords.filter(el => (el.citizenId == citizenId && !el.isLandRecord))?.[0]
     return { landRecords, rorRecords };
   }
   return {}
 
+}
+
+export const removeCitizenImageRecord = async (citizenId) => {
+  let images = await getImages();
+  if (images?.length > 0) {
+    let imageRecords = images.filter(el => el.citizenId != citizenId);
+    await localForage.setItem("imageRecords", imageRecords);
+  }
 }

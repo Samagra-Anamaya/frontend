@@ -48,9 +48,9 @@ const CitizenForm = (props) => {
                 activeStep={activeStep}
                 sx={{ width: '170vw', marginRight: '-85vw', marginBottom: '1rem' }}
             />
-            
+
             {
-               
+
                 activeStep == 0 && <form onSubmit={(e) => { e.preventDefault(), setActiveStep(1) }} className={styles.userForm}>
                     {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
                         <InputLabel id="aadhar-select-label">Is Aadhaar Available?</InputLabel>
@@ -68,7 +68,7 @@ const CitizenForm = (props) => {
                             <MenuItem value={false}>No</MenuItem>
                         </Select>
                     </FormControl> : <TextField
-                        type={"text"}
+                        type={"number"}
                         variant="standard"
                         label={"Is Aadhaar Available?"}
                         value={formState?.isAadhaarAvailable ? 'Yes' : 'No'}
