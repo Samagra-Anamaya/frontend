@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styles from "./index.module.scss";
 import {
     TextField,
@@ -15,13 +15,15 @@ import MobileStepper from '@mui/material/MobileStepper';
 import ImageUploading from 'react-images-uploading';
 
 import "react-datepicker/dist/react-datepicker.css";
-import moment from "moment";
 import { toast } from "react-toastify";
-import { MDBContainer } from "mdbreact";
+import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
+import { Carousel } from 'react-responsive-carousel';
+import ImageViewer from 'react-simple-image-viewer';
 
 const CitizenForm = (props) => {
     const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
-
+    const [currentImage, setCurrentImage] = useState(0);
+    const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
 
     console.log("FORM EDITABLE -->", formEditable)
@@ -39,6 +41,33 @@ const CitizenForm = (props) => {
         setRorImages(imageList);
     };
 
+    const openImageViewer = useCallback((index) => {
+        setCurrentImage(index);
+        setIsViewerOpen(true);
+    }, []);
+
+    const closeImageViewer = () => {
+        setCurrentImage(0);
+        setIsViewerOpen(false);
+    };
+
+    const getRecordImages = async () => {
+        if (formState?.landRecords?.length) {
+            let landImages = formState?.landRecords;
+
+
+        }
+        if (formState?.rorRecords?.length) {
+            let rorImages = formState?.rorRecords;
+        }
+    }
+
+    useEffect(() => {
+
+
+    },)
+
+    console.log("land ->", landImages)
     return (
         <>
             <MobileStepper
@@ -68,7 +97,7 @@ const CitizenForm = (props) => {
                             <MenuItem value={false}>No</MenuItem>
                         </Select>
                     </FormControl> : <TextField
-                        type={"number"}
+                        type={"text"}
                         variant="standard"
                         label={"Is Aadhaar Available?"}
                         value={formState?.isAadhaarAvailable ? 'Yes' : 'No'}
@@ -128,14 +157,25 @@ const CitizenForm = (props) => {
                     {landImages.length > 0 && !formEditable && <div>
                         <p>Land Record Images</p>
                         <div>
-                            {landImages?.map(el => {
+                            {landImages?.map((el, index) => {
                                 let objectURL = URL.createObjectURL(el);
                                 console.log(objectURL)
-                                return <img src={objectURL} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                                return <img src={objectURL} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
                             })}
                         </div>
+                        {isViewerOpen && (
+                            <ImageViewer
+                                src={landImages.map(el => URL.createObjectURL(el))}
+                                currentIndex={currentImage}
+                                disableScroll={false}
+                                closeOnClickOutside={true}
+                                onClose={closeImageViewer}
+                                backgroundStyle={{ background: '#fff', zIndex: 10, border: '5px solid #017922' }}
+                                closeComponent={<p style={{ fontSize: '3rem', color: '#000', opacity: 1, paddingRight: '1rem' }}>X</p>}
+                            />
+                        )}
                     </div>}
-                    {formState?.landTitleSerialNumber && formEditable && <ImageUploading
+                    {formState?.landTitleSerialNumber && formEditable && <><ImageUploading
                         multiple
                         value={landImages}
                         onChange={handleLandImages}
@@ -158,19 +198,42 @@ const CitizenForm = (props) => {
                                 >
                                     Upload Land Records
                                 </Button>
+                                {/* <Carousel>
+                                    {imageList.map((image, index) => (
+                                        <div key={index} className="image-item">
+                                            <div className="image-item__btn-wrapper">
+                                                <Button color="error" variant="outlined" onClick={() => onImageRemove(index)}>Remove</Button>
+                                            </div>
+                                            <img src={image['land_records']} alt="" width="100" />
+                                        </div>
+                                    ))}
+                                </Carousel> */}
                                 <div className={styles.imagePreviewContainer}>
                                     {imageList.map((image, index) => (
                                         <div key={index} className="image-item">
-                                            <img src={image['land_records']} alt="" width="100" />
+                                            <img src={image['land_records']} alt="" width="100" onClick={() => openImageViewer(index)} />
                                             <div className="image-item__btn-wrapper">
                                                 <Button color="error" variant="outlined" onClick={() => onImageRemove(index)}>Remove</Button>
                                             </div>
                                         </div>
                                     ))}
+                                    {isViewerOpen && (
+                                        <ImageViewer
+                                            src={imageList.map(el => el['land_records'])}
+                                            currentIndex={currentImage}
+                                            disableScroll={false}
+                                            closeOnClickOutside={true}
+                                            onClose={closeImageViewer}
+                                            backgroundStyle={{ background: '#fff', zIndex: 10, border: '5px solid #017922' }}
+                                            closeComponent={<p style={{ fontSize: '3rem', color: '#000', opacity: 1, paddingRight: '1rem' }}>X</p>}
+                                        />
+                                    )}
                                 </div>
                             </div>
                         )}
-                    </ImageUploading>}
+                    </ImageUploading>
+                    </>
+                    }
                     <TextField
                         variant='standard'
                         label={"Claimant Name"}
@@ -394,12 +457,23 @@ const CitizenForm = (props) => {
                                 <div className={styles.imagePreviewContainer}>
                                     {imageList.map((image, index) => (
                                         <div key={index} className="image-item">
-                                            <img src={image['ror_records']} alt="" width="100" />
+                                            <img src={image['ror_records']} alt="" width="100" onClick={() => openImageViewer(index)} />
                                             <div className="image-item__btn-wrapper">
                                                 <Button variant="outlined" color="error" onClick={() => onImageRemove(index)}>Remove</Button>
                                             </div>
                                         </div>
                                     ))}
+                                    {isViewerOpen && (
+                                        <ImageViewer
+                                            src={imageList.map(el => el['ror_records'])}
+                                            currentIndex={currentImage}
+                                            disableScroll={false}
+                                            closeOnClickOutside={true}
+                                            onClose={closeImageViewer}
+                                            backgroundStyle={{ background: '#fff', zIndex: 10, border: '5px solid #017922' }}
+                                            closeComponent={<p style={{ fontSize: '3rem', color: '#000', opacity: 1, paddingRight: '1rem' }}>X</p>}
+                                        />
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -407,13 +481,24 @@ const CitizenForm = (props) => {
                     {rorImages.length > 0 && !formEditable && <div>
                         <p>ROR Record Images</p>
                         <div>
-                            {rorImages?.map(el => {
+                            {rorImages?.map((el, index) => {
                                 console.log("landrecord ->", el);
                                 let objectURL = URL.createObjectURL(el);
                                 console.log(objectURL)
-                                return <img src={objectURL} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                                return <img src={objectURL} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
                             })}
                         </div>
+                        {isViewerOpen && (
+                            <ImageViewer
+                                src={rorImages.map(el => URL.createObjectURL(el))}
+                                currentIndex={currentImage}
+                                disableScroll={false}
+                                closeOnClickOutside={true}
+                                onClose={closeImageViewer}
+                                backgroundStyle={{ background: '#fff', zIndex: 10, border: '5px solid #017922' }}
+                                closeComponent={<p style={{ fontSize: '3rem', color: '#000', opacity: 1, paddingRight: '1rem' }}>X</p>}
+                            />
+                        )}
                     </div>}
                 </> : <></>}
                 {!submittedModal && formEditable && <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Submit</Button>}

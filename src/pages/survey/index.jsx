@@ -275,7 +275,7 @@ const SurveyPage = ({ params }) => {
               user_id: userData?.user?.user?.username,
             });
           }}
-          leftImage={"/assets/assessment.png"}
+          leftImage={"/assets/savedEntries.png"}
           rightImage={"/assets/circleArrow.png"}
           mainText={"View Saved Entries"}
           href="/saved-entries"
@@ -301,7 +301,7 @@ const SurveyPage = ({ params }) => {
         />
       </div>
       {submitModal && (
-        <CommonModal sx={{ maxHeight: "30vh", overflow: "scroll" }}>
+        <CommonModal sx={{ maxHeight: "50vh", maxWidth: '80vw', overflow: "scroll" }}>
           {loading ? (
             <div style={{ ...modalStyles.container, justifyContent: "center" }}>
               <CircularProgress color="success" />

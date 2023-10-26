@@ -19,6 +19,7 @@ import { compressImage, getCitizenImageRecords, getImages, storeImages } from ".
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
 import moment from "moment";
+import { MobileStepper } from "@mui/material";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -43,6 +44,8 @@ const CitizenSurveyPage = ({ params }) => {
   const [formState, setFormState] = useState({});
   const [landImages, setLandImages] = useState([]);
   const [rorImages, setRorImages] = useState([]);
+  const [totalSteps, setTotalSteps] = useState(0);
+  const [activeStep, setActiveStep] = useState(0);
   const user = useSelector((state) => state?.userData?.user?.user);
   const _currLocation = useSelector(
     (state) => state?.userData?.currentLocation
@@ -73,6 +76,7 @@ const CitizenSurveyPage = ({ params }) => {
     getImagesFromStore();
   }, []);
 
+
   /* Util Functions */
   const handleSubmit = async () => {
     if (loading) return;
@@ -80,12 +84,16 @@ const CitizenSurveyPage = ({ params }) => {
       setLoading(true);
       showSubmittedModal(true);
       let capturedAt = moment().utc();
+      setTotalSteps((landImages?.length || 0) + (rorImages?.length || 0))
       for (let el in landImages) {
         const compressedImg = await compressImage(landImages[el].file);
+        setActiveStep(Number(el) + 1);
         landImages[el] = compressedImg;
       }
       for (let el in rorImages) {
         const compressedImg = await compressImage(rorImages[el].file);
+        setActiveStep((landImages?.length || 0) + Number(el) + 1);
+
         rorImages[el] = compressedImg;
       }
       if (landImages?.length) await storeImages(
@@ -192,7 +200,7 @@ const CitizenSurveyPage = ({ params }) => {
 
 
         {submittedModal && (
-          <CommonModal sx={{ maxHeight: "50vh", overflow: "scroll" }}>
+          <CommonModal sx={{ maxHeight: "55vh", maxWidth: '90vw', overflow: "scroll", padding: '1rem' }}>
             {loading ? <div style={{
               display: "flex",
               flexDirection: "column",
@@ -200,7 +208,19 @@ const CitizenSurveyPage = ({ params }) => {
               height: '100%',
               justifyContent: "center",
               alignItems: "center",
-            }}><CircularProgress color="success" size={50} /> </div> :
+            }}>
+              <CircularProgress color="success" size={50} />
+              <p style={{ textAlign: 'center', padding: '2rem 0rem' }}>Please wait while we compress and optimize images</p>
+              <MobileStepper
+                variant="progress"
+                steps={totalSteps}
+                position="static"
+                activeStep={activeStep}
+                sx={{ width: '130vw', marginRight: '-63vw', marginBottom: '1rem' }}
+              />
+              <p>{activeStep}/{totalSteps}</p>
+
+            </div> :
               <div className={styles.submitModal}>
                 <div>
                   <Lottie
