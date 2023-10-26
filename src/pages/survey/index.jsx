@@ -121,7 +121,7 @@ const SurveyPage = ({ params }) => {
       const response = await offlinePackage?.sendRequest(config);
       if (response && Object.keys(response)?.length) {
         // dispatch(saveCitizenFormData({ id: currCitizen.citizenId, data: formState, capturedAt: capturedAt }))
-        //  dispatch(clearSubmissions(_currLocation?.villageCode));
+        dispatch(clearSubmissions(_currLocation?.villageCode));
         setLoading(false);
         showSubmitModal(false);
         logEvent(analytics, "submission_successfull", {

@@ -51,45 +51,23 @@ export default function App({ Component, pageProps }) {
       // setTimeout(() => {
       //   removeCitizenImageRecord(response?.config?.meta?.citizenId)
       // }, 300);
-      if (images.length <= 1) {
-        setTimeout(()=>{
-          submitData(response);
-        },1000)
+      // if (images.length <= 1) {
+      //   setTimeout(()=>{
+      //     submitData(response);
+      //   },1000)
         
-      }
+      // }
     }
-    // toast(`☁️  Village ${el}'s data synced with server `, {
-    //   position: "top-center",
-    //   autoClose: 2500,
-    //   hideProgressBar: false,
-    //   closeOnClick: true,
-    //   pauseOnHover: true,
-    //   draggable: true,
-    //   progress: undefined,
-    //   theme: "light",
-    // });
-    // for (let el in response?.config?.data) {
-    //   toast(`☁️  Village ${el}'s data synced with server `, {
-    //     position: "top-center",
-    //     autoClose: 2500,
-    //     hideProgressBar: false,
-    //     closeOnClick: true,
-    //     pauseOnHover: true,
-    //     draggable: true,
-    //     progress: undefined,
-    //     theme: "light",
-    //   });
-    // }
     console.log(response?.data?.status);
-    // if (response?.data?.status == 201) {
-    //   console.log(
-    //     "Clearing Submission for ->",
-    //     Object.keys(response?.config?.data)?.[0]
-    //   );
-    //   store.dispatch(
-    //     clearSubmissions(Object.keys(response?.config?.data)?.[0])
-    //   );
-    // }
+    if (response?.data?.status == 201) {
+      // console.log(
+      //   "Clearing Submission for ->",
+      //   Object.keys(response?.config?.data)?.[0]
+      // );
+      // store.dispatch(
+      //   clearSubmissions(Object.keys(response?.config?.data)?.[0])
+      // );
+    }
   };
 
   useEffect(() => {

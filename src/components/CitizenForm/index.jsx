@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
 import { Carousel } from 'react-responsive-carousel';
 import ImageViewer from 'react-simple-image-viewer';
+import { validateAadhaar } from "../../services/utils";
 
 const CitizenForm = (props) => {
     const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
@@ -80,7 +81,17 @@ const CitizenForm = (props) => {
 
             {
 
-                activeStep == 0 && <form onSubmit={(e) => { e.preventDefault(), setActiveStep(1) }} className={styles.userForm}>
+                activeStep == 0 && <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (formState?.aadharNumber && !validateAadhaar(formState?.aadharNumber)) {
+                        toast("Please enter a valid Aadhaar Number!", {
+                            type: 'error'
+                        })
+                        return;
+                    }
+                    setActiveStep(1);
+                }}
+                    className={styles.userForm}>
                     {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
                         <InputLabel id="aadhar-select-label">Is Aadhaar Available?</InputLabel>
                         <Select
@@ -356,6 +367,7 @@ const CitizenForm = (props) => {
                         onChange={e => setFormState((prevState) => ({ ...prevState, area: e.target.value }))}
                         value={formState?.area}
                         required
+                        type={'number'}
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
 
@@ -372,6 +384,11 @@ const CitizenForm = (props) => {
                             type: 'error'
                         })
                         return;
+                    } else if (formState?.fraPlotsClaimed == 0) {
+                        toast("Plots claimed cannot be zero!", {
+                            type: 'error'
+                        })
+                        return;
                     }
                     handleSubmit();
                 }}
@@ -379,7 +396,7 @@ const CitizenForm = (props) => {
                 <TextField
                     variant='standard'
                     label={"Plots Claimed Under FRA)"}
-                    onChange={e => setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: e.target.value }))}
+                    onChange={e => { if (Number(e.target.value) <= 20) setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: e.target.value })) }}
                     value={formState?.fraPlotsClaimed}
                     required
                     type={'number'}
@@ -393,7 +410,6 @@ const CitizenForm = (props) => {
                         onChange={e => setFormState((prevState) => ({ ...prevState, [`plotNumber${el + 1}`]: e.target.value }))}
                         value={formState?.[`plotNumber${el + 1}`]}
                         required
-                        type={'number'}
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
                     />
