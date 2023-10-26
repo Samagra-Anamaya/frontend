@@ -376,9 +376,10 @@ export const getOfflineCapableForm = async (formId, dispatch) => {
 
 export const getVillageDetails = async (id) => {
   try {
+    const user = store?.getState()?.userData?.user;  
     let res = await axios.get(BACKEND_SERVICE_URL + `/utils/villageData/${id}`, {
       headers: {
-        Authorization: `Bearer ${USER.token}`
+        Authorization: `Bearer ${user.token}`
       }
     });
     return res.data;
@@ -388,11 +389,11 @@ export const getVillageDetails = async (id) => {
   }
 }
 
-export const getVillageSubmissions = async (id, page) => {
+export const getVillageSubmissions = async (id, page,token) => {
   try {
     let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/${id}?limit=5&page=${page}`, {
       headers: {
-        Authorization: `Bearer ${USER.token}`
+        Authorization: `Bearer ${token}`
       }
     });
     return res.data;
@@ -416,16 +417,35 @@ export const searchCitizen = async (villageId, query) => {
   }
 }
 
-export const getEntriesMade = async (submitterId) => {
+export const getEntriesMade = async (user) => {
   try {
-    let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/enumerator/${submitterId}?page=1&limit=1`, {
+    let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/enumerator/${user?.user?.uniqueUsername}?page=1&limit=1`, {
       headers: {
-        Authorization: `Bearer ${USER.token}`
+        Authorization: `Bearer ${user?.token}`
       }
     });
     return res.data;
   } catch (err) {
     console.log(err);
     return null;
+  }
+}
+
+export const uploadMedia = async (files) => {
+  try {
+    console.log({ files })
+    let data = new FormData();
+    files.forEach(file => {
+      data.append('files', file);
+    })
+    let res = await axios.post(BACKEND_SERVICE_URL + `/upload/multiple`, data, {
+      headers: {
+        Authorization: `Bearer ${USER.token}`
+      }
+    });
+    return res.data.map(images => images?.result?.filename);
+  } catch (err) {
+
+    return { err };
   }
 }

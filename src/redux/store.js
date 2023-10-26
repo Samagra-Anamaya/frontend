@@ -1,6 +1,10 @@
-import { configureStore, createSlice, current } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
+import { configureStore, createSlice, current } from "@reduxjs/toolkit";
+import { cloneDeep, forEach, map } from "lodash";
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
+import { replaceMediaObject } from "./actions/replaceMediaObject";
+import { _updateSubmissionMedia } from "./actions/updateSubmissionMedia";
+// import storage from 'redux-persist-indexeddb-storage';
 
 // const authSlice = createSlice({
 //   name: 'auth',
@@ -29,7 +33,7 @@ import storage from 'redux-persist/lib/storage'; // defaults to localStorage for
 // });
 
 const userDataSlice = createSlice({
-  name: 'userData',
+  name: "userData",
   initialState: {
     isAuthenticated: false,
     user: null,
@@ -39,13 +43,15 @@ const userDataSlice = createSlice({
     forms: {},
     searchQuery: {},
     searchSavedQuery: {},
-    submissions: {}
+    submissions: {},
+    status: "",
+    error: {},
   },
   reducers: {
     login: (state, action) => {
       state.isAuthenticated = true;
       state.user = action.payload;
-      state.assignedLocations = action.payload?.user?.data?.villages
+      state.assignedLocations = action.payload?.user?.data?.villages;
     },
     logoutUser: (state) => {
       state.isAuthenticated = false;
@@ -65,38 +71,87 @@ const userDataSlice = createSlice({
       state.assignedLocations = action.payload;
     },
     addCitizen: (state, action) => {
-      const currLocIndex = state.assignedLocations.findIndex((el) => el.villageCode == state.currentLocation.villageCode)
-      console.log("FIND CURRENT-->", currLocIndex)
-      console.log("Add Citizen --->", current(state.currentLocation), action.payload)
+      const currLocIndex = state.assignedLocations.findIndex(
+        (el) => el.villageCode == state.currentLocation.villageCode
+      );
+      console.log("FIND CURRENT-->", currLocIndex);
+      console.log(
+        "Add Citizen --->",
+        current(state.currentLocation),
+        action.payload
+      );
       let newCurrLocation = {
         ...state.currentLocation,
-        citizens: [...(state?.currentLocation?.citizens || []), { citizenId: action.payload.id }]
-      }
-      state.currentLocation = newCurrLocation
-      state.assignedLocations = [...state.assignedLocations.slice(0, currLocIndex), newCurrLocation, ...state.assignedLocations.slice(currLocIndex + 1)]
+        citizens: [
+          ...(state?.currentLocation?.citizens || []),
+          { citizenId: action.payload.id },
+        ],
+      };
+      state.currentLocation = newCurrLocation;
+      state.assignedLocations = [
+        ...state.assignedLocations.slice(0, currLocIndex),
+        newCurrLocation,
+        ...state.assignedLocations.slice(currLocIndex + 1),
+      ];
     },
     addFormUri: (state, action) => {
-      state.forms = { ...state.forms, [action.payload.formId]: action.payload.formUrl }
+      state.forms = {
+        ...state.forms,
+        [action.payload.formId]: action.payload.formUrl,
+      };
     },
     saveCitizenFormData: (state, action) => {
-      // const currLocIndex = state.assignedLocations.findIndex((el) => el.villageCode == state.currentLocation.villageCode)
-      // console.log("Save citizenFormDat --->", current(state.currentLocation), action.payload)
-      // if (state?.currentLocation?.citizens?.length) {
-      //   let citArray = state?.currentLocation?.citizens;
+      // state.submissions = { ...state?.submissions, [action.payload.spdpVillageId]: [...(state?.submissions?.[action.payload.spdpVillageId] || []), action.payload.formData] }
+      state.submissions = {
+        ...state?.submissions,
+        [action.payload.spdpVillageId]: [
+          ...(state?.submissions?.[action.payload.spdpVillageId] || []),
+          action.payload,
+        ],
+      };
+    },
+    updateCitizenFormData: (state, action) => {
+      let submissionArray = state.submissions[action.payload.spdpVillageId];
+      const submissionIndex = submissionArray.findIndex(
+        (submission) => submission.citizenId === action.payload.citizenId
+      );
 
-      //   const currCitIndex = citArray.findIndex((el) => el.citizenId == action.payload.id)
+      if (submissionIndex !== -1) {
+        submissionArray[submissionIndex] = {
+          ...action.payload,
+        };
+      }
 
-      //   let newCitizenArray = [...citArray.slice(0, currCitIndex), { ...citArray[currCitIndex], status: 'SUBMITTED', submissionData: action.payload.data, capturedAt: action.payload.capturedAt }, ...citArray.slice(currCitIndex + 1)]
-
-      //   let newCurrLocation = {
-      //     ...state.currentLocation,
-      //     citizens: newCitizenArray
-      //   }
-      //   state.currentLocation = newCurrLocation
-      //   state.assignedLocations = [...state.assignedLocations.slice(0, currLocIndex), newCurrLocation, ...state.assignedLocations.slice(currLocIndex + 1)]
-      // }
-      state.submissions = { ...state?.submissions, [action.payload.spdpVillageId]: [...(state?.submissions?.[action.payload.spdpVillageId] || []), action.payload] }
-
+      state.submissions = {
+        ...state.submissions,
+        [action.payload.spdpVillageId]: submissionArray,
+      };
+    },
+    updateSubmissionMedia: (state, action) => {
+      console.log({ state: cloneDeep(state), action });
+      const villageData = map(
+        state?.submissions?.[action?.payload?.villageId],
+        (item, index) => {
+          return item?.citizenId === action?.payload?.citizenId
+            ? {
+                ...item,
+                submissionData: action?.payload?.isLandRecord
+                  ? {
+                      ...item.submissionData,
+                      landRecords: action?.payload?.images,
+                    }
+                  : {
+                      ...item.submissionData,
+                      rorRecords: action?.payload?.images,
+                    },
+              }
+            : item;
+        }
+      );
+      state.submissions = {
+        ...state.submissions,
+        [action.payload.villageId]: villageData,
+      };
     },
     clearSubmissions: (state, action) => {
       let tempState = state?.submissions;
@@ -104,33 +159,152 @@ const userDataSlice = createSlice({
       state.submissions = tempState;
     },
     setCurrentCitizen: (state, action) => {
-      state.currentCitizen = action.payload
+      state.currentCitizen = action.payload;
     },
     updateSearchQuery: (state, action) => {
-      state.searchQuery = { ...state.searchQuery, [action.payload.villageId]: action.payload.query }
+      state.searchQuery = {
+        ...state.searchQuery,
+        [action.payload.villageId]: action.payload.query,
+      };
     },
     updateSearchSavedQuery: (state, action) => {
-      state.searchSavedQuery = { ...state.searchSavedQuery, [action.payload.villageId]: action.payload.query }
+      state.searchSavedQuery = {
+        ...state.searchSavedQuery,
+        [action.payload.villageId]: action.payload.query,
+      };
     },
-  }
-})
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(replaceMediaObject.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        forEach(action?.payload?.result, (fileData) => {
+          const fileMeta = JSON.parse(fileData?.meta);
+          state.submissions[fileMeta.villageId] = map(
+            state.submissions[fileMeta.villageId],
+            (prev) => {
+              if (prev?.citizenId === fileMeta?.citizenId) {
+                if (fileMeta?.isLandRecord)
+                  return {
+                    ...prev,
+                    submissionData: {
+                      ...prev?.submissionData,
+                      landRecords: prev?.submissionData?.landRecords
+                        ? [
+                            ...prev?.submissionData?.landRecords,
+                            fileData.filename,
+                          ]
+                        : [fileData.filename],
+                    },
+                  };
+                else
+                  return {
+                    ...prev,
+                    submissionData: {
+                      ...prev?.submissionData,
+                      rorRecords: prev?.submissionData?.rorRecords
+                        ? [
+                            ...prev?.submissionData?.rorRecords,
+                            fileData.filename,
+                          ]
+                        : [fileData.filename],
+                    },
+                  };
+              }else return prev
+            }
+          );
+        });
+        return state;
+      })
+      .addCase(replaceMediaObject.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      })
+      .addCase(_updateSubmissionMedia.fulfilled,(state,action)=>{
+        console.log("shri ram _updateSubmissionMedia:",{ state: cloneDeep(state), action });
+        forEach(action?.payload, (fileData) => {
+          const fileMeta = JSON.parse(fileData?.meta);
+          state.submissions[fileMeta.villageId] = map(
+            state.submissions[fileMeta.villageId],
+            (prev) => {
+              if (prev?.citizenId === fileMeta?.citizenId) {
+                if (fileMeta?.isLandRecord)
+                  return {
+                    ...prev,
+                    submissionData: {
+                      ...prev?.submissionData,
+                      landRecords: prev?.submissionData?.landRecords
+                        ? [
+                            ...prev?.submissionData?.landRecords,
+                            fileData.filename,
+                          ]
+                        : [fileData.filename],
+                    },
+                  };
+                else
+                  return {
+                    ...prev,
+                    submissionData: {
+                      ...prev?.submissionData,
+                      rorRecords: prev?.submissionData?.rorRecords
+                        ? [
+                            ...prev?.submissionData?.rorRecords,
+                            fileData.filename,
+                          ]
+                        : [fileData.filename],
+                    },
+                  };
+              }else return prev
+            }
+          );
+        });
+        return state;
+        // const villageData = map(
+        //   state?.submissions?.[action?.payload?.villageId],
+        //   (item, index) => {
+        //     return item?.citizenId === action?.payload?.citizenId
+        //       ? {
+        //           ...item,
+        //           submissionData: action?.payload?.isLandRecord
+        //             ? {
+        //                 ...item.submissionData,
+        //                 landRecords: action?.payload?.images,
+        //               }
+        //             : {
+        //                 ...item.submissionData,
+        //                 rorRecords: action?.payload?.images,
+        //               },
+        //         }
+        //       : item;
+        //   }
+        // );
+        // state.submissions = {
+        //   ...state.submissions,
+        //   [action.payload.villageId]: villageData,
+        // };
+      })
+  },
+});
 
 const persistConfig = {
-  key: 'root', // key for the root of the storage
-  storage, // storage to use (e.g., localStorage)
+  key: "root", // key for the root of the storage
+  storage,
+  // storage: storage('myDB') // storage to use (e.g., localStorage)
 };
 
-const persistedUserDataReduces = persistReducer(persistConfig, userDataSlice.reducer);
+const persistedUserDataReduces = persistReducer(
+  persistConfig,
+  userDataSlice.reducer
+);
 
 const store = configureStore({
   reducer: {
-    // Using persisted reducers 
-    userData: persistedUserDataReduces
+    // Using persisted reducers
+    userData: persistedUserDataReduces,
   },
 });
 
 const persistor = persistStore(store);
-
 
 export const {
   login,
@@ -143,7 +317,11 @@ export const {
   setCurrentCitizen,
   updateSearchQuery,
   updateSearchSavedQuery,
-  clearSubmissions
+  clearSubmissions,
+  updateCitizenFormData,
+  updateSubmissionMedia,
 } = userDataSlice.actions;
 
 export { store, persistor };
+
+export const tokenSelector = (state) => state.userData.user.token

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styles from "./index.module.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
@@ -11,293 +11,276 @@ import Lottie from "react-lottie";
 import { useOfflineSyncContext } from "offline-sync-handler-test";
 import CitizenForm from "../../components/CitizenForm";
 // import QrReader from 'react-qr-scanner'
-import { QrScanner } from "@yudiel/react-qr-scanner";
-import GovtBanner from "../../components/GovtBanner";
+// import { QrScanner } from "@yudiel/react-qr-scanner";
 import { logEvent } from "firebase/analytics";
-import { analytics } from "@/services/firebase/firebase";
+import CircularProgress from "@mui/material/CircularProgress";
+import { analytics } from "../../services/firebase/firebase";
+import { compressImage, getCitizenImageRecords, getImages, storeImages } from "../../services/utils";
+import Banner from "../../components/Banner";
+import Breadcrumb from "../../components/Breadcrumb";
+import moment from "moment";
+import { MobileStepper } from "@mui/material";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
 // Lottie Options
 const defaultOptions = {
-    loop: true,
-    autoplay: true,
-    animationData: submissionLottie,
-    rendererSettings: {
-        preserveAspectRatio: "xMidYMid slice",
-    },
+  loop: true,
+  autoplay: true,
+  animationData: submissionLottie,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+  },
 };
 
 const CitizenSurveyPage = ({ params }) => {
-    /* Util Hooks */
-    const { sendRequest } = useOfflineSyncContext();
-    const router = useRouter();
-    const dispatch = useDispatch();
+  /* Util Hooks */
+  const { sendRequest } = useOfflineSyncContext();
+  const router = useRouter();
+  const dispatch = useDispatch();
 
-    /* Use States */
-    const [hydrated, setHydrated] = React.useState(false);
-    const [formState, setFormState] = useState({
-        beneficiaryName: "",
-        aadharNumber: "",
-        dateOfBirth: "",
-        gender: "",
-    });
-    const user = useSelector((state) => state?.userData?.user?.user);
-    const _currLocation = useSelector(
-        (state) => state?.userData?.currentLocation
-    );
-    const currCitizen = useSelector((state) => state?.userData?.currentCitizen);
-    const [submittedModal, showSubmittedModal] = useState(false);
-    const [isMobile, setIsMobile] = useState(true);
-    const [loading, setLoading] = useState(false);
-    const [mode, setMode] = useState(null);
-    const [showForm, setShowForm] = useState(false);
-    const [formEditable, setFormEditable] = useState(false);
+  /* Use States */
+  const [hydrated, setHydrated] = React.useState(false);
+  const [formState, setFormState] = useState({});
+  const [landImages, setLandImages] = useState([]);
+  const [rorImages, setRorImages] = useState([]);
+  const [totalSteps, setTotalSteps] = useState(0);
+  const [activeStep, setActiveStep] = useState(0);
+  const user = useSelector((state) => state?.userData?.user?.user);
+  const _currLocation = useSelector(
+    (state) => state?.userData?.currentLocation
+  );
+  const currCitizen = useSelector((state) => state?.userData?.currentCitizen);
+  const [submittedModal, showSubmittedModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [formEditable, setFormEditable] = useState(false);
 
-    console.log("CURR CITIZEN -->", currCitizen);
+  console.log("CURR CITIZEN -->", currCitizen);
 
-    /* Use Effects */
-    useEffect(() => {
-        setHydrated(true);
-        if (window.innerWidth < 769) setIsMobile(true);
-        else setIsMobile(false);
-        if (currCitizen?.status == "SUBMITTED") {
-            setMode("manual");
-            setFormState(currCitizen.submissionData);
-        } else if (
-            currCitizen?.submissionData &&
-            Object.keys(currCitizen?.submissionData)?.length > 0
-        ) {
-            setMode("manual");
-            setFormState(currCitizen.submissionData);
+
+  /* Use Effects */
+  useEffect(() => {
+    setHydrated(true);
+    if (window.innerWidth < 769) setIsMobile(true);
+    else setIsMobile(false);
+    if (currCitizen?.status == "SUBMITTED") {
+      setFormState(currCitizen.submissionData);
+    } else if (
+      currCitizen?.submissionData &&
+      Object.keys(currCitizen?.submissionData)?.length > 0
+    ) {
+      setFormState(currCitizen.submissionData);
+    }
+    getImagesFromStore();
+  }, []);
+
+
+  /* Util Functions */
+  const handleSubmit = async () => {
+    if (loading) return;
+    try {
+      setLoading(true);
+      showSubmittedModal(true);
+      let capturedAt = moment().utc();
+      setTotalSteps((landImages?.length || 0) + (rorImages?.length || 0))
+      for (let el in landImages) {
+        const compressedImg = await compressImage(landImages[el].file);
+        setActiveStep(Number(el) + 1);
+        landImages[el] = compressedImg;
+      }
+      for (let el in rorImages) {
+        const compressedImg = await compressImage(rorImages[el].file);
+        setActiveStep((landImages?.length || 0) + Number(el) + 1);
+
+        rorImages[el] = compressedImg;
+      }
+      if (landImages?.length) await storeImages(
+        {
+          citizenId: currCitizen.citizenId,
+          images: landImages,
+          isLandRecord: true,
+          villageId:_currLocation.villageCode
         }
-    }, []);
-
-    /* Util Functions */
-    const handleSubmit = async (e) => {
-        if (loading) return;
-        try {
-
-            setLoading(true);
-            e.preventDefault();
-            let capturedAt = new Date();
-            capturedAt.toISOString().slice(0, 19).replace("T", " ");
-            dispatch(
-                saveCitizenFormData({
-                    submissionData: formState,
-                    spdpVillageId: _currLocation.villageCode,
-                    citizenId: currCitizen.citizenId,
-                    submitterId: user.id,
-                    capturedAt,
-                })
-            );
-            setLoading(false);
-            showSubmittedModal(true);
-            logEvent(analytics, "form_saved", {
-                villageId: _currLocation.villageCode,
-                villageName: _currLocation.villageName,
-                user_id: user?.username,
-                app_status: navigator.onLine ? 'online' : 'offline',
-                mode: mode,
-                capturedAt: capturedAt
-            });
-        } catch (err) {
-            console.log(err);
-            setLoading(false);
+      );
+      if (rorImages?.length) await storeImages(
+        {
+          citizenId: currCitizen.citizenId,
+          images: rorImages,
+          isLandRecord: false,
+          villageId:_currLocation.villageCode
         }
-    };
+      );
 
-    const handleScannedAadhaar = async (data) => {
-        if (data?.length) {
-            var XMLParser = require("react-xml-parser");
-            var xml = new XMLParser().parseFromString(data);
-            console.log(xml);
-            let dob = "";
-            let gender = "";
+      let newFormState = formState;
+      // newFormState['landRecords'] = landImages;
+      // newFormState['rorRecords'] = rorImages;
+      newFormState['imageUploaded'] = false;
+      if (!formState?.isAadhaarAvailable) {
+        delete formState?.aadharNumber;
+      }
+      if (!formState?.rorUpdated) {
+        delete formState?.khataNumber;
+        delete formState?.landImages;
+      }
+      if (!formState?.coClaimantAvailable) {
+        delete formState?.coClaimantName;
+      }
 
-            // Handling DOB discrepancy
-            if (xml?.attributes?.dob?.includes("/")) {
-                let dobArr = xml?.attributes?.dob.split("/");
-                dob = `${dobArr[2]}-${dobArr[1]}-${dobArr[0]}`;
-            } else {
-                let dobArr = xml?.attributes?.dob.split("-");
-                dob = `${dobArr[0]}-${dobArr[1]}-${dobArr[2]}`;
+      console.log("Final Submission Object: ", newFormState)
+      dispatch(
+        saveCitizenFormData({
+          submissionData: newFormState,
+          spdpVillageId: _currLocation.villageCode,
+          citizenId: currCitizen.citizenId,
+          submitterId: user.username,
+          capturedAt,
+        })
+      );
+      setLoading(false);
+      logEvent(analytics, "form_saved", {
+        villageId: _currLocation.villageCode,
+        villageName: _currLocation.villageName,
+        user_id: user?.username,
+        app_status: navigator.onLine ? 'online' : 'offline',
+        capturedAt: capturedAt
+      });
+    } catch (err) {
+      console.log(err);
+      setLoading(false);
+    }
+  };
+
+
+  const getImagesFromStore = async () => {
+    let { landRecords, rorRecords } = await getCitizenImageRecords(currCitizen.citizenId);
+    if (currCitizen?.submissionData && Object.keys(currCitizen?.submissionData)?.length > 0) {
+      if (landRecords?.images?.length) setLandImages(landRecords.images)
+      if (rorRecords?.images?.length) setRorImages(rorRecords.images)
+    }
+  }
+
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Home", to: "/" },
+      { label: _currLocation.villageName, to: "/survey" },
+      { label: "Land Survey" },
+    ],
+    [_currLocation.villageName]
+  );
+
+
+
+
+  return !hydrated ? null : (
+    <>
+      <div className={styles.root}>
+        <Banner />
+        <Breadcrumb items={breadcrumbItems} />
+        <CitizenForm
+          formEditable={
+            currCitizen?.status == "SUBMITTED" ||
+              (
+                currCitizen?.submissionData &&
+                Object?.keys(currCitizen?.submissionData)
+              )?.length > 0
+              ? false
+              : true
+          }
+          handleSubmit={handleSubmit}
+          setFormState={setFormState}
+          formState={formState}
+          currCitizen={currCitizen}
+          submittedModal={submittedModal}
+          savedEntries={(currCitizen?.submissionData && Object?.keys(currCitizen?.submissionData)?.length > 0 && currCitizen?.status != "SUBMITTED") || false}
+          rorImages={rorImages}
+          setRorImages={setRorImages}
+          landImages={landImages}
+          setLandImages={setLandImages}
+        />
+
+
+        {submittedModal && (
+          <CommonModal sx={{ maxHeight: "55vh", maxWidth: '90vw', overflow: "scroll", padding: '1rem' }}>
+            {loading ? <div style={{
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              height: '100%',
+              justifyContent: "center",
+              alignItems: "center",
+            }}>
+              <CircularProgress color="success" size={50} />
+              <p style={{ textAlign: 'center', padding: '2rem 0rem' }}>Please wait while we compress and optimize images</p>
+              <MobileStepper
+                variant="progress"
+                steps={totalSteps}
+                position="static"
+                activeStep={activeStep}
+                sx={{ width: '130vw', marginRight: '-63vw', marginBottom: '1rem' }}
+              />
+              <p>{activeStep}/{totalSteps}</p>
+
+            </div> :
+              <div className={styles.submitModal}>
+                <div>
+                  <Lottie
+                    options={defaultOptions}
+                    style={{ marginTop: -40 }}
+                    height={200}
+                    width={200}
+                  />
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    width: "100%",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <p
+                    style={{ fontSize: "1.5rem", marginTop: -40, fontWeight: 600 }}
+                  >
+                    Citizen Data Saved
+                  </p>
+                  <p>You will get edit access after next cycle</p>
+                  <p>Please get the filled form validated by GP/Tehsildar before syncing</p>
+                  <div
+                    onClick={() => router.back()}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      background: "#017922",
+                      height: "3.5rem",
+                      borderRadius: "0.75rem",
+                      color: "#fff",
+                      marginTop: 30,
+                    }}
+                  >
+                    End Survey
+                  </div>
+                </div>
+              </div>
             }
+          </CommonModal>
+        )}
+        <style>
 
-            // Handling gender discrepancy
-            if (xml?.attributes?.gender?.length == 1) {
-                gender =
-                    xml?.attributes?.gender == "F"
-                        ? "female"
-                        : xml?.attributes?.gender == "M"
-                            ? "male"
-                            : "other";
-            } else {
-                gender = xml?.attributes?.gender?.toLowerCase();
-            }
 
-            setFormState({
-                beneficiaryName: xml?.attributes?.name,
-                aadharNumber: xml?.attributes?.uid,
-                dateOfBirth: dob,
-                gender: gender,
-            });
-            setShowForm(true);
-        }
-    };
-
-    //dummy commit
-
-    return !hydrated ? null : (
-        <div className={styles.root}>
-            <GovtBanner />
-            <CommonHeader
-                onBack={() => router.back()}
-                text={"Citizen Survey"}
-                showLogout={false}
-                sx={{
-                    justifyContent: "space-between !important",
-                    padding: "0rem 1rem 1rem 1rem",
-                }}
-            />
-
-            {!mode ? (
-                <>
-                    <div className={styles.collectionMode} onClick={() => {
-                        logEvent(analytics, "mode_selected", {
-                            villageId: _currLocation.villageCode,
-                            villageName: _currLocation.villageName,
-                            user_id: user?.username,
-                            app_status: navigator.onLine ? 'online' : 'offline',
-                            mode: 'qr'
-                        });
-                        setMode("qr")
-                    }}>
-                        <div>
-                            <img src="/assets/qr.png" />
-                        </div>
-                        <p>Scan Aadhar QR</p>
-                        <div>
-                            <span>Scan</span>
-                            <img src="/assets/circleArrowGreen.png" />
-                        </div>
-                    </div>
-                    <div
-                        className={styles.collectionMode}
-                        onClick={() => {
-                            logEvent(analytics, "mode_selected", {
-                                villageId: _currLocation.villageCode,
-                                villageName: _currLocation.villageName,
-                                user_id: user?.username,
-                                app_status: navigator.onLine ? 'online' : 'offline',
-                                mode: 'manual'
-                            });
-                            setMode("manual")
-                        }}
-                    >
-                        <div>
-                            <img src="/assets/docFill.png" />
-                        </div>
-                        <p>Fill Form Manually</p>
-                        <div>
-                            <span>Fill Form</span>
-                            <img src="/assets/circleArrowGreen.png" />
-                        </div>
-                    </div>
-                </>
-            ) : mode == "manual" && !showForm ? (
-                <CitizenForm
-                    mode={mode}
-                    formEditable={
-                        currCitizen?.status == "SUBMITTED" ||
-                            (
-                                currCitizen?.submissionData &&
-                                Object?.keys(currCitizen?.submissionData)
-                            )?.length > 0
-                            ? false
-                            : true
+          {`
+        .MuiInputLabel-outlined {
+        margin-left: -14px;
                     }
-                    handleSubmit={handleSubmit}
-                    setFormState={setFormState}
-                    formState={formState}
-                    currCitizen={currCitizen}
-                    submittedModal={submittedModal}
-                    loading={loading}
-                    savedEntries={(currCitizen?.submissionData && Object?.keys(currCitizen?.submissionData)?.length > 0 && currCitizen?.status != "SUBMITTED") || false}
-                />
-            ) : (
-                !showForm && (
-                    <div className={styles.qrContainer}>
-                        <QrScanner
-                            onDecode={(result) => handleScannedAadhaar(result)}
-                            onError={(error) => console.log(error?.message)}
-                        />
-                        <p>Align QR Code within the scanner</p>
-                    </div>
-                )
-            )}
-
-            {showForm && (
-                <CitizenForm
-                    mode={mode}
-                    formEditable={formEditable}
-                    handleSubmit={handleSubmit}
-                    setFormState={setFormState}
-                    formState={formState}
-                    currCitizen={currCitizen}
-                    submittedModal={submittedModal}
-                    loading={loading}
-                />
-            )}
-
-            {submittedModal && (
-                <CommonModal sx={{ maxHeight: "40vh", overflow: "scroll" }}>
-                    <div className={styles.submitModal}>
-                        <div>
-                            <Lottie
-                                options={defaultOptions}
-                                style={{ marginTop: -40 }}
-                                height={200}
-                                width={200}
-                            />
-                        </div>
-                        <div
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                width: "100%",
-                                justifyContent: "center",
-                                alignItems: "center",
-                            }}
-                        >
-                            <p
-                                style={{ fontSize: "1.5rem", marginTop: -40, fontWeight: 600 }}
-                            >
-                                Citizen Data Saved
-                            </p>
-                            <p>You will get edit access after next cycle</p>
-                            <div
-                                onClick={() => router.back()}
-                                style={{
-                                    width: "100%",
-                                    display: "flex",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    background: "#017922",
-                                    height: "3.5rem",
-                                    borderRadius: "0.75rem",
-                                    color: "#fff",
-                                    marginTop: 30,
-                                }}
-                            >
-                                End Survey
-                            </div>
-                        </div>
-                    </div>
-                </CommonModal>
-            )}
-        </div>
-    );
+                `}
+        </style>
+      </div>
+    </>
+  );
 };
 
 export default CitizenSurveyPage;

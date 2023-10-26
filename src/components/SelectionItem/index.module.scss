@@ -1,12 +1,12 @@
 .container {
     width: 100%;
-    min-height: 10vh;
+    //min-height: 10vh;
     border-radius: 1rem;
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     display: flex;
     flex-direction: row;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    // gap: 1rem;
+    margin-bottom: 1rem;
     transition: all 0.3s ease-in;
     background: #017922;
 
@@ -14,15 +14,15 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 20%;
-        background: #fff;
-        border-radius: 0.5rem;
+        // width: 20%;
+     background: #fff;
+       border-radius: 0.5rem;
         margin: 1rem;
-        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+       // box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 
-        img {
-            width: 70%;
-        }
+        // img {
+        //     width: 70%;
+        // }
     }
 
     & div:nth-child(2) {

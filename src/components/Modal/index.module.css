@@ -1,5 +1,5 @@
 .overlayContainer {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
@@ -38,7 +38,7 @@
 
 @media screen and (max-width: 768px) {
     .container {
-        width: 90%;
+        width: 100vw !important;
         min-height: 45%;
         overflow: hidden;
     }

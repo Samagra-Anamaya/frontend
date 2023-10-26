@@ -27,7 +27,7 @@
         .loginText {
             text-align: center;
             color: #007922;
-            margin: 1rem 0rem 2rem 0rem;
+            margin: 0rem 0rem 2rem 0rem;
             font-size: 1.3rem;
             font-weight: bolder
         }
@@ -37,7 +37,6 @@
             flex-direction: column;
             align-items: center;
             width: 80%;
-
             .loginForm {
                 display: flex;
                 flex-direction: column;

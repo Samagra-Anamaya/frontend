@@ -6,6 +6,8 @@ import { getMedicalAssessments, getPrefillXML, getSubmissionXML } from "../api";
 import axios from "axios";
 // import { userData } from "@/app/pages/Default/page";
 // import { useUserData } from "@/app/hooks/useAuth";
+import imageCompression from 'browser-image-compression';
+import localForage from "localforage";
 
 export const makeHasuraCalls = async (query, userData) => {
   return fetch(process.env.NEXT_PUBLIC_HASURA_URL, {
@@ -202,3 +204,48 @@ export const getFormData = async ({ loading, scheduleId, formSpec, startingForm,
 //   console.log("Trans form:", transformedForm.data)
 //   setToLocalForage(formName, transformedForm.data);
 // }
+
+export const compressImage = async (imageFile) => {
+  const options = {
+    maxSizeMB: 0.1,
+    maxWidthOrHeight: 1920,
+    useWebWorker: true,
+    fileType: 'image/webp'
+  }
+
+  const compressedFile = await imageCompression(imageFile, options);
+  console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+  console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+
+  return compressedFile;
+}
+
+export const storeImages = async (data) => {
+  let imageRecords = await localForage.getItem("imageRecords") || [];
+  imageRecords.push(data);
+  return await localForage.setItem("imageRecords", imageRecords);
+}
+
+export const getImages = async (key) => {
+  return await localForage.getItem("imageRecords");
+}
+
+export const getCitizenImageRecords = async (citizenId) => {
+  let imageRecords = await getImages();
+  if (imageRecords?.length > 0) {
+    let landRecords = imageRecords.filter(el => (el.citizenId == citizenId && el.isLandRecord))?.[0]
+    let rorRecords = imageRecords.filter(el => (el.citizenId == citizenId && !el.isLandRecord))?.[0]
+    return { landRecords, rorRecords };
+  }
+  return {}
+
+}
+
+
+export const removeCitizenImageRecord = async (citizenId) => {
+  let images = await getImages();
+  if (images?.length > 0) {
+    let imageRecords = images.filter(el => el.citizenId != citizenId);
+    await localForage.setItem("imageRecords", imageRecords);
+  }
+}

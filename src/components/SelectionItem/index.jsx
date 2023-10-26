@@ -3,6 +3,8 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import styles from './index.module.scss';
 import Link from 'next/link'
+import { MDBListGroupItem } from "mdbreact";
+import { MDBBadge } from "mdbreact";
 
 const SelectionItem = (props) => {
     const {
@@ -13,15 +15,17 @@ const SelectionItem = (props) => {
         mainSubtext,
         onClick,
         href,
-        imgWidth
+        imgWidth,
+        onSubBtnClick,
+        rightActionLogo=null
     } = props
     const router = useRouter();
 
     return href?.length ?
         (
-            <Link href={href} className={styles.container} onClick={onClick} style={{ ...props.sx, textDecoration: 'none' }}>
-                <div >
-                    <img src={leftImage} />
+            <Link href={href} className={`${styles.container}`} onClick={onClick} style={{ ...props.sx, textDecoration: 'none' }}>
+                <div style={{width:'45px' ,height:'45px'}} >
+                    <img src={leftImage} style={{width:'40px' ,height:'40px'}}  />
                 </div>
                 <div>
                     <p className={styles.mainText}>{mainText}</p>
@@ -34,7 +38,7 @@ const SelectionItem = (props) => {
         ) : (
             <div className={styles.container} onClick={onClick} style={{ ...props.sx }} >
                 <div style={{ width: rightImage ? '' : '40%', margin: rightImage ? '' : '1.5rem' }}>
-                    <img src={leftImage} />
+                    <img src={leftImage} style={{width:'40px' ,height:'40px'}} />
                 </div>
                 <div>
                     <p className={styles.mainText} style={{ color: mode == 1 ? '#017922' : '#fff' }}>{mainText}</p>
@@ -43,7 +47,13 @@ const SelectionItem = (props) => {
                 <div>
                     <img src={rightImage} style={{ width: imgWidth ? imgWidth : '' }} />
                 </div>
+                 {onSubBtnClick && <img src={rightActionLogo} onClick={(ev)=>{
+                    ev.preventDefault();
+                    ev.stopPropagation()
+                    onSubBtnClick()
+                 }} style={{ width: '40px' ,height:'40px' }} /> }
             </div>
+         
         )
 };
 
