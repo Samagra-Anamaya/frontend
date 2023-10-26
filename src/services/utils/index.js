@@ -239,3 +239,12 @@ export const getCitizenImageRecords = async (citizenId) => {
   return {}
 
 }
+
+
+export const removeCitizenImageRecord = async (citizenId) => {
+  let images = await getImages();
+  if (images?.length > 0) {
+    let imageRecords = images.filter(el => el.citizenId != citizenId);
+    await localForage.setItem("imageRecords", imageRecords);
+  }
+}

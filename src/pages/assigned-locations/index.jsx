@@ -24,13 +24,14 @@ const AssignedLocations = () => {
 
   useEffect(() => {
     async function getEntries() {
-      let res = await getEntriesMade(user?.user?.uniqueUsername);
+    console.log({user})
+      let res = await getEntriesMade(user);
       setEntries(res?.result?.totalCount || "NA");
     }
     getEntries();
     setHydrated(true);
     setLocations(assignedLocations || []);
-  }, [])
+  }, [user,assignedLocations])
 
 
   console.log("AL ----->", locations)

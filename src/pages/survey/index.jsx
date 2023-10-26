@@ -1,11 +1,21 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import styles from "./index.module.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import CommonHeader from "../../components/Commonheader";
 import { v4 as uuidv4 } from "uuid";
-import { clearSubmissions, setCurrentCitizen, updateCitizenFormData } from "../../redux/store";
+import {
+  clearSubmissions,
+  setCurrentCitizen,
+  updateCitizenFormData,
+} from "../../redux/store";
 import { useOfflineSyncContext } from "offline-sync-handler-test";
 import GovtBanner from "../../components/GovtBanner";
 import SelectionItem from "../../components/SelectionItem";
@@ -17,7 +27,9 @@ import { analytics } from "../../services/firebase/firebase";
 import { uploadMedia } from "../../services/api";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
-import { getCitizenImageRecords } from "../../services/utils";
+import { getCitizenImageRecords, getImages } from "../../services/utils";
+import { formDataToObject } from "../../utils/formdata-to-object";
+import { replaceMediaObject } from "../../redux/actions/replaceMediaObject";
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
 const SurveyPage = ({ params }) => {
@@ -25,6 +37,7 @@ const SurveyPage = ({ params }) => {
   const offlinePackage = useOfflineSyncContext();
   const userData = useSelector((state) => state?.userData);
   const [loading, setLoading] = useState(false);
+  const [isMediaUploaded, setIsMediaUploaded] = useState(false);
   const _currLocation = useSelector(
     (state) => state?.userData?.currentLocation
   );
@@ -64,7 +77,7 @@ const SurveyPage = ({ params }) => {
     }
   }
 
-  console.log(submissions)
+ 
 
   useEffect(() => {
     checkSavedRequests();
@@ -89,50 +102,14 @@ const SurveyPage = ({ params }) => {
     router.push(`/citizen-survey`);
   };
 
-  const submitData = async () => {
+  const submitData2 = async () => {
     try {
       setLoading(true);
-      let newSubmissionData = [];
-      for (const submission of submissions) {
-        let newSubmission = Object.assign({}, submission);
-
-        if (!submission?.submissionData.imageUploaded) {
-          let { landRecords, rorRecords } = await getCitizenImageRecords(submission.citizenId);
-
-          if (landRecords?.images?.length) {
-            landRecords = await uploadMedia(
-              landRecords?.images
-            );
-            if (landRecords.err) {
-              toast.error(landRecords?.err?.response?.data?.message);
-            }
-          }
-          if (rorRecords?.images?.length) {
-            rorRecords = await uploadMedia(
-              rorRecords?.images
-            );
-            if (rorRecords.err) {
-              toast.error(rorRecords?.err?.response?.data?.message);
-            }
-          }
-          newSubmission = {
-            ...newSubmission,
-            submissionData: {
-              ...newSubmission?.submissionData,
-              landRecords,
-              rorRecords,
-              imageUploaded: true,
-            },
-          };
-          newSubmissionData.push(newSubmission);
-          dispatch(updateCitizenFormData(newSubmission));
-        } else {
-          newSubmissionData.push(newSubmission);
-        }
-      }
+   
       const submissionData = {
-        [_currLocation.villageCode]: newSubmissionData,
+        [_currLocation.villageCode]: submissions,
       };
+      console.log("shri ram: submit2",{ submissionData, submissions });
       const config = {
         method: "POST",
         url: BACKEND_SERVICE_URL + `/submissions/bulk`,
@@ -144,7 +121,7 @@ const SurveyPage = ({ params }) => {
       const response = await offlinePackage?.sendRequest(config);
       if (response && Object.keys(response)?.length) {
         // dispatch(saveCitizenFormData({ id: currCitizen.citizenId, data: formState, capturedAt: capturedAt }))
-        dispatch(clearSubmissions(_currLocation?.villageCode));
+        //  dispatch(clearSubmissions(_currLocation?.villageCode));
         setLoading(false);
         showSubmitModal(false);
         logEvent(analytics, "submission_successfull", {
@@ -154,41 +131,94 @@ const SurveyPage = ({ params }) => {
           app_status: navigator.onLine ? "online" : "offline",
         });
       } else {
-        // Either an error or offline
-        if (!navigator.onLine) {
-          // Submitted Offline
-          // dispatch(saveCitizenFormData({ id: currCitizen.citizenId, data: formState, capturedAt: capturedAt }))
-          setLoading(false);
-          showSubmitModal(false);
-          checkSavedRequests();
-          logEvent(analytics, "submission_queued", {
-            villageId: _currLocation.villageCode,
-            villageName: _currLocation.villageName,
-            user_id: userData?.user?.user?.username,
-            app_status: navigator.onLine ? "online" : "offline",
-          });
-        } else {
-          alert(
-            "An error occured while submitting form. Please try again \nError String : " +
+        toast.error(
+          "An error occured while submitting form. Please try again \nError String : " +
             JSON.stringify(response)
-          );
-          showSubmitModal(false);
-          setLoading(false);
-          checkSavedRequests();
-          logEvent(analytics, "submission_failure", {
-            villageId: _currLocation.villageCode,
-            villageName: _currLocation.villageName,
-            user_id: userData?.user?.user?.username,
-            app_status: navigator.onLine ? "online" : "offline",
-          });
-        }
+        );
+        showSubmitModal(false);
+        setLoading(false);
+        checkSavedRequests();
+        logEvent(analytics, "submission_failure", {
+          villageId: _currLocation.villageCode,
+          villageName: _currLocation.villageName,
+          user_id: userData?.user?.user?.username,
+          app_status: navigator.onLine ? "online" : "offline",
+        });
+        // Either an error or offline
+        // if (!navigator.onLine) {
+        //   // Submitted Offline
+        //   // dispatch(saveCitizenFormData({ id: currCitizen.citizenId, data: formState, capturedAt: capturedAt }))
+        //   setLoading(false);
+        //   showSubmitModal(false);
+        //   checkSavedRequests();
+        //   logEvent(analytics, "submission_queued", {
+        //     villageId: _currLocation.villageCode,
+        //     villageName: _currLocation.villageName,
+        //     user_id: userData?.user?.user?.username,
+        //     app_status: navigator.onLine ? "online" : "offline",
+        //   });
+        // } else {
+        //   alert(
+        //     "An error occured while submitting form. Please try again \nError String : " +
+        //       JSON.stringify(response)
+        //   );
+        //   showSubmitModal(false);
+        //   setLoading(false);
+        //   checkSavedRequests();
+        //   logEvent(analytics, "submission_failure", {
+        //     villageId: _currLocation.villageCode,
+        //     villageName: _currLocation.villageName,
+        //     user_id: userData?.user?.user?.username,
+        //     app_status: navigator.onLine ? "online" : "offline",
+        //   });
+        // }
       }
     } catch (err) {
       console.error("ERR", err);
     }
   };
 
-  const breadcrumbItems = useMemo(() => ([{ label: "Home", to: "/" }, { label: _currLocation?.villageName }]), [_currLocation?.villageName])
+  const submitData = useCallback(async () => {
+    setLoading(true);
+    const images = await getImages();
+
+    for (const _image of images) {
+      let data = new FormData();
+      _image?.images.forEach((file) => {
+        data.append("files", file);
+      });
+
+      data.append("meta", JSON.stringify(_image));
+
+      const config = {
+        method: "POST",
+        url: BACKEND_SERVICE_URL + `/upload/multiple`,
+        meta: _image,
+        data,
+        isFormdata: true,
+        headers: {
+          Authorization: `Bearer ${userData?.user?.token}`,
+        },
+      };
+
+      const response = await offlinePackage?.sendRequest(config);
+      console.log("shri ram:",{ response });
+      
+      if (response?.result)
+        dispatch(replaceMediaObject(response)).then((res) => {
+          console.log("shri ram dispatch then:", { res });
+          if (res.type.includes("fulfilled")) {
+            setIsMediaUploaded(true);
+          }
+        });
+    }
+    setLoading(false);
+  }, []);
+
+  const breadcrumbItems = useMemo(
+    () => [{ label: "Home", to: "/" }, { label: _currLocation?.villageName }],
+    [_currLocation?.villageName]
+  );
   return !hydrated ? null : (
     <div className={styles.container} ref={containerRef}>
       <Banner />
@@ -316,20 +346,38 @@ const SurveyPage = ({ params }) => {
                 submitting
               </p>
               <div style={modalStyles.btnContainer}>
-                <div
-                  style={modalStyles.confirmBtn}
-                  onClick={() => {
-                    logEvent(analytics, "submit_entries_confirm", {
-                      villageId: _currLocation.villageCode,
-                      villageName: _currLocation.villageName,
-                      user_id: userData?.user?.user?.username,
-                      app_status: navigator.onLine ? "online" : "offline",
-                    });
-                    submitData();
-                  }}
-                >
-                  Submit
-                </div>
+                {isMediaUploaded ? (
+                  <div
+                    style={modalStyles.confirmBtn}
+                    onClick={() => {
+                      logEvent(analytics, "submit_entries_confirm", {
+                        villageId: _currLocation.villageCode,
+                        villageName: _currLocation.villageName,
+                        user_id: userData?.user?.user?.username,
+                        app_status: navigator.onLine ? "online" : "offline",
+                      });
+                      submitData2();
+                    }}
+                  >
+                    Submit
+                  </div>
+                ) : (
+                  <div
+                    style={modalStyles.confirmBtn}
+                    onClick={() => {
+                      logEvent(analytics, "submit_entries_confirm", {
+                        villageId: _currLocation.villageCode,
+                        villageName: _currLocation.villageName,
+                        user_id: userData?.user?.user?.username,
+                        app_status: navigator.onLine ? "online" : "offline",
+                      });
+                      submitData();
+                    }}
+                  >
+                    Upload Media
+                  </div>
+                )}
+
                 <div
                   style={modalStyles.exitBtn}
                   onClick={() => {
