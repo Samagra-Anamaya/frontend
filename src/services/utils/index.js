@@ -241,6 +241,7 @@ export const getCitizenImageRecords = async (citizenId) => {
 
 }
 
+
 export const removeCitizenImageRecord = async (citizenId) => {
   let images = await getImages();
   if (images?.length > 0) {

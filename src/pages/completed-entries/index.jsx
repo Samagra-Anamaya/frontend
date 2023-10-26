@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   addCitizen,
   setCurrentCitizen,
+  tokenSelector,
   updateSearchQuery,
 } from "../../redux/store";
 import {
@@ -94,14 +95,17 @@ const CompletedEntries = ({ params }) => {
       console.log(err);
     }
   };
-
+  const token =useSelector(tokenSelector);
+  console.log({token,userData})
   const getVillageSubmissionData = async () => {
     try {
       if (_currLocation?.villageCode) {
+       
         setFetching(true);
         let data = await getVillageSubmissions(
           _currLocation.villageCode,
-          currPage
+          currPage,
+        token
         );
         console.log("PREV SUBMISSIONS -->", data);
         setFetching(false);

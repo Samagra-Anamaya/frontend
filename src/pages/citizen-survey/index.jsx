@@ -100,14 +100,16 @@ const CitizenSurveyPage = ({ params }) => {
         {
           citizenId: currCitizen.citizenId,
           images: landImages,
-          isLandRecord: true
+          isLandRecord: true,
+          villageId:_currLocation.villageCode
         }
       );
       if (rorImages?.length) await storeImages(
         {
           citizenId: currCitizen.citizenId,
           images: rorImages,
-          isLandRecord: false
+          isLandRecord: false,
+          villageId:_currLocation.villageCode
         }
       );
 

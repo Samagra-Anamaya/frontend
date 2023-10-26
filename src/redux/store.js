@@ -1,6 +1,9 @@
-import { configureStore, createSlice, current } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
+import { configureStore, createSlice, current } from "@reduxjs/toolkit";
+import { cloneDeep, forEach, map } from "lodash";
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
+import { replaceMediaObject } from "./actions/replaceMediaObject";
+import { _updateSubmissionMedia } from "./actions/updateSubmissionMedia";
 // import storage from 'redux-persist-indexeddb-storage';
 
 // const authSlice = createSlice({
@@ -41,6 +44,8 @@ const userDataSlice = createSlice({
     searchQuery: {},
     searchSavedQuery: {},
     submissions: {},
+    status: "",
+    error: {},
   },
   reducers: {
     login: (state, action) => {
@@ -122,6 +127,32 @@ const userDataSlice = createSlice({
         [action.payload.spdpVillageId]: submissionArray,
       };
     },
+    updateSubmissionMedia: (state, action) => {
+      console.log({ state: cloneDeep(state), action });
+      const villageData = map(
+        state?.submissions?.[action?.payload?.villageId],
+        (item, index) => {
+          return item?.citizenId === action?.payload?.citizenId
+            ? {
+                ...item,
+                submissionData: action?.payload?.isLandRecord
+                  ? {
+                      ...item.submissionData,
+                      landRecords: action?.payload?.images,
+                    }
+                  : {
+                      ...item.submissionData,
+                      rorRecords: action?.payload?.images,
+                    },
+              }
+            : item;
+        }
+      );
+      state.submissions = {
+        ...state.submissions,
+        [action.payload.villageId]: villageData,
+      };
+    },
     clearSubmissions: (state, action) => {
       let tempState = state?.submissions;
       delete tempState[action.payload];
@@ -143,11 +174,121 @@ const userDataSlice = createSlice({
       };
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(replaceMediaObject.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        forEach(action?.payload?.result, (fileData) => {
+          const fileMeta = JSON.parse(fileData?.meta);
+          state.submissions[fileMeta.villageId] = map(
+            state.submissions[fileMeta.villageId],
+            (prev) => {
+              if (prev?.citizenId === fileMeta?.citizenId) {
+                if (fileMeta?.isLandRecord)
+                  return {
+                    ...prev,
+                    submissionData: {
+                      ...prev?.submissionData,
+                      landRecords: prev?.submissionData?.landRecords
+                        ? [
+                            ...prev?.submissionData?.landRecords,
+                            fileData.filename,
+                          ]
+                        : [fileData.filename],
+                    },
+                  };
+                else
+                  return {
+                    ...prev,
+                    submissionData: {
+                      ...prev?.submissionData,
+                      rorRecords: prev?.submissionData?.rorRecords
+                        ? [
+                            ...prev?.submissionData?.rorRecords,
+                            fileData.filename,
+                          ]
+                        : [fileData.filename],
+                    },
+                  };
+              }else return prev
+            }
+          );
+        });
+        return state;
+      })
+      .addCase(replaceMediaObject.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      })
+      .addCase(_updateSubmissionMedia.fulfilled,(state,action)=>{
+        console.log("shri ram _updateSubmissionMedia:",{ state: cloneDeep(state), action });
+        forEach(action?.payload, (fileData) => {
+          const fileMeta = JSON.parse(fileData?.meta);
+          state.submissions[fileMeta.villageId] = map(
+            state.submissions[fileMeta.villageId],
+            (prev) => {
+              if (prev?.citizenId === fileMeta?.citizenId) {
+                if (fileMeta?.isLandRecord)
+                  return {
+                    ...prev,
+                    submissionData: {
+                      ...prev?.submissionData,
+                      landRecords: prev?.submissionData?.landRecords
+                        ? [
+                            ...prev?.submissionData?.landRecords,
+                            fileData.filename,
+                          ]
+                        : [fileData.filename],
+                    },
+                  };
+                else
+                  return {
+                    ...prev,
+                    submissionData: {
+                      ...prev?.submissionData,
+                      rorRecords: prev?.submissionData?.rorRecords
+                        ? [
+                            ...prev?.submissionData?.rorRecords,
+                            fileData.filename,
+                          ]
+                        : [fileData.filename],
+                    },
+                  };
+              }else return prev
+            }
+          );
+        });
+        return state;
+        // const villageData = map(
+        //   state?.submissions?.[action?.payload?.villageId],
+        //   (item, index) => {
+        //     return item?.citizenId === action?.payload?.citizenId
+        //       ? {
+        //           ...item,
+        //           submissionData: action?.payload?.isLandRecord
+        //             ? {
+        //                 ...item.submissionData,
+        //                 landRecords: action?.payload?.images,
+        //               }
+        //             : {
+        //                 ...item.submissionData,
+        //                 rorRecords: action?.payload?.images,
+        //               },
+        //         }
+        //       : item;
+        //   }
+        // );
+        // state.submissions = {
+        //   ...state.submissions,
+        //   [action.payload.villageId]: villageData,
+        // };
+      })
+  },
 });
 
 const persistConfig = {
-  key: 'root', // key for the root of the storage
-  storage
+  key: "root", // key for the root of the storage
+  storage,
   // storage: storage('myDB') // storage to use (e.g., localStorage)
 };
 
@@ -178,6 +319,9 @@ export const {
   updateSearchSavedQuery,
   clearSubmissions,
   updateCitizenFormData,
+  updateSubmissionMedia,
 } = userDataSlice.actions;
 
 export { store, persistor };
+
+export const tokenSelector = (state) => state.userData.user.token
