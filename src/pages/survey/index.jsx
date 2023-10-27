@@ -30,6 +30,7 @@ import Breadcrumb from "../../components/Breadcrumb";
 import { getCitizenImageRecords, getImages } from "../../services/utils";
 import { formDataToObject } from "../../utils/formdata-to-object";
 import { replaceMediaObject } from "../../redux/actions/replaceMediaObject";
+
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
 const SurveyPage = ({ params }) => {
@@ -186,7 +187,7 @@ const SurveyPage = ({ params }) => {
     for (const _image of images) {
       let data = new FormData();
       _image?.images.forEach((file) => {
-        data.append("files", file);
+        data.append("files", file, uuidv4() + '.webp');
       });
 
       data.append("meta", JSON.stringify(_image));
@@ -203,11 +204,11 @@ const SurveyPage = ({ params }) => {
       };
 
       const response = await offlinePackage?.sendRequest(config);
-   
+
 
       if (response?.result?.length)
         dispatch(replaceMediaObject(response)).then((res) => {
-        
+
           if (res.type.includes("fulfilled")) {
             setIsMediaUploaded(true);
           }
@@ -224,7 +225,7 @@ const SurveyPage = ({ params }) => {
     <div className={styles.container} ref={containerRef}>
       <Banner />
       <Breadcrumb items={breadcrumbItems} />
-     
+
 
       <div className="px-3">
         <SelectionItem

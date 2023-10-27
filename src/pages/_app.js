@@ -49,15 +49,14 @@ export default function App({ Component, pageProps }) {
 
         }
       })
-     
-      
-     const apiRequests =    await localforage.getItem('apiRequests');
-     console.log("ram ram:",{ apiRequests });
-      if (apiRequests.length < 1) {
+
+
+      const apiRequests = await localforage.getItem('apiRequests');
+      console.log("ram ram:", { apiRequests });
+      if (apiRequests?.length < 1) {
         setTimeout(() => {
           submitData(response);
         }, 1000)
-
       }
     }
     console.log(response?.data?.status);

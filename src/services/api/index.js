@@ -1,6 +1,7 @@
 import axios from "axios";
 import { addFormUri, store } from "../../redux/store";
 import { getFromLocalForage, makeHasuraCalls } from "../utils";
+import { v4 as uuidv4 } from 'uuid';
 
 const BASE_URL = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 const applicationId = process.env.NEXT_PUBLIC_APPLICATION_ID;
@@ -376,7 +377,7 @@ export const getOfflineCapableForm = async (formId, dispatch) => {
 
 export const getVillageDetails = async (id) => {
   try {
-    const user = store?.getState()?.userData?.user;  
+    const user = store?.getState()?.userData?.user;
     let res = await axios.get(BACKEND_SERVICE_URL + `/utils/villageData/${id}`, {
       headers: {
         Authorization: `Bearer ${user.token}`
@@ -389,7 +390,7 @@ export const getVillageDetails = async (id) => {
   }
 }
 
-export const getVillageSubmissions = async (id, page,token) => {
+export const getVillageSubmissions = async (id, page, token) => {
   try {
     let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/${id}?limit=5&page=${page}`, {
       headers: {
@@ -436,7 +437,7 @@ export const uploadMedia = async (files) => {
     console.log({ files })
     let data = new FormData();
     files.forEach(file => {
-      data.append('files', file);
+      data.append("files", file, uuidv4() + '.webp');
     })
     let res = await axios.post(BACKEND_SERVICE_URL + `/upload/multiple`, data, {
       headers: {
