@@ -1,7 +1,7 @@
 import "../styles/globals.css";
 import { OfflineSyncProvider, useOfflineSyncContext } from "offline-sync-handler-test";
 import { Provider, useDispatch } from "react-redux";
-import { clearSubmissions, clearSubmissionsFunc, store, updateSubmissionMedia } from "../redux/store";
+import { store } from "../redux/store";
 import { useState, useEffect, useCallback } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,16 +13,16 @@ import "mdbreact/dist/css/mdb.css";
 import { getImages, removeCitizenImageRecord } from "../services/utils";
 import { _updateSubmissionMedia } from "../redux/actions/updateSubmissionMedia";
 import { isNull, omitBy } from "lodash";
+import localforage from "localforage";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 export default function App({ Component, pageProps }) {
   const [hydrated, setHydrated] = useState(false);
   const offlinePackage = useOfflineSyncContext();
-  // const dispatch = useDispatch();
-  console.log({ offlinePackage })
+
   const submitData = useCallback(async (data) => {
-    const userData = omitBy(store.getState()?.userData,isNull);
-    console.log("shri ram:----", { userData })
+    const userData = omitBy(store.getState()?.userData, isNull);
+    console.log("debug:submitData call-", { userData })
     const config = {
       method: "POST",
       url: BACKEND_SERVICE_URL + `/submissions/bulk`,
@@ -32,30 +32,31 @@ export default function App({ Component, pageProps }) {
       },
     };
     const response = await data?.sendRequest(config);
-    console.log("submitDataresponse:", { response,data });
+    console.log("debug -submitDataresponse:", { response, data });
   }, [offlinePackage]);
 
   const onSyncSuccess = async (response) => {
-    console.log("shri ram sync response -->", response);
+    console.log("debug sync response -->", response);
     const images = await getImages();
-    console.log("shri ram:",{ images })
+    console.log("debug: before", { images })
     if (response?.config?.meta?.citizenId) {
-    //  store?.dispatch(_updateSubmissionMedia(response?.config?.meta)).then(res => {
+      //  store?.dispatch(_updateSubmissionMedia(response?.config?.meta)).then(res => {
       store?.dispatch(_updateSubmissionMedia(response?.data?.data?.result)).then(res => {
-        console.log("shri ram: _app then",res)
+        console.log("debug: _app then", res)
         if (res?.type?.includes('fulfilled')) {
           removeCitizenImageRecord(response?.config?.meta?.citizenId);
-         
+
         }
       })
-      // setTimeout(() => {
-      //   removeCitizenImageRecord(response?.config?.meta?.citizenId)
-      // }, 300);
-      if (images.length <= 1) {
-        setTimeout(()=>{
+     
+      
+     const apiRequests =    await localforage.getItem('apiRequests');
+     console.log("ram ram:",{ apiRequests });
+      if (apiRequests.length < 1) {
+        setTimeout(() => {
           submitData(response);
-        },1000)
-        
+        }, 1000)
+
       }
     }
     // toast(`☁️  Village ${el}'s data synced with server `, {
@@ -117,7 +118,7 @@ export default function App({ Component, pageProps }) {
         theme: "light",
       });
     });
-   // submitData();
+    // submitData();
     setHydrated(true);
     logEvent(analytics, 'page_view');
   }, [])
