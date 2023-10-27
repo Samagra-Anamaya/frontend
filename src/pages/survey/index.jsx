@@ -219,6 +219,8 @@ const SurveyPage = ({ params }) => {
     () => [{ label: "Home", to: "/" }, { label: _currLocation?.villageName }],
     [_currLocation?.villageName]
   );
+
+  //const showSubmitBtn =useMemo(()=>,[]);
   return !hydrated ? null : (
     <div className={styles.container} ref={containerRef}>
       <Banner />

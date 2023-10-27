@@ -14,6 +14,7 @@ import { getImages, removeCitizenImageRecord } from "../services/utils";
 import { _updateSubmissionMedia } from "../redux/actions/updateSubmissionMedia";
 import { isNull, omitBy } from "lodash";
 import localforage from "localforage";
+import { removeSubmission } from "../redux/actions/removeSubmission";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 export default function App({ Component, pageProps }) {
@@ -32,8 +33,12 @@ export default function App({ Component, pageProps }) {
       },
     };
     const response = await data?.sendRequest(config);
+    console.log("ram ram submitDataResponse:",{response})
+    store?.dispatch(removeSubmission(response)).then(res=>{
+      console.log("ram ram: removeSubmissionRes",{res})
+    })
     console.log("debug -submitDataresponse:", { response, data });
-  }, [offlinePackage]);
+  }, [BACKEND_SERVICE_URL]);
 
   const onSyncSuccess = async (response) => {
     console.log("debug sync response -->", response);

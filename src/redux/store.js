@@ -4,6 +4,7 @@ import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
 import { replaceMediaObject } from "./actions/replaceMediaObject";
 import { _updateSubmissionMedia } from "./actions/updateSubmissionMedia";
+import { removeSubmission } from "./actions/removeSubmission";
 // import storage from 'redux-persist-indexeddb-storage';
 
 // const authSlice = createSlice({
@@ -282,6 +283,12 @@ const userDataSlice = createSlice({
         //   ...state.submissions,
         //   [action.payload.villageId]: villageData,
         // };
+      }).addCase(removeSubmission.fulfilled,(state,action)=>{
+        let tempState = state?.submissions;
+        forEach(Object.keys(action.payload),(key)=>{
+          delete tempState[key];
+        }) 
+        state.submissions = tempState;
       })
   },
 });
