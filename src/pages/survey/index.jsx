@@ -204,11 +204,8 @@ const SurveyPage = ({ params }) => {
       };
 
       const response = await offlinePackage?.sendRequest(config);
-
-
       if (response?.result?.length)
         dispatch(replaceMediaObject(response)).then((res) => {
-
           if (res.type.includes("fulfilled")) {
             setIsMediaUploaded(true);
           }

@@ -331,4 +331,5 @@ export const {
 
 export { store, persistor };
 
-export const tokenSelector = (state) => state.userData.user.token
+export const tokenSelector = (state) => state.userData.user.token;
+export const allSubmissionsSelector = (state) => state?.userData?.submissions;

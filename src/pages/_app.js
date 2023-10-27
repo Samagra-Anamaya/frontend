@@ -58,11 +58,11 @@ export default function App({ Component, pageProps }) {
 
       const apiRequests = await localforage.getItem('apiRequests');
       console.log("ram ram:", { apiRequests });
-      if (apiRequests?.length < 1) {
-        setTimeout(() => {
-          submitData(response);
-        }, 1000)
-      }
+      // if (apiRequests?.length < 1) {
+      //   setTimeout(() => {
+      //     submitData(response);
+      //   }, 1000)
+      // }
     }
     console.log(response?.data?.status);
     if (response?.data?.status == 201) {
@@ -104,13 +104,15 @@ export default function App({ Component, pageProps }) {
     // submitData();
     setHydrated(true);
     logEvent(analytics, 'page_view');
-  }, [])
+  }, []);
 
+  const onHello =useCallback(()=>{
+    console.log("hello");
+  },[]);
   return hydrated ? (
     <Provider store={store} data-testid="redux-provider">
       <OfflineSyncProvider onCallback={onSyncSuccess}>
-        {/* <OfflineSyncProvider > */}
-        <Component {...pageProps} />
+        <Component {...pageProps} onHello={onHello}/>
       </OfflineSyncProvider>
       <ToastContainer
         position="top-center"
