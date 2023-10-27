@@ -202,11 +202,11 @@ const SurveyPage = ({ params }) => {
       };
 
       const response = await offlinePackage?.sendRequest(config);
-      console.log("shri ram:", { response });
+   
 
       if (response?.result?.length)
         dispatch(replaceMediaObject(response)).then((res) => {
-          console.log("shri ram dispatch then:", { res });
+        
           if (res.type.includes("fulfilled")) {
             setIsMediaUploaded(true);
           }
@@ -223,16 +223,7 @@ const SurveyPage = ({ params }) => {
     <div className={styles.container} ref={containerRef}>
       <Banner />
       <Breadcrumb items={breadcrumbItems} />
-      {/* <CommonHeader
-        onBack={() => router.back()}
-        text={"Hello there 👋"}
-        subText={`Enumerator ID : ${userData?.user?.user?.username}`}
-        showLogout={false}
-        sx={{
-          justifyContent: "space-between !important",
-          margin: "2rem !important",
-        }}
-      /> */}
+     
 
       <div className="px-3">
         <SelectionItem
