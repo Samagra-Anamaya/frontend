@@ -21,7 +21,7 @@ export default function App({ Component, pageProps }) {
   // const dispatch = useDispatch();
   console.log({ offlinePackage })
   const submitData = useCallback(async (data) => {
-    const userData = omitBy(store.getState()?.userData,isNull);
+    const userData = omitBy(store.getState()?.userData, isNull);
     console.log("shri ram:----", { userData })
     const config = {
       method: "POST",
@@ -32,31 +32,31 @@ export default function App({ Component, pageProps }) {
       },
     };
     const response = await data?.sendRequest(config);
-    console.log("submitDataresponse:", { response,data });
+    console.log("submitDataresponse:", { response, data });
   }, [offlinePackage]);
 
   const onSyncSuccess = async (response) => {
     console.log("shri ram sync response -->", response);
     const images = await getImages();
-    console.log("shri ram:",{ images })
+    console.log("shri ram:", { images })
     if (response?.config?.meta?.citizenId) {
-    //  store?.dispatch(_updateSubmissionMedia(response?.config?.meta)).then(res => {
+      //  store?.dispatch(_updateSubmissionMedia(response?.config?.meta)).then(res => {
       store?.dispatch(_updateSubmissionMedia(response?.data?.data?.result)).then(res => {
-        console.log("shri ram: _app then",res)
+        console.log("shri ram: _app then", res)
         if (res?.type?.includes('fulfilled')) {
+          console.log("Clearing Image Records for --->", response?.config?.meta?.citizenId)
           removeCitizenImageRecord(response?.config?.meta?.citizenId);
-         
+
         }
       })
       // setTimeout(() => {
       //   removeCitizenImageRecord(response?.config?.meta?.citizenId)
       // }, 300);
-      // if (images.length <= 1) {
-      //   setTimeout(()=>{
-      //     submitData(response);
-      //   },1000)
-        
-      // }
+      if (images.length <= 1) {
+        setTimeout(() => {
+          submitData(response);
+        }, 1000)
+      }
     }
     console.log(response?.data?.status);
     if (response?.data?.status == 201) {
@@ -95,7 +95,7 @@ export default function App({ Component, pageProps }) {
         theme: "light",
       });
     });
-   // submitData();
+    // submitData();
     setHydrated(true);
     logEvent(analytics, 'page_view');
   }, [])

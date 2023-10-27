@@ -69,8 +69,9 @@ const SurveyPage = ({ params }) => {
     console.log("Saved Requests ->", savedRequests);
     if (savedRequests?.length) {
       let currRequest = savedRequests.filter(
-        (el) => Object.keys(el.data)?.[0] == _currLocation.villageCode
+        (el) => el?.meta?.villageId == _currLocation.villageCode
       );
+      console.log("curr Reques->", currRequest)
       if (currRequest?.length && submissions?.length > 0) {
         setDisableSubmitEntries(true);
       }
@@ -81,7 +82,7 @@ const SurveyPage = ({ params }) => {
 
   useEffect(() => {
     checkSavedRequests();
-  }, []);
+  }, [loading]);
 
   /* Utility Functions */
   const addNewCitizen = () => {
