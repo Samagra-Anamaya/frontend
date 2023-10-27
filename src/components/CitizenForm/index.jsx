@@ -20,12 +20,15 @@ import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a lo
 import { Carousel } from 'react-responsive-carousel';
 import ImageViewer from 'react-simple-image-viewer';
 import { validateAadhaar } from "../../services/utils";
+import { getImageFromMinio } from "../../services/api";
+import { useSelector } from "react-redux";
 
 const CitizenForm = (props) => {
     const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
     const [currentImage, setCurrentImage] = useState(0);
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
+    const user = useSelector((state) => state?.userData?.user);
 
     console.log("FORM EDITABLE -->", formEditable)
     console.log("formState ->", formState)
@@ -54,19 +57,26 @@ const CitizenForm = (props) => {
 
     const getRecordImages = async () => {
         if (formState?.landRecords?.length) {
-            let landImages = formState?.landRecords;
-
-
+            let landImages = []
+            for (let el in formState.landRecords) {
+                let imageUri = await getImageFromMinio(formState.landRecords[el], user);
+                landImages.push(imageUri);
+            }
+            setLandImages(landImages);
         }
         if (formState?.rorRecords?.length) {
-            let rorImages = formState?.rorRecords;
+            let rorImages = [];
+            for (let el in formState.rorRecords) {
+                let imageUri = await getImageFromMinio(formState.rorRecords[el], user);
+                rorImages.push(imageUri);
+            }
+            setRorImages(rorImages);
         }
     }
 
     useEffect(() => {
-
-
-    },)
+        getRecordImages();
+    }, [])
 
     console.log("land ->", landImages)
     return (
@@ -83,7 +93,7 @@ const CitizenForm = (props) => {
 
                 activeStep == 0 && <form onSubmit={(e) => {
                     e.preventDefault();
-                    if (formState?.aadharNumber && !validateAadhaar(formState?.aadharNumber)) {
+                    if (formEditable && formState?.aadharNumber && !validateAadhaar(formState?.aadharNumber)) {
                         toast("Please enter a valid Aadhaar Number!", {
                             type: 'error'
                         })
@@ -166,17 +176,22 @@ const CitizenForm = (props) => {
 
                     />
                     {landImages.length > 0 && !formEditable && <div>
-                        <p>Land Record Images</p>
-                        <div>
+                        <p style={{ textAlign: 'center' }}>Land Record Images</p>
+                        <div className={styles.imageRecordContainer}>
                             {landImages?.map((el, index) => {
-                                let objectURL = URL.createObjectURL(el);
-                                console.log(objectURL)
-                                return <img src={objectURL} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                                if (typeof el == 'string') {
+                                    return <img src={el} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+
+                                } else {
+                                    let objectURL = URL.createObjectURL(el);
+                                    console.log(objectURL)
+                                    return <img src={objectURL} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                                }
                             })}
                         </div>
                         {isViewerOpen && (
                             <ImageViewer
-                                src={landImages.map(el => URL.createObjectURL(el))}
+                                src={landImages.map(el => typeof el == 'string' ? el : URL.createObjectURL(el))}
                                 currentIndex={currentImage}
                                 disableScroll={false}
                                 closeOnClickOutside={true}
@@ -495,18 +510,21 @@ const CitizenForm = (props) => {
                         )}
                     </ImageUploading>}
                     {rorImages.length > 0 && !formEditable && <div>
-                        <p>ROR Record Images</p>
-                        <div>
+                        <p style={{ textAlign: 'center' }}>ROR Record Images</p>
+                        <div className={styles.imageRecordContainer}>
                             {rorImages?.map((el, index) => {
-                                console.log("landrecord ->", el);
-                                let objectURL = URL.createObjectURL(el);
-                                console.log(objectURL)
-                                return <img src={objectURL} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                                if (typeof el == 'string') {
+                                    return <img src={el} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                                }
+                                else {
+                                    let objectURL = URL.createObjectURL(el);
+                                    return <img src={objectURL} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                                }
                             })}
                         </div>
                         {isViewerOpen && (
                             <ImageViewer
-                                src={rorImages.map(el => URL.createObjectURL(el))}
+                                src={rorImages.map(el => typeof el == 'string' ? el : URL.createObjectURL(el))}
                                 currentIndex={currentImage}
                                 disableScroll={false}
                                 closeOnClickOutside={true}
