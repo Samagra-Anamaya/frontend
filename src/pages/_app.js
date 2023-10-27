@@ -49,53 +49,31 @@ export default function App({ Component, pageProps }) {
       store?.dispatch(_updateSubmissionMedia(response?.data?.data?.result)).then(res => {
         console.log("debug: _app then", res)
         if (res?.type?.includes('fulfilled')) {
+          console.log("Clearing Image Records for --->", response?.config?.meta?.citizenId)
           removeCitizenImageRecord(response?.config?.meta?.citizenId);
 
         }
       })
-     
-      
-     const apiRequests =    await localforage.getItem('apiRequests');
-     console.log("ram ram:",{ apiRequests });
-      if (apiRequests.length < 1) {
+
+
+      const apiRequests = await localforage.getItem('apiRequests');
+      console.log("ram ram:", { apiRequests });
+      if (apiRequests?.length < 1) {
         setTimeout(() => {
           submitData(response);
         }, 1000)
-
       }
     }
-    // toast(`☁️  Village ${el}'s data synced with server `, {
-    //   position: "top-center",
-    //   autoClose: 2500,
-    //   hideProgressBar: false,
-    //   closeOnClick: true,
-    //   pauseOnHover: true,
-    //   draggable: true,
-    //   progress: undefined,
-    //   theme: "light",
-    // });
-    // for (let el in response?.config?.data) {
-    //   toast(`☁️  Village ${el}'s data synced with server `, {
-    //     position: "top-center",
-    //     autoClose: 2500,
-    //     hideProgressBar: false,
-    //     closeOnClick: true,
-    //     pauseOnHover: true,
-    //     draggable: true,
-    //     progress: undefined,
-    //     theme: "light",
-    //   });
-    // }
     console.log(response?.data?.status);
-    // if (response?.data?.status == 201) {
-    //   console.log(
-    //     "Clearing Submission for ->",
-    //     Object.keys(response?.config?.data)?.[0]
-    //   );
-    //   store.dispatch(
-    //     clearSubmissions(Object.keys(response?.config?.data)?.[0])
-    //   );
-    // }
+    if (response?.data?.status == 201) {
+      // console.log(
+      //   "Clearing Submission for ->",
+      //   Object.keys(response?.config?.data)?.[0]
+      // );
+      // store.dispatch(
+      //   clearSubmissions(Object.keys(response?.config?.data)?.[0])
+      // );
+    }
   };
 
   useEffect(() => {
