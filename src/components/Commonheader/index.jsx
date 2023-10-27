@@ -23,16 +23,16 @@ const CommonHeader = (props) => {
             {showBack ? <div className={styles.backBtn} style={{ marginTop: subText ? '' : '0rem' }} onClick={onBack}><img src="/assets/backArrow.png" /></div> : <div></div>
             }
             <div >
-                <p className={styles.mainText} >{text}</p>
-                {subText && <p className={styles.subText}>{subText}</p>}
+                <p className={styles.mainText} ></p>
+                {subText && <p className={styles.subText}></p>}
             </div>
             {showLogout ? <div className={styles.logoutBtn} onClick={() => showLogoutModal(true)}><LogoutIcon style={{ color: '#007922', fontSize: 40 }} /></div> : <div style={{ width: '20%' }}></div>}
             {
                 logoutModal && <CommonModal sx={{ height: '40vh' }}>
                     <div style={modalStyles.container}>
                         <img src="/assets/errorIcon.png" style={modalStyles.image} />
-                        <div style={modalStyles.warningText}>Logging out will delete any unsaved data or any forms which are still pending to be submitted</div>
-                        <div style={modalStyles.confirmationText}>Are you sure you want to logut?</div>
+                        {/* <div style={modalStyles.warningText}>Logging out will delete any unsaved data or any forms which are still pending to be submitted</div>
+                        <div style={modalStyles.confirmationText}>Are you sure you want to logut?</div> */}
                         <div style={modalStyles.btnContainer}>
                             <div style={modalStyles.confirmBtn} onClick={() => {
                                 logout();
