@@ -450,3 +450,16 @@ export const uploadMedia = async (files) => {
     return { err };
   }
 }
+
+export const getImageFromMinio = async (filename, user) => {
+  try {
+    let res = await axios.get(BACKEND_SERVICE_URL + `/upload/${filename}`, {
+      headers: {
+        Authorization: `Bearer ${user?.token}`
+      }
+    });
+    return res?.data;
+  } catch (err) {
+    throw err;
+  }
+}

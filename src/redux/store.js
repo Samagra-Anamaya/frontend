@@ -4,6 +4,7 @@ import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
 import { replaceMediaObject } from "./actions/replaceMediaObject";
 import { _updateSubmissionMedia } from "./actions/updateSubmissionMedia";
+import { removeSubmission } from "./actions/removeSubmission";
 // import storage from 'redux-persist-indexeddb-storage';
 
 // const authSlice = createSlice({
@@ -46,6 +47,7 @@ const userDataSlice = createSlice({
     submissions: {},
     status: "",
     error: {},
+    isOffline: false
   },
   reducers: {
     login: (state, action) => {
@@ -134,17 +136,17 @@ const userDataSlice = createSlice({
         (item, index) => {
           return item?.citizenId === action?.payload?.citizenId
             ? {
-                ...item,
-                submissionData: action?.payload?.isLandRecord
-                  ? {
-                      ...item.submissionData,
-                      landRecords: action?.payload?.images,
-                    }
-                  : {
-                      ...item.submissionData,
-                      rorRecords: action?.payload?.images,
-                    },
-              }
+              ...item,
+              submissionData: action?.payload?.isLandRecord
+                ? {
+                  ...item.submissionData,
+                  landRecords: action?.payload?.images,
+                }
+                : {
+                  ...item.submissionData,
+                  rorRecords: action?.payload?.images,
+                },
+            }
             : item;
         }
       );
@@ -173,6 +175,9 @@ const userDataSlice = createSlice({
         [action.payload.villageId]: action.payload.query,
       };
     },
+    updateIsOffline: (state, action) => {
+      state.isOffline = action.payload
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -191,9 +196,9 @@ const userDataSlice = createSlice({
                       ...prev?.submissionData,
                       landRecords: prev?.submissionData?.landRecords
                         ? [
-                            ...prev?.submissionData?.landRecords,
-                            fileData.filename,
-                          ]
+                          ...prev?.submissionData?.landRecords,
+                          fileData.filename,
+                        ]
                         : [fileData.filename],
                     },
                   };
@@ -204,13 +209,13 @@ const userDataSlice = createSlice({
                       ...prev?.submissionData,
                       rorRecords: prev?.submissionData?.rorRecords
                         ? [
-                            ...prev?.submissionData?.rorRecords,
-                            fileData.filename,
-                          ]
+                          ...prev?.submissionData?.rorRecords,
+                          fileData.filename,
+                        ]
                         : [fileData.filename],
                     },
                   };
-              }else return prev
+              } else return prev
             }
           );
         });
@@ -220,8 +225,8 @@ const userDataSlice = createSlice({
         state.status = "failed";
         state.error = action.error.message;
       })
-      .addCase(_updateSubmissionMedia.fulfilled,(state,action)=>{
-        console.log("shri ram _updateSubmissionMedia:",{ state: cloneDeep(state), action });
+      .addCase(_updateSubmissionMedia.fulfilled, (state, action) => {
+        console.log("shri ram _updateSubmissionMedia:", { state: cloneDeep(state), action });
         forEach(action?.payload, (fileData) => {
           const fileMeta = JSON.parse(fileData?.meta);
           state.submissions[fileMeta.villageId] = map(
@@ -235,9 +240,9 @@ const userDataSlice = createSlice({
                       ...prev?.submissionData,
                       landRecords: prev?.submissionData?.landRecords
                         ? [
-                            ...prev?.submissionData?.landRecords,
-                            fileData.filename,
-                          ]
+                          ...prev?.submissionData?.landRecords,
+                          fileData.filename,
+                        ]
                         : [fileData.filename],
                     },
                   };
@@ -248,13 +253,13 @@ const userDataSlice = createSlice({
                       ...prev?.submissionData,
                       rorRecords: prev?.submissionData?.rorRecords
                         ? [
-                            ...prev?.submissionData?.rorRecords,
-                            fileData.filename,
-                          ]
+                          ...prev?.submissionData?.rorRecords,
+                          fileData.filename,
+                        ]
                         : [fileData.filename],
                     },
                   };
-              }else return prev
+              } else return prev
             }
           );
         });
@@ -282,6 +287,12 @@ const userDataSlice = createSlice({
         //   ...state.submissions,
         //   [action.payload.villageId]: villageData,
         // };
+      }).addCase(removeSubmission.fulfilled,(state,action)=>{
+        let tempState = state?.submissions;
+        forEach(Object.keys(action.payload),(key)=>{
+          delete tempState[key];
+        }) 
+        state.submissions = tempState;
       })
   },
 });
@@ -320,8 +331,10 @@ export const {
   clearSubmissions,
   updateCitizenFormData,
   updateSubmissionMedia,
+  updateIsOffline
 } = userDataSlice.actions;
 
 export { store, persistor };
 
-export const tokenSelector = (state) => state.userData.user.token
+export const tokenSelector = (state) => state.userData.user.token;
+export const allSubmissionsSelector = (state) => state?.userData?.submissions;

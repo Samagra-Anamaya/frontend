@@ -1,7 +1,7 @@
 import "../styles/globals.css";
 import { OfflineSyncProvider, useOfflineSyncContext } from "offline-sync-handler-test";
 import { Provider, useDispatch } from "react-redux";
-import { store } from "../redux/store";
+import { store, updateIsOffline } from "../redux/store";
 import { useState, useEffect, useCallback } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,8 +12,9 @@ import "bootstrap-css-only/css/bootstrap.min.css";
 import "mdbreact/dist/css/mdb.css";
 import { getImages, removeCitizenImageRecord } from "../services/utils";
 import { _updateSubmissionMedia } from "../redux/actions/updateSubmissionMedia";
-import { isNull, omitBy } from "lodash";
+import { isNull, omitBy, update } from "lodash";
 import localforage from "localforage";
+import { removeSubmission } from "../redux/actions/removeSubmission";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 export default function App({ Component, pageProps }) {
@@ -32,8 +33,12 @@ export default function App({ Component, pageProps }) {
       },
     };
     const response = await data?.sendRequest(config);
+    console.log("ram ram submitDataResponse:",{response})
+    store?.dispatch(removeSubmission(response)).then(res=>{
+      console.log("ram ram: removeSubmissionRes",{res})
+    })
     console.log("debug -submitDataresponse:", { response, data });
-  }, [offlinePackage]);
+  }, [BACKEND_SERVICE_URL]);
 
   const onSyncSuccess = async (response) => {
     console.log("debug sync response -->", response);
@@ -54,9 +59,12 @@ export default function App({ Component, pageProps }) {
       const apiRequests = await localforage.getItem('apiRequests');
       console.log("ram ram:", { apiRequests });
       if (apiRequests?.length < 1) {
-        setTimeout(() => {
-          submitData(response);
-        }, 1000)
+        if (store.getState().userData.isOffline) {
+          store.dispatch(updateIsOffline(false));
+          setTimeout(() => {
+            submitData(response);
+          }, 1000)
+        }
       }
     }
     console.log(response?.data?.status);
@@ -83,6 +91,8 @@ export default function App({ Component, pageProps }) {
         progress: undefined,
         theme: "light",
       });
+
+      store.dispatch(updateIsOffline(true));
     })
     window.addEventListener('online', () => {
       toast.success('App is back online', {
@@ -99,13 +109,15 @@ export default function App({ Component, pageProps }) {
     // submitData();
     setHydrated(true);
     logEvent(analytics, 'page_view');
-  }, [])
+  }, []);
 
+  const onHello =useCallback(()=>{
+    console.log("hello");
+  },[]);
   return hydrated ? (
     <Provider store={store} data-testid="redux-provider">
       <OfflineSyncProvider onCallback={onSyncSuccess}>
-        {/* <OfflineSyncProvider > */}
-        <Component {...pageProps} />
+        <Component {...pageProps} onHello={onHello}/>
       </OfflineSyncProvider>
       <ToastContainer
         position="top-center"

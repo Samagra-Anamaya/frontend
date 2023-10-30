@@ -204,15 +204,15 @@ const SurveyPage = ({ params }) => {
       };
 
       const response = await offlinePackage?.sendRequest(config);
-
-
       if (response?.result?.length)
         dispatch(replaceMediaObject(response)).then((res) => {
-
           if (res.type.includes("fulfilled")) {
             setIsMediaUploaded(true);
           }
         });
+      else {
+        showSubmitModal(false);
+      }
     }
     setLoading(false);
   }, []);
@@ -221,6 +221,8 @@ const SurveyPage = ({ params }) => {
     () => [{ label: "Home", to: "/" }, { label: _currLocation?.villageName }],
     [_currLocation?.villageName]
   );
+
+  //const showSubmitBtn =useMemo(()=>,[]);
   return !hydrated ? null : (
     <div className={styles.container} ref={containerRef}>
       <Banner />
