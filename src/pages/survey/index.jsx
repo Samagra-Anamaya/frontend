@@ -210,6 +210,9 @@ const SurveyPage = ({ params }) => {
             setIsMediaUploaded(true);
           }
         });
+      else {
+        showSubmitModal(false);
+      }
     }
     setLoading(false);
   }, []);
