@@ -218,7 +218,7 @@ const breadcrumbItems=useMemo(()=>([{label:"Home" ,to:"/"},{label:_currLocation?
               }}
                 leftImage={"/assets/citizen.svg"}
                 rightImage={"/assets/verified.png"}
-                mainText={el?.submissionData?.beneficiaryName}
+                mainText={el?.submissionData?.claimantName}
                 mainSubtext={moment(el?.updatedAt).format(
                   "DD MMM YYYY, hh:mm a"
                 )}

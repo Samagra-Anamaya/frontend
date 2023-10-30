@@ -112,6 +112,10 @@ const userDataSlice = createSlice({
         ],
       };
     },
+    bulkSaveSubmission:(state,action)=>{
+      state.submissions = action.payload;
+
+    },
     updateCitizenFormData: (state, action) => {
       let submissionArray = state.submissions[action.payload.spdpVillageId];
       const submissionIndex = submissionArray.findIndex(
@@ -331,7 +335,8 @@ export const {
   clearSubmissions,
   updateCitizenFormData,
   updateSubmissionMedia,
-  updateIsOffline
+  updateIsOffline,
+  bulkSaveSubmission
 } = userDataSlice.actions;
 
 export { store, persistor };

@@ -13,6 +13,7 @@ import { useDispatch } from "react-redux";
 import GovtBanner from "../../components/GovtBanner";
 import {
   allSubmissionsSelector,
+  bulkSaveSubmission,
   clearSubmissions,
   setCurrentLocation,
   testboi,
@@ -28,12 +29,14 @@ import { v4 as uuidv4 } from "uuid";
 import { useOfflineSyncContext } from "offline-sync-handler-test";
 import { replaceMediaObject } from "../../redux/actions/replaceMediaObject";
 import { removeSubmission } from "../../redux/actions/removeSubmission";
+import localforage from "localforage";
+import { toast } from "react-toastify";
 const AssignedLocations = () => {
-  
   const [hydrated, setHydrated] = React.useState(false);
   const assignedLocations = useSelector(
     (state) => state?.userData?.assignedLocations
   );
+  const [showSecondBtn, setshowSecondBtn] = useState(true);
   const user = useSelector((state) => state?.userData?.user);
   const userData = useSelector((state) => state?.userData);
   const [images, setImages] = useState(null);
@@ -74,26 +77,28 @@ const AssignedLocations = () => {
   //   [isMediaUploaded]
   // );
 
-  const submissions = useSelector(
-    allSubmissionsSelector
-  );
+  const submissions = useSelector(allSubmissionsSelector);
   const token = useSelector(tokenSelector);
- 
-  const showUploadBtn = useMemo(() =>  images?.length > 0 && showMediaUploadBtn, [images,showMediaUploadBtn]);
+
+  const showUploadBtn = useMemo(
+    () => images?.length > 0 && showMediaUploadBtn,
+    [images, showMediaUploadBtn]
+  );
   const showSubmitBtn = useMemo(
-    () => Object.keys(submissions)?.length > 0 && (!showUploadBtn || isMediaUploaded),
-    [submissions,showUploadBtn]
+    () =>
+      Object.keys(submissions)?.length > 0 &&
+      (!showUploadBtn || isMediaUploaded),
+    [submissions, showUploadBtn]
   );
   const onAction = useCallback(async () => {
-    const images = await getImages();
-    if(!images?.length){
+    const images = await localforage.getItem("_imageRecords");;
+    if (!images?.length) {
       setShowMediaUploadBtn(false);
-      console.log({images,showMediaUploadBtn})
-      return
+      console.log({ images, showMediaUploadBtn });
+      return;
     }
     setLoading(true);
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
-   
 
     for (const _image of images) {
       let data = new FormData();
@@ -124,10 +129,10 @@ const AssignedLocations = () => {
         });
     }
     setLoading(false);
-  }, [dispatch, token]);
+    onSubmit();
+  }, [dispatch, token,submissions]);
 
   const onSubmit = useCallback(async () => {
- 
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
     const config = {
       method: "POST",
@@ -138,13 +143,45 @@ const AssignedLocations = () => {
       },
     };
     const response = await offlinePackage?.sendRequest(config);
+    
     console.log("ram ram submitDataResponse:", { response });
-    dispatch(removeSubmission(response)).then((res) => {
+    if(response)
+  { 
+    toast.success("Uploaded..")
+      dispatch(removeSubmission(response)).then((res) => {
       console.log("ram ram: removeSubmissionRes", { res });
-    });
+      toast.success("records uploaded");
+      setshowSecondBtn(true);
+      localforage.removeItem('_imageRecords')
+    });}
     console.log("debug -submitDataresponse:", { response });
-  }, [token,submissions,dispatch]);
-console.log({showUploadBtn})
+  }, [token, submissions, dispatch]);
+
+  const dummySubmission = useCallback(async () => {
+    setLoading(true);
+    const images = await getImages();
+    console.log("shri ram",{ images,submissions,rec: submissions?.['404234']?.[0] });
+    const submissionsArray =[];
+    const imagesArray = [];
+    [...Array(100).keys()].forEach((num) => {
+      imagesArray.push({ ...images[0], citizenId: `Bulk Test-${num}` });
+      imagesArray.push({ ...images[1], citizenId: `Bulk Test-${num}` });
+      submissionsArray.push({...submissions?.['404234']?.[0],citizenId: `Bulk Test-${num}`,submissionData:{
+        ...submissions?.['404234']?.[0]?.submissionData,
+        claimantName:`Bulk Test-${num}`
+      }});
+    });
+    dispatch(bulkSaveSubmission({
+      '404234':submissionsArray
+    }))
+    const r = await localforage.setItem("_imageRecords", imagesArray);
+    if (r) {
+      toast.success("Records stored");
+      setshowSecondBtn(false);
+      setLoading(false);
+    }
+   console.log({ imagesArray });
+  }, [submissions,dispatch]);
   return !hydrated ? null : (
     <div className={styles.container + " animate__animated animate__fadeIn"}>
       {/* <GovtBanner sx={{ paddingTop: '2rem' }} /> */}
@@ -174,7 +211,16 @@ console.log({showUploadBtn})
             <div>Total Unresolved Flags:</div>
             <div className={styles.subtext}>0</div>
           </div>
-          {showUploadBtn && 
+          {showSecondBtn ? (
+            <button onClick={dummySubmission} className="btn btn-primary">
+            {loading ? 'Loading...': 'Create Image records'}  
+            </button>
+          ) : (
+            <button onClick={onAction} className="btn btn-primary">
+              {loading ? 'Loading...': 'Submit 100 records'}   
+            </button>
+          )}
+          {/* {showUploadBtn && 
             <div
               className={` p-2 mb-4 btn text-center btn-primary`}
               onClick={onAction}
@@ -191,7 +237,7 @@ console.log({showUploadBtn})
                 <div> Submit </div>
               </div>
             )
-          )}
+          )} */}
 
           <div className={`${styles.assignedLocations} p-3`}>
             <p>Assigned Villages</p>

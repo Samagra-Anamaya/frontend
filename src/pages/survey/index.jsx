@@ -333,7 +333,7 @@ const SurveyPage = ({ params }) => {
           ) : (
             <div style={modalStyles.container}>
               <div style={modalStyles.mainText}>
-                A total of {submissions?.length} entries will be submitted for{" "}
+                A total of {submissions?.length} entries will be submitted for
                 {_currLocation.villageName}
               </div>
               <p style={modalStyles.warningText}>
