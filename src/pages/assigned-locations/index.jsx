@@ -69,14 +69,7 @@ const AssignedLocations = () => {
     setLocations(assignedLocations || []);
   }, [user, assignedLocations]);
 
-  console.log("AL ----->", locations);
-  console.log("State", userData);
-
-  // const label = useMemo(
-  //   () => (images?.length > 0 ?  "Upload Media" : "Submit"),
-  //   [isMediaUploaded]
-  // );
-
+ 
   const submissions = useSelector(allSubmissionsSelector);
   const token = useSelector(tokenSelector);
 
@@ -94,44 +87,118 @@ const AssignedLocations = () => {
     const images = await localforage.getItem("_imageRecords");;
     if (!images?.length) {
       setShowMediaUploadBtn(false);
-      console.log({ images, showMediaUploadBtn });
       return;
     }
     setLoading(true);
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
-    for (const _image of images) {
-      let data = new FormData();
-      _image?.images.forEach((file) => {
-        data.append("files", file, uuidv4() + ".webp");
-      });
+    // for (const _image of images) {
+    //   let data = new FormData();
+    //   _image?.images.forEach((file) => {
+    //     data.append("files", file, uuidv4() + ".webp");
+    //   });
 
-      data.append("meta", JSON.stringify(_image));
+    //   data.append("meta", JSON.stringify(_image));
 
-      const config = {
-        method: "POST",
-        url: BACKEND_SERVICE_URL + `/upload/multiple`,
-        meta: _image,
-        data,
-        isFormdata: true,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+    //   const config = {
+    //     method: "POST",
+    //     url: BACKEND_SERVICE_URL + `/upload/multiple`,
+    //     meta: _image,
+    //     data,
+    //     isFormdata: true,
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //     },
+    //   };
 
-      const response = await offlinePackage?.sendRequest(config);
-      if (response?.result?.length)
-        dispatch(replaceMediaObject(response)).then((res) => {
-          if (res.type.includes("fulfilled")) {
-            setIsMediaUploaded(true);
-            setShowMediaUploadBtn(false);
-          }
+    //   const response = await offlinePackage?.sendRequest(config);
+    //   if (response?.result?.length)
+    //     dispatch(replaceMediaObject(response)).then((res) => {
+    //       if (res.type.includes("fulfilled")) {
+    //         setIsMediaUploaded(true);
+    //         setShowMediaUploadBtn(false);
+    //       }
+    //     });
+    // }
+    uploadImagesInBatches(images, token);
+  
+    // onSubmit();
+  }, [dispatch, token,submissions,uploadImagesInBatches]);
+
+  async function uploadImagesInBatches(images, token) {
+    const BATCH_SIZE = 10;
+    const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
+    const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
+
+   setLoading(true);
+    // Function to split the array into chunks of a specified size
+    const chunkArray = (arr, size) => {
+      const chunks = [];
+      for (let i = 0; i < arr.length; i += size) {
+        chunks.push(arr.slice(i, i + size));
+      }
+      return chunks;
+    };
+  
+    // Sleep function to introduce a delay
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  
+    // Splitting the images array into batches of 20
+    const batches = chunkArray(images, BATCH_SIZE);
+  
+    for (const batch of batches) {
+      const promises = batch.map(async (_image) => {
+        let data = new FormData();
+        _image?.images.forEach((file) => {
+          data.append("files", file, uuidv4() + ".webp");
         });
+  
+        data.append("meta", JSON.stringify(_image));
+  
+        const config = {
+          method: "POST",
+          url: BACKEND_SERVICE_URL + `/upload/multiple`,
+          meta: _image,
+          data,
+          isFormdata: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+  
+        try {
+          const response = await offlinePackage?.sendRequest(config);
+          console.log("hola 1",{response})
+          if (response?.result?.length)
+            return dispatch(replaceMediaObject(response));
+        } catch (error) {
+          console.error("Error uploading image", error);
+          return null;
+        }
+      });
+  
+      const responses = await Promise.all(promises);
+      console.log("hola 2",{responses})
+      responses.forEach((res) => {
+        if (res?.type.includes("fulfilled")) {
+          setIsMediaUploaded(true);
+          setShowMediaUploadBtn(false);
+        }
+      });
+  
+      // Introduce a delay before processing the next batch
+      await sleep(DELAY_TIME);
+      
     }
     setLoading(false);
-    onSubmit();
-  }, [dispatch, token,submissions]);
+     onSubmit();
+    console.log("hola all done")
+  }
+  
 
+  
+  
+  
   const onSubmit = useCallback(async () => {
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
     const config = {
