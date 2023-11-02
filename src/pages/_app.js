@@ -53,43 +53,35 @@ export default function App({ Component, pageProps }) {
     console.log("debug: before", { images })
     if (response?.config?.meta?.citizenId) {
       //  store?.dispatch(_updateSubmissionMedia(response?.config?.meta)).then(res => {
-      store?.dispatch(_updateSubmissionMedia(response?.data?.data?.result)).then(res => {
+      store?.dispatch(_updateSubmissionMedia(response?.data?.data?.result)).then(async res => {
         console.log("debug: _app then", res)
         if (res?.type?.includes('fulfilled')) {
           console.log("Clearing Image Records for --->", response?.config?.meta?.citizenId)
           removeCitizenImageRecord(response?.config?.meta?.citizenId);
 
+          // Updating villageId in pending submissions
+          if (store.getState().userData.isOffline) {
+            let ps = [...store.getState().userData.pendingSubmissions];
+            if (!ps.includes(response?.config?.meta?.villageId)) ps.push(response?.config?.meta?.villageId);
+            store.dispatch(updatePendingSubmissions(ps));
+          }
+
+          const apiRequests = await localforage.getItem('apiRequests');
+
+          if (apiRequests?.length < 1) {
+            if (store.getState().userData.isOffline) {
+              store.dispatch(updateIsOffline(false));
+              setTimeout(() => {
+                performBatchSubmission(response);
+              }, 1000)
+            }
+          }
+
         }
       })
 
-      // Updating villageId in pending submissions
-      if (store.getState().userData.isOffline) {
-        let ps = [...store.getState().userData.pendingSubmissions];
-        if (!ps.includes(response?.config?.meta?.villageId)) ps.push(response?.config?.meta?.villageId);
-        store.dispatch(updatePendingSubmissions(ps));
-      }
-
-      const apiRequests = await localforage.getItem('apiRequests');
-
-      if (apiRequests?.length < 1) {
-        if (store.getState().userData.isOffline) {
-          store.dispatch(updateIsOffline(false));
-          setTimeout(() => {
-            performBatchSubmission(response);
-          }, 1000)
-        }
-      }
     }
-    console.log(response?.data?.status);
-    if (response?.data?.status == 201) {
-      // console.log(
-      //   "Clearing Submission for ->",
-      //   Object.keys(response?.config?.data)?.[0]
-      // );
-      // store.dispatch(
-      //   clearSubmissions(Object.keys(response?.config?.data)?.[0])
-      // );
-    }
+
   };
 
   useEffect(() => {
@@ -129,16 +121,19 @@ export default function App({ Component, pageProps }) {
   }, []);
 
   async function performBatchSubmission(offlinePackage) {
-    const BATCH_SIZE = 1;
+    const BATCH_SIZE = 10;
     const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
     let ps = [...store.getState().userData.pendingSubmissions]
-
+    console.log("PS -->", { ps })
     if (ps?.length) {
       const responses = [];
       for (let i in ps) {
+        console.log({ i, ps })
         let submissions = userData?.submissions[ps[i]];
+
+        console.log({ submissions })
 
         // Splitting the submission array into batches of 10
         const batches = chunkArray(submissions, BATCH_SIZE);
