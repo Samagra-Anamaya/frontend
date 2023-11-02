@@ -47,7 +47,8 @@ const userDataSlice = createSlice({
     submissions: {},
     status: "",
     error: {},
-    isOffline: false
+    isOffline: false,
+    pendingSubmissions: []
   },
   reducers: {
     login: (state, action) => {
@@ -112,7 +113,7 @@ const userDataSlice = createSlice({
         ],
       };
     },
-    bulkSaveSubmission:(state,action)=>{
+    bulkSaveSubmission: (state, action) => {
       state.submissions = action.payload;
 
     },
@@ -181,6 +182,14 @@ const userDataSlice = createSlice({
     },
     updateIsOffline: (state, action) => {
       state.isOffline = action.payload
+    },
+    clearSubmissionBatch: (state, action) => {
+      let currSubmission = current(state.submissions[action.payload[0]?.spdpVillageId]);
+      let newSubmissions = currSubmission.filter(el => el.citizenId != action.payload.find(x => x.citizenId == el.citizenId)?.citizenId);
+      state.submissions[action.payload[0]?.spdpVillageId] = newSubmissions;
+    },
+    updatePendingSubmissions: (state, action) => {
+      state.pendingSubmissions = action.payload
     }
   },
   extraReducers: (builder) => {
@@ -291,11 +300,11 @@ const userDataSlice = createSlice({
         //   ...state.submissions,
         //   [action.payload.villageId]: villageData,
         // };
-      }).addCase(removeSubmission.fulfilled,(state,action)=>{
+      }).addCase(removeSubmission.fulfilled, (state, action) => {
         let tempState = state?.submissions;
-        forEach(Object.keys(action.payload),(key)=>{
+        forEach(Object.keys(action.payload), (key) => {
           delete tempState[key];
-        }) 
+        })
         state.submissions = tempState;
       })
   },
@@ -336,7 +345,9 @@ export const {
   updateCitizenFormData,
   updateSubmissionMedia,
   updateIsOffline,
-  bulkSaveSubmission
+  bulkSaveSubmission,
+  clearSubmissionBatch,
+  updatePendingSubmissions
 } = userDataSlice.actions;
 
 export { store, persistor };

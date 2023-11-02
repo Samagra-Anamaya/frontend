@@ -69,7 +69,7 @@ const AssignedLocations = () => {
     setLocations(assignedLocations || []);
   }, [user, assignedLocations]);
 
- 
+
   const submissions = useSelector(allSubmissionsSelector);
   const token = useSelector(tokenSelector);
 
@@ -121,16 +121,16 @@ const AssignedLocations = () => {
     //     });
     // }
     uploadImagesInBatches(images, token);
-  
+
     // onSubmit();
-  }, [dispatch, token,submissions,uploadImagesInBatches]);
+  }, [dispatch, token, submissions, uploadImagesInBatches]);
 
   async function uploadImagesInBatches(images, token) {
     const BATCH_SIZE = 10;
     const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
-   setLoading(true);
+    setLoading(true);
     // Function to split the array into chunks of a specified size
     const chunkArray = (arr, size) => {
       const chunks = [];
@@ -139,22 +139,22 @@ const AssignedLocations = () => {
       }
       return chunks;
     };
-  
+
     // Sleep function to introduce a delay
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  
+
     // Splitting the images array into batches of 20
     const batches = chunkArray(images, BATCH_SIZE);
-  
+
     for (const batch of batches) {
       const promises = batch.map(async (_image) => {
         let data = new FormData();
         _image?.images.forEach((file) => {
           data.append("files", file, uuidv4() + ".webp");
         });
-  
+
         data.append("meta", JSON.stringify(_image));
-  
+
         const config = {
           method: "POST",
           url: BACKEND_SERVICE_URL + `/upload/multiple`,
@@ -165,10 +165,10 @@ const AssignedLocations = () => {
             Authorization: `Bearer ${token}`,
           },
         };
-  
+
         try {
           const response = await offlinePackage?.sendRequest(config);
-          console.log("hola 1",{response})
+          console.log("hola 1", { response })
           if (response?.result?.length)
             return dispatch(replaceMediaObject(response));
         } catch (error) {
@@ -176,29 +176,29 @@ const AssignedLocations = () => {
           return null;
         }
       });
-  
+
       const responses = await Promise.all(promises);
-      console.log("hola 2",{responses})
+      console.log("hola 2", { responses })
       responses.forEach((res) => {
         if (res?.type.includes("fulfilled")) {
           setIsMediaUploaded(true);
           setShowMediaUploadBtn(false);
         }
       });
-  
+
       // Introduce a delay before processing the next batch
       await sleep(DELAY_TIME);
-      
+
     }
     setLoading(false);
-     onSubmit();
+    onSubmit();
     console.log("hola all done")
   }
-  
 
-  
-  
-  
+
+
+
+
   const onSubmit = useCallback(async () => {
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
     const config = {
@@ -210,36 +210,38 @@ const AssignedLocations = () => {
       },
     };
     const response = await offlinePackage?.sendRequest(config);
-    
+
     console.log("ram ram submitDataResponse:", { response });
-    if(response)
-  { 
-    toast.success("Uploaded..")
+    if (response) {
+      toast.success("Uploaded..")
       dispatch(removeSubmission(response)).then((res) => {
-      console.log("ram ram: removeSubmissionRes", { res });
-      toast.success("records uploaded");
-      setshowSecondBtn(true);
-      localforage.removeItem('_imageRecords')
-    });}
+        console.log("ram ram: removeSubmissionRes", { res });
+        toast.success("records uploaded");
+        setshowSecondBtn(true);
+        localforage.removeItem('_imageRecords')
+      });
+    }
     console.log("debug -submitDataresponse:", { response });
   }, [token, submissions, dispatch]);
 
   const dummySubmission = useCallback(async () => {
     setLoading(true);
     const images = await getImages();
-    console.log("shri ram",{ images,submissions,rec: submissions?.['404234']?.[0] });
-    const submissionsArray =[];
+    console.log("shri ram", { images, submissions, rec: submissions?.['404234']?.[0] });
+    const submissionsArray = [];
     const imagesArray = [];
     [...Array(100).keys()].forEach((num) => {
       imagesArray.push({ ...images[0], citizenId: `Bulk Test-${num}` });
       imagesArray.push({ ...images[1], citizenId: `Bulk Test-${num}` });
-      submissionsArray.push({...submissions?.['404234']?.[0],citizenId: `Bulk Test-${num}`,submissionData:{
-        ...submissions?.['404234']?.[0]?.submissionData,
-        claimantName:`Bulk Test-${num}`
-      }});
+      submissionsArray.push({
+        ...submissions?.['404234']?.[0], citizenId: `Bulk Test-${num}`, submissionData: {
+          ...submissions?.['404234']?.[0]?.submissionData,
+          claimantName: `Bulk Test-${num}`
+        }
+      });
     });
     dispatch(bulkSaveSubmission({
-      '404234':submissionsArray
+      '404234': submissionsArray
     }))
     const r = await localforage.setItem("_imageRecords", imagesArray);
     if (r) {
@@ -247,8 +249,8 @@ const AssignedLocations = () => {
       setshowSecondBtn(false);
       setLoading(false);
     }
-   console.log({ imagesArray });
-  }, [submissions,dispatch]);
+    console.log({ imagesArray });
+  }, [submissions, dispatch]);
   return !hydrated ? null : (
     <div className={styles.container + " animate__animated animate__fadeIn"}>
       {/* <GovtBanner sx={{ paddingTop: '2rem' }} /> */}
@@ -280,11 +282,11 @@ const AssignedLocations = () => {
           </div>
           {showSecondBtn ? (
             <button onClick={dummySubmission} className="btn btn-primary">
-            {loading ? 'Loading...': 'Create Image records'}  
+              {loading ? 'Loading...' : 'Create Image records'}
             </button>
           ) : (
             <button onClick={onAction} className="btn btn-primary">
-              {loading ? 'Loading...': 'Submit 100 records'}   
+              {loading ? 'Loading...' : 'Submit 100 records'}
             </button>
           )}
           {/* {showUploadBtn && 
