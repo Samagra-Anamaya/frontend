@@ -28,6 +28,7 @@ import { Stepper } from "@mui/material";
 import { Step } from "@mui/material";
 import { StepLabel } from "@mui/material";
 
+
 const steps = [
     'Aadhaar Details',
     'Tribe & Land Details',
@@ -410,7 +411,7 @@ const CitizenForm = (props) => {
                     />}
                     <TextField
                         variant='standard'
-                        label={"Area (In Hectares)"}
+                        label={"Area in Hectares (xx.xx)"}
                         onChange={e => setFormState((prevState) => ({ ...prevState, area: e.target.value }))}
                         value={formState?.area}
                         required
@@ -442,7 +443,7 @@ const CitizenForm = (props) => {
                 className={styles.userForm}>
                 <TextField
                     variant='standard'
-                    label={"Plots Claimed Under FRA)"}
+                    label={"No. of Plots Claimed Under FRA"}
                     onChange={e => { if (Number(e.target.value) <= 20) setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: e.target.value })) }}
                     value={formState?.fraPlotsClaimed}
                     required

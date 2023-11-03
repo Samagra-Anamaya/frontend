@@ -245,18 +245,11 @@ const SavedEntries = ({ params }) => {
                   leftImage={"/assets/citizen.svg"}
                   //rightImage={"/assets/upload-icon.png"}
                   secondaryLoading={fileUploading}
-                  secondaryImage={el?.submissionData?.imageUploaded ? null : "/assets/upload-icon.png"}
 
                   mainSubtext={moment(el?.capturedAt).format(
                     "DD MMM YYYY, hh:mm a"
                   )}
                   mainText={el?.submissionData?.parentName}
-                  onSecondaryAction={
-
-                    el?.submissionData?.imageUploaded
-                      ? null
-                      : () => onMediaUpload(el)
-                  }
                   sx={{
                     background: "#fff",
                     marginBottom: "0.5rem",
