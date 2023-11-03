@@ -24,6 +24,15 @@ import { validateAadhaar } from "../../services/utils";
 import { getImageFromMinio } from "../../services/api";
 import { useSelector } from "react-redux";
 import { getTbName } from "./tribe-names";
+import { Stepper } from "@mui/material";
+import { Step } from "@mui/material";
+import { StepLabel } from "@mui/material";
+
+const steps = [
+    'Aadhaar Details',
+    'Tribe & Land Details',
+    'Plot Details',
+];
 
 const CitizenForm = (props) => {
     const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
@@ -80,18 +89,20 @@ const CitizenForm = (props) => {
         getRecordImages();
     }, [])
 
-    console.log("land ->", landImages);
     const tribeOptions = useMemo(() => getTbName(), []);
+
     return (
         <>
-            <MobileStepper
-                variant="progress"
-                steps={3}
-                position="static"
-                activeStep={activeStep}
-                sx={{ width: '170vw', marginRight: '-85vw', marginBottom: '1rem' }}
-            />
+            <Stepper activeStep={activeStep} alternativeLabel
+                sx={{ width: '100vw', marginBottom: '1rem' }}
 
+            >
+                {steps.map((label) => (
+                    <Step key={label}>
+                        <StepLabel>{label}</StepLabel>
+                    </Step>
+                ))}
+            </Stepper>
             {
 
                 activeStep == 0 && <form onSubmit={(e) => {

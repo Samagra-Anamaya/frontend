@@ -16,7 +16,7 @@ import { useSelector } from "react-redux";
 const Banner = (props) => {
   const [logoutModal, showLogoutModal] = useState(false);
   const dispatch = useDispatch();
-  const isAuthenticated = useSelector(state => state.userData.isAuthenticated);
+  const userData = useSelector(state => state?.userData);
 
   const logout = () => {
     dispatch(logoutUser());
@@ -26,14 +26,18 @@ const Banner = (props) => {
     }, 200)
   }
 
+
+
   return (
     <div>
       <MDBCard className="p-0">
         <MDBRow className="g-0 mt-1 m-0">
 
-          {isAuthenticated && <MDBCol size="1" className="text-right p-0">
-            <Menu>
-              <div onClick={() => showLogoutModal(true)}>
+          {userData?.isAuthenticated && <MDBCol size="1" className="text-right p-0">
+            <Menu >
+              <div>Hi there 👋,</div>
+              <div style={{ marginBottom: 20 }}>Enumerator {userData?.user?.user?.username}</div>
+              <div onClick={() => { showLogoutModal(true) }}>
                 <span><LogoutIcon style={{ color: '#007922', fontSize: 40 }} /></span>&nbsp;&nbsp;&nbsp;
                 <span>Logout</span>
               </div>

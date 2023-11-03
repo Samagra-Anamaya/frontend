@@ -69,21 +69,21 @@ body {
 .bm-burger-bars {
   position: relative;
   background: #017922;
-  height: 5px !important;
-  width: 2.4rem;
+  height: 4px !important;
+  width: 1.8rem;
   margin: 0rem !important;
-  left: 15px !important;
+  left: 20px !important;
   margin-bottom: -2rem !important;
   padding: 0;
   top: 30% !important;
 }
 
 .bm-burger-bars:nth-child(2) {
-  top: 45% !important;
+  top: 40% !important;
 }
 
 .bm-burger-bars:nth-child(3) {
-  top: 60% !important;
+  top: 52% !important;
 }
 
 /* Position and sizing of clickable cross button */
@@ -116,6 +116,7 @@ Note: Beware of modifying this element as it can break the animations - you shou
   flex-direction: column;
   align-items: flex-start;
   border-right: 4px solid #017922;
+
 }
 
 /* Morph shape necessary with bubble or elastic */
@@ -127,6 +128,9 @@ Note: Beware of modifying this element as it can break the animations - you shou
 .bm-item-list {
   color: #017922;
   padding: 0.8em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 /* Individual item */
