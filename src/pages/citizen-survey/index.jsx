@@ -20,6 +20,7 @@ import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
 import moment from "moment";
 import { MobileStepper } from "@mui/material";
+import { v4 as uuidv4 } from "uuid";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -96,12 +97,17 @@ const CitizenSurveyPage = ({ params }) => {
 
         rorImages[el] = compressedImg;
       }
+
+      // for (let i = 0; i < 100; i++) {
+      // console.log("SAVING FORM ", i)
+      // let c = uuidv4();
+
       if (landImages?.length) await storeImages(
         {
           citizenId: currCitizen.citizenId,
           images: landImages,
           isLandRecord: true,
-          villageId:_currLocation.villageCode
+          villageId: _currLocation.villageCode
         }
       );
       if (rorImages?.length) await storeImages(
@@ -109,11 +115,11 @@ const CitizenSurveyPage = ({ params }) => {
           citizenId: currCitizen.citizenId,
           images: rorImages,
           isLandRecord: false,
-          villageId:_currLocation.villageCode
+          villageId: _currLocation.villageCode
         }
       );
 
-      let newFormState = formState;
+      let newFormState = { ...formState };
       // newFormState['landRecords'] = landImages;
       // newFormState['rorRecords'] = rorImages;
       newFormState['imageUploaded'] = false;
@@ -129,6 +135,7 @@ const CitizenSurveyPage = ({ params }) => {
       }
 
       console.log("Final Submission Object: ", newFormState)
+
       dispatch(
         saveCitizenFormData({
           submissionData: newFormState,
@@ -138,6 +145,7 @@ const CitizenSurveyPage = ({ params }) => {
           capturedAt,
         })
       );
+      // }
       setLoading(false);
       logEvent(analytics, "form_saved", {
         villageId: _currLocation.villageCode,

@@ -57,6 +57,7 @@ const userDataSlice = createSlice({
       state.assignedLocations = action.payload?.user?.data?.villages;
     },
     logoutUser: (state) => {
+      console.log("Logging user out")
       state.isAuthenticated = false;
       state.user = null;
       state.assignedLocations = [];
@@ -66,6 +67,10 @@ const userDataSlice = createSlice({
       state.searchQuery = {};
       state.searchSavedQuery = {};
       state.submissions = {};
+      state.status = {};
+      state.error = {};
+      state.isOffline = false;
+      state.pendingSubmissions = [];
     },
     setCurrentLocation: (state, action) => {
       state.currentLocation = action.payload;
@@ -352,5 +357,5 @@ export const {
 
 export { store, persistor };
 
-export const tokenSelector = (state) => state.userData.user.token;
+export const tokenSelector = (state) => state?.userData?.user?.token;
 export const allSubmissionsSelector = (state) => state?.userData?.submissions;

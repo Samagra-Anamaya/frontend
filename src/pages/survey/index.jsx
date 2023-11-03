@@ -218,7 +218,7 @@ const SurveyPage = ({ params }) => {
   async function uploadImagesInBatches() {
     const images = await getImagesForVillage(_currLocation?.villageCode);
     console.log("Images for ", _currLocation.villageCode, images)
-    const BATCH_SIZE = 1;
+    const BATCH_SIZE = 10;
     const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -275,7 +275,7 @@ const SurveyPage = ({ params }) => {
   }
 
   async function performBatchSubmission() {
-    const BATCH_SIZE = 1;
+    const BATCH_SIZE = 10;
     const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -355,14 +355,16 @@ const SurveyPage = ({ params }) => {
 
 
       <div className="px-3">
-        <SelectionItem
+        {/* <SelectionItem
           key={_currLocation.id}
           leftImage={"/assets/villageIcon.png"}
           mainText={_currLocation.villageName}
           mainSubtext={"Village Code - " + _currLocation.villageCode}
           sx={{ background: "#fff" }}
           mode={1}
-        />
+        /> */}
+        <p className={styles.headerText}>{_currLocation.villageName} </p>
+        <p className={styles.villageCode}>{_currLocation.villageCode}</p>
 
         {disableSubmitEntries ? (
           <div className={styles.submitBtnDisabled}>
@@ -412,7 +414,7 @@ const SurveyPage = ({ params }) => {
           }}
           leftImage={"/assets/assessment.png"}
           rightImage={"/assets/circleArrow.png"}
-          mainText={"View Completed Entries"}
+          mainText={"View Completed Records"}
           href="/completed-entries"
         />
         <SelectionItem
@@ -426,7 +428,7 @@ const SurveyPage = ({ params }) => {
           }}
           leftImage={"/assets/savedEntries.png"}
           rightImage={"/assets/circleArrow.png"}
-          mainText={"View Saved Entries"}
+          mainText={"View Saved Records"}
           href="/saved-entries"
         />
         <SelectionItem
@@ -446,7 +448,6 @@ const SurveyPage = ({ params }) => {
           leftImage={"/assets/unresolvedFlags.png"}
           sx={{ background: "#b2b2b2" }}
           mainText={"Unresolved Flags"}
-          rightImage={"/assets/circleArrow.png"}
         />
       </div>
       {submitModal && (

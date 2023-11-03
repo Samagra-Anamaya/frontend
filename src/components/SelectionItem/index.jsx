@@ -17,15 +17,15 @@ const SelectionItem = (props) => {
         href,
         imgWidth,
         onSubBtnClick,
-        rightActionLogo=null
+        rightActionLogo = null
     } = props
     const router = useRouter();
 
     return href?.length ?
         (
             <Link href={href} className={`${styles.container}`} onClick={onClick} style={{ ...props.sx, textDecoration: 'none' }}>
-                <div style={{width:'45px' ,height:'45px'}} >
-                    <img src={leftImage} style={{width:'40px' ,height:'40px'}}  />
+                <div style={{ width: '45px', height: '45px' }} >
+                    <img src={leftImage} style={{ width: '40px', height: '40px' }} />
                 </div>
                 <div>
                     <p className={styles.mainText}>{mainText}</p>
@@ -37,8 +37,8 @@ const SelectionItem = (props) => {
             </Link>
         ) : (
             <div className={styles.container} onClick={onClick} style={{ ...props.sx }} >
-                <div style={{ width: rightImage ? '' : '40%', margin: rightImage ? '' : '1.5rem' }}>
-                    <img src={leftImage} style={{width:'40px' ,height:'40px'}} />
+                <div style={{ width: rightImage ? '' : '10%', margin: rightImage ? '' : '1.5rem' }}>
+                    <img src={leftImage} style={{ width: '40px', height: '40px' }} />
                 </div>
                 <div>
                     <p className={styles.mainText} style={{ color: mode == 1 ? '#017922' : '#fff' }}>{mainText}</p>
@@ -47,13 +47,13 @@ const SelectionItem = (props) => {
                 <div>
                     <img src={rightImage} style={{ width: imgWidth ? imgWidth : '' }} />
                 </div>
-                 {onSubBtnClick && <img src={rightActionLogo} onClick={(ev)=>{
+                {onSubBtnClick && <img src={rightActionLogo} onClick={(ev) => {
                     ev.preventDefault();
                     ev.stopPropagation()
                     onSubBtnClick()
-                 }} style={{ width: '40px' ,height:'40px' }} /> }
+                }} style={{ width: '40px', height: '40px' }} />}
             </div>
-         
+
         )
 };
 

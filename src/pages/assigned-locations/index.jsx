@@ -256,11 +256,6 @@ const AssignedLocations = () => {
       {/* <GovtBanner sx={{ paddingTop: '2rem' }} /> */}
       <Banner />
       <div className={`${styles.mainContent} p-2`}>
-        <CommonHeader
-          text={"Hello there 👋"}
-          subText={`Enumerator ID : ${user?.user?.username}`}
-          showBack={false}
-        />
 
         <div className={styles.userInfoCard}>
           <img src="/assets/infoHeaderIcon.png" />
