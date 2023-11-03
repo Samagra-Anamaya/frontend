@@ -8,7 +8,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 999;
+    z-index: 1200;
     backdrop-filter: blur(2px);
     overflow: hidden;
     -ms-overflow-style: none;
@@ -24,6 +24,7 @@
     max-width: 70%;
     width: 80%;
     height: 76%;
+    z-index: 1300;
     border-radius: 0.5rem;
     overflow: hidden;
     -ms-overflow-style: none;

@@ -12,8 +12,10 @@ import { useRouter } from "next/navigation";
 import CommonHeader from "../../components/Commonheader";
 import { v4 as uuidv4 } from "uuid";
 import {
+  clearSubmissionBatch,
   clearSubmissions,
   setCurrentCitizen,
+  tokenSelector,
   updateCitizenFormData,
 } from "../../redux/store";
 import { useOfflineSyncContext } from "offline-sync-handler-test";
@@ -27,7 +29,7 @@ import { analytics } from "../../services/firebase/firebase";
 import { uploadMedia } from "../../services/api";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
-import { getCitizenImageRecords, getImages } from "../../services/utils";
+import { chunkArray, getCitizenImageRecords, getImages, getImagesForVillage, sleep } from "../../services/utils";
 import { formDataToObject } from "../../utils/formdata-to-object";
 import { replaceMediaObject } from "../../redux/actions/replaceMediaObject";
 
@@ -49,6 +51,7 @@ const SurveyPage = ({ params }) => {
   const [submitModal, showSubmitModal] = useState(false);
   const [disableSubmitEntries, setDisableSubmitEntries] = useState(false);
   const [warningModal, showWarningModal] = useState(false);
+  const token = useSelector(tokenSelector);
   const router = useRouter();
   const dispatch = useDispatch();
   const containerRef = useRef();
@@ -64,6 +67,24 @@ const SurveyPage = ({ params }) => {
       containerRef.current.scrollIntoView();
     }
   });
+
+  useEffect(() => {
+    console.log({ submissions })
+    if (submissions?.length) {
+      let mediaUploaded = false;
+      for (let el in submissions) {
+        if (
+          (!submissions[el]?.submissionData?.landRecords?.length && submissions[el]?.submissionData?.rorRecords?.length)
+          || (submissions[el]?.submissionData?.landRecords?.length && !submissions[el]?.submissionData?.rorRecords?.length)
+          || (submissions[el]?.submissionData?.landRecords?.length && submissions[el]?.submissionData?.rorRecords?.length)
+        ) {
+          mediaUploaded = true;
+        } else mediaUploaded = false;
+      }
+      console.log("Setting Media Uploaded as ->", mediaUploaded)
+      setIsMediaUploaded(mediaUploaded);
+    }
+  }, [])
 
   async function checkSavedRequests() {
     let savedRequests = await offlinePackage.getStoredRequests();
@@ -104,123 +125,227 @@ const SurveyPage = ({ params }) => {
     router.push(`/citizen-survey`);
   };
 
-  const submitData2 = async () => {
-    try {
-      setLoading(true);
+  // const submitData2 = async () => {
+  //   try {
+  //     setLoading(true);
 
-      const submissionData = {
-        [_currLocation.villageCode]: submissions,
-      };
-      console.log("shri ram: submit2", { submissionData, submissions });
-      const config = {
-        method: "POST",
-        url: BACKEND_SERVICE_URL + `/submissions/bulk`,
-        data: submissionData,
-        headers: {
-          Authorization: `Bearer ${userData?.user?.token}`,
-        },
-      };
-      const response = await offlinePackage?.sendRequest(config);
-      if (response && Object.keys(response)?.length) {
-        // dispatch(saveCitizenFormData({ id: currCitizen.citizenId, data: formState, capturedAt: capturedAt }))
-        dispatch(clearSubmissions(_currLocation?.villageCode));
-        setLoading(false);
-        showSubmitModal(false);
-        logEvent(analytics, "submission_successfull", {
-          villageId: _currLocation.villageCode,
-          villageName: _currLocation.villageName,
-          user_id: userData?.user?.user?.username,
-          app_status: navigator.onLine ? "online" : "offline",
-        });
-      } else {
-        toast.error(
-          "An error occured while submitting form. Please try again \nError String : " +
-          JSON.stringify(response)
-        );
-        showSubmitModal(false);
-        setLoading(false);
-        checkSavedRequests();
-        logEvent(analytics, "submission_failure", {
-          villageId: _currLocation.villageCode,
-          villageName: _currLocation.villageName,
-          user_id: userData?.user?.user?.username,
-          app_status: navigator.onLine ? "online" : "offline",
-        });
-        // Either an error or offline
-        // if (!navigator.onLine) {
-        //   // Submitted Offline
-        //   // dispatch(saveCitizenFormData({ id: currCitizen.citizenId, data: formState, capturedAt: capturedAt }))
-        //   setLoading(false);
-        //   showSubmitModal(false);
-        //   checkSavedRequests();
-        //   logEvent(analytics, "submission_queued", {
-        //     villageId: _currLocation.villageCode,
-        //     villageName: _currLocation.villageName,
-        //     user_id: userData?.user?.user?.username,
-        //     app_status: navigator.onLine ? "online" : "offline",
-        //   });
-        // } else {
-        //   alert(
-        //     "An error occured while submitting form. Please try again \nError String : " +
-        //       JSON.stringify(response)
-        //   );
-        //   showSubmitModal(false);
-        //   setLoading(false);
-        //   checkSavedRequests();
-        //   logEvent(analytics, "submission_failure", {
-        //     villageId: _currLocation.villageCode,
-        //     villageName: _currLocation.villageName,
-        //     user_id: userData?.user?.user?.username,
-        //     app_status: navigator.onLine ? "online" : "offline",
-        //   });
-        // }
-      }
-    } catch (err) {
-      console.error("ERR", err);
-    }
-  };
+  //     const submissionData = {
+  //       [_currLocation.villageCode]: submissions,
+  //     };
+  //     console.log("shri ram: submit2", { submissionData, submissions });
+  //     const config = {
+  //       method: "POST",
+  //       url: BACKEND_SERVICE_URL + `/submissions/bulk`,
+  //       data: submissionData,
+  //       headers: {
+  //         Authorization: `Bearer ${userData?.user?.token}`,
+  //       },
+  //     };
+  //     const response = await offlinePackage?.sendRequest(config);
+  //     if (response && Object.keys(response)?.length) {
+  //       // dispatch(saveCitizenFormData({ id: currCitizen.citizenId, data: formState, capturedAt: capturedAt }))
+  //       dispatch(clearSubmissions(_currLocation?.villageCode));
+  //       setLoading(false);
+  //       showSubmitModal(false);
+  //       logEvent(analytics, "submission_successfull", {
+  //         villageId: _currLocation.villageCode,
+  //         villageName: _currLocation.villageName,
+  //         user_id: userData?.user?.user?.username,
+  //         app_status: navigator.onLine ? "online" : "offline",
+  //       });
+  //     } else {
+  //       toast.error(
+  //         "An error occured while submitting form. Please try again \nError String : " +
+  //         JSON.stringify(response)
+  //       );
+  //       showSubmitModal(false);
+  //       setLoading(false);
+  //       checkSavedRequests();
+  //       logEvent(analytics, "submission_failure", {
+  //         villageId: _currLocation.villageCode,
+  //         villageName: _currLocation.villageName,
+  //         user_id: userData?.user?.user?.username,
+  //         app_status: navigator.onLine ? "online" : "offline",
+  //       });
+  //     }
+  //   } catch (err) {
+  //     console.error("ERR", err);
+  //   }
+  // };
 
-  const submitData = useCallback(async () => {
-    setLoading(true);
-    const images = await getImages();
+  // const submitData = useCallback(async () => {
+  //   setLoading(true);
+  //   const images = await getImages();
 
-    for (const _image of images) {
-      let data = new FormData();
-      _image?.images.forEach((file) => {
-        data.append("files", file, uuidv4() + '.webp');
-      });
+  //   for (const _image of images) {
+  //     let data = new FormData();
+  //     _image?.images.forEach((file) => {
+  //       data.append("files", file, uuidv4() + '.webp');
+  //     });
 
-      data.append("meta", JSON.stringify(_image));
+  //     data.append("meta", JSON.stringify(_image));
 
-      const config = {
-        method: "POST",
-        url: BACKEND_SERVICE_URL + `/upload/multiple`,
-        meta: _image,
-        data,
-        isFormdata: true,
-        headers: {
-          Authorization: `Bearer ${userData?.user?.token}`,
-        },
-      };
+  //     const config = {
+  //       method: "POST",
+  //       url: BACKEND_SERVICE_URL + `/upload/multiple`,
+  //       meta: _image,
+  //       data,
+  //       isFormdata: true,
+  //       headers: {
+  //         Authorization: `Bearer ${userData?.user?.token}`,
+  //       },
+  //     };
 
-      const response = await offlinePackage?.sendRequest(config);
-      if (response?.result?.length)
-        dispatch(replaceMediaObject(response)).then((res) => {
-          if (res.type.includes("fulfilled")) {
-            setIsMediaUploaded(true);
-          }
-        });
-      else {
-        showSubmitModal(false);
-      }
-    }
-    setLoading(false);
-  }, []);
+  //     const response = await offlinePackage?.sendRequest(config);
+  //     if (response?.result?.length)
+  //       dispatch(replaceMediaObject(response)).then((res) => {
+  //         if (res.type.includes("fulfilled")) {
+  //           setIsMediaUploaded(true);
+  //         }
+  //       });
+  //     else {
+  //       showSubmitModal(false);
+  //     }
+  //   }
+  //   setLoading(false);
+  // }, []);
 
   const breadcrumbItems = useMemo(
     () => [{ label: "Home", to: "/" }, { label: _currLocation?.villageName }],
     [_currLocation?.villageName]
   );
+
+  async function uploadImagesInBatches() {
+    const images = await getImagesForVillage(_currLocation?.villageCode);
+    console.log("Images for ", _currLocation.villageCode, images)
+    const BATCH_SIZE = 10;
+    const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
+    const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
+
+    setLoading(true);
+    // Splitting the images array into batches of 20
+    const batches = chunkArray(images, BATCH_SIZE);
+    console.log("Batches ->", batches);
+
+    for (const batch of batches) {
+      const promises = batch.map(async (_image) => {
+        let data = new FormData();
+        _image?.images.forEach((file) => {
+          data.append("files", file, uuidv4() + ".webp");
+        });
+
+        data.append("meta", JSON.stringify(_image));
+
+        const config = {
+          method: "POST",
+          url: BACKEND_SERVICE_URL + `/upload/multiple`,
+          meta: _image,
+          data,
+          isFormdata: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
+        try {
+          const response = await offlinePackage?.sendRequest(config);
+          console.log("hola 1", { response })
+          if (response?.result?.length)
+            return dispatch(replaceMediaObject(response));
+        } catch (error) {
+          console.error("Error uploading image", error);
+          return null;
+        }
+      });
+
+      const responses = await Promise.all(promises);
+      console.log("hola 2", { responses })
+      responses.forEach((res) => {
+        if (res?.type.includes("fulfilled")) {
+          setIsMediaUploaded(true);
+        }
+      });
+
+      // Introduce a delay before processing the next batch
+      await sleep(DELAY_TIME);
+
+    }
+    setLoading(false);
+    console.log("hola all done")
+  }
+
+  async function performBatchSubmission() {
+    const BATCH_SIZE = 10;
+    const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
+    const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
+
+    setLoading(true);
+
+    // Splitting the images array into batches of 10
+    const batches = chunkArray(submissions, BATCH_SIZE);
+    console.log("Batches ->", batches);
+
+    const responses = [];
+
+    for (let el in batches) {
+
+      let batch = batches[el];
+
+      const submissionData = {
+        [_currLocation.villageCode]: batch,
+      };
+
+      const config = {
+        method: "POST",
+        url: BACKEND_SERVICE_URL + `/submissions/bulk`,
+        data: submissionData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      try {
+        // Introduce a delay before processing the next batch
+        await sleep(DELAY_TIME);
+        const response = await offlinePackage?.sendRequest(config);
+        console.log("Batch Submission Response", { response })
+
+        if (response && Object.keys(response)?.length) {
+          logEvent(analytics, "submission_successfull", {
+            villageId: _currLocation.villageCode,
+            villageName: _currLocation.villageName,
+            user_id: userData?.user?.user?.username,
+            app_status: navigator.onLine ? "online" : "offline",
+          });
+          responses.push(response);
+          dispatch(clearSubmissionBatch(batch))
+        } else {
+          toast.error(
+            "An error occured while submitting form. Please try again \nError String : " +
+            JSON.stringify(response)
+          );
+          checkSavedRequests();
+          logEvent(analytics, "submission_failure", {
+            villageId: _currLocation.villageCode,
+            villageName: _currLocation.villageName,
+            user_id: userData?.user?.user?.username,
+            app_status: navigator.onLine ? "online" : "offline",
+          });
+          responses.push(response);
+        }
+
+      } catch (error) {
+        console.error("Error Submitting Submission Data: ", error);
+      }
+    }
+
+    console.log("Final Submission Responses ---->", { responses })
+
+    setLoading(false);
+    showSubmitModal(false);
+    console.log("Batch submission completed")
+  }
+
 
   //const showSubmitBtn =useMemo(()=>,[]);
   return !hydrated ? null : (
@@ -230,14 +355,16 @@ const SurveyPage = ({ params }) => {
 
 
       <div className="px-3">
-        <SelectionItem
+        {/* <SelectionItem
           key={_currLocation.id}
           leftImage={"/assets/villageIcon.png"}
           mainText={_currLocation.villageName}
           mainSubtext={"Village Code - " + _currLocation.villageCode}
           sx={{ background: "#fff" }}
           mode={1}
-        />
+        /> */}
+        <p className={styles.headerText}>{_currLocation.villageName} </p>
+        <p className={styles.villageCode}>{_currLocation.villageCode}</p>
 
         {disableSubmitEntries ? (
           <div className={styles.submitBtnDisabled}>
@@ -257,7 +384,7 @@ const SurveyPage = ({ params }) => {
                   showSubmitModal(true);
               }}
             >
-              Submit Saved Entries
+              Submit Saved Titles
             </div>
           )
         )}
@@ -287,7 +414,7 @@ const SurveyPage = ({ params }) => {
           }}
           leftImage={"/assets/assessment.png"}
           rightImage={"/assets/circleArrow.png"}
-          mainText={"View Completed Entries"}
+          mainText={"View Completed Records"}
           href="/completed-entries"
         />
         <SelectionItem
@@ -301,7 +428,7 @@ const SurveyPage = ({ params }) => {
           }}
           leftImage={"/assets/savedEntries.png"}
           rightImage={"/assets/circleArrow.png"}
-          mainText={"View Saved Entries"}
+          mainText={"View Saved Records"}
           href="/saved-entries"
         />
         <SelectionItem
@@ -321,7 +448,6 @@ const SurveyPage = ({ params }) => {
           leftImage={"/assets/unresolvedFlags.png"}
           sx={{ background: "#b2b2b2" }}
           mainText={"Unresolved Flags"}
-          rightImage={"/assets/circleArrow.png"}
         />
       </div>
       {submitModal && (
@@ -333,7 +459,7 @@ const SurveyPage = ({ params }) => {
           ) : (
             <div style={modalStyles.container}>
               <div style={modalStyles.mainText}>
-                A total of {submissions?.length} entries will be submitted for{" "}
+                A total of {submissions?.length} entries will be submitted for
                 {_currLocation.villageName}
               </div>
               <p style={modalStyles.warningText}>
@@ -351,7 +477,7 @@ const SurveyPage = ({ params }) => {
                         user_id: userData?.user?.user?.username,
                         app_status: navigator.onLine ? "online" : "offline",
                       });
-                      submitData2();
+                      performBatchSubmission();
                     }}
                   >
                     Submit
@@ -366,7 +492,7 @@ const SurveyPage = ({ params }) => {
                         user_id: userData?.user?.user?.username,
                         app_status: navigator.onLine ? "online" : "offline",
                       });
-                      submitData();
+                      uploadImagesInBatches();
                     }}
                   >
                     Upload Media
@@ -401,7 +527,7 @@ const SurveyPage = ({ params }) => {
               offline mode.
             </div>
             <p style={warningModalStyles.mainText}>
-              You will have to resubmit saved entries in villages again{" "}
+              You will have to re-submit saved titles in villages again{" "}
               {"(your data is safe)"}
             </p>
             <div style={warningModalStyles.btnContainer}>

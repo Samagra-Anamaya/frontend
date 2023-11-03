@@ -5,6 +5,7 @@ import storage from "redux-persist/lib/storage"; // defaults to localStorage for
 import { replaceMediaObject } from "./actions/replaceMediaObject";
 import { _updateSubmissionMedia } from "./actions/updateSubmissionMedia";
 import { removeSubmission } from "./actions/removeSubmission";
+import { ptBR } from "@mui/x-date-pickers";
 // import storage from 'redux-persist-indexeddb-storage';
 
 // const authSlice = createSlice({
@@ -47,7 +48,8 @@ const userDataSlice = createSlice({
     submissions: {},
     status: "",
     error: {},
-    isOffline: false
+    isOffline: false,
+    pendingSubmissions: []
   },
   reducers: {
     login: (state, action) => {
@@ -56,6 +58,7 @@ const userDataSlice = createSlice({
       state.assignedLocations = action.payload?.user?.data?.villages;
     },
     logoutUser: (state) => {
+      console.log("Logging user out")
       state.isAuthenticated = false;
       state.user = null;
       state.assignedLocations = [];
@@ -65,6 +68,10 @@ const userDataSlice = createSlice({
       state.searchQuery = {};
       state.searchSavedQuery = {};
       state.submissions = {};
+      state.status = {};
+      state.error = {};
+      state.isOffline = false;
+      state.pendingSubmissions = [];
     },
     setCurrentLocation: (state, action) => {
       state.currentLocation = action.payload;
@@ -111,6 +118,10 @@ const userDataSlice = createSlice({
           action.payload,
         ],
       };
+    },
+    bulkSaveSubmission: (state, action) => {
+      state.submissions = action.payload;
+
     },
     updateCitizenFormData: (state, action) => {
       let submissionArray = state.submissions[action.payload.spdpVillageId];
@@ -177,6 +188,14 @@ const userDataSlice = createSlice({
     },
     updateIsOffline: (state, action) => {
       state.isOffline = action.payload
+    },
+    clearSubmissionBatch: (state, action) => {
+      let currSubmission = current(state.submissions[action.payload[0]?.spdpVillageId]);
+      let newSubmissions = currSubmission.filter(el => el.citizenId != action.payload.find(x => x.citizenId == el.citizenId)?.citizenId);
+      state.submissions[action.payload[0]?.spdpVillageId] = newSubmissions;
+    },
+    updatePendingSubmissions: (state, action) => {
+      state.pendingSubmissions = action.payload
     }
   },
   extraReducers: (builder) => {
@@ -287,11 +306,11 @@ const userDataSlice = createSlice({
         //   ...state.submissions,
         //   [action.payload.villageId]: villageData,
         // };
-      }).addCase(removeSubmission.fulfilled,(state,action)=>{
+      }).addCase(removeSubmission.fulfilled, (state, action) => {
         let tempState = state?.submissions;
-        forEach(Object.keys(action.payload),(key)=>{
+        forEach(Object.keys(action.payload), (key) => {
           delete tempState[key];
-        }) 
+        })
         state.submissions = tempState;
       })
   },
@@ -331,10 +350,20 @@ export const {
   clearSubmissions,
   updateCitizenFormData,
   updateSubmissionMedia,
-  updateIsOffline
+  updateIsOffline,
+  bulkSaveSubmission,
+  clearSubmissionBatch,
+  updatePendingSubmissions
 } = userDataSlice.actions;
 
 export { store, persistor };
 
-export const tokenSelector = (state) => state.userData.user.token;
+export const tokenSelector = (state) => state?.userData?.user?.token;
 export const allSubmissionsSelector = (state) => state?.userData?.submissions;
+export const currentVillageSubmissions = (state) => state.userData.submissions[state.userData.currentLocation.villageCode]
+export const getVillageSubmissions = (id) => (state) => {
+  console.log({ id, state: state.userData.submissions });
+  return state.userData.submissions[id]
+}
+export const currentLocationSelector = (state) => state?.userData?.currentLocation
+

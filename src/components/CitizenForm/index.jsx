@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./index.module.scss";
 import {
     TextField,
@@ -9,6 +9,7 @@ import {
     MenuItem,
     FormControl,
     Tooltip,
+    Autocomplete,
 } from "@mui/material";
 
 import MobileStepper from '@mui/material/MobileStepper';
@@ -22,6 +23,16 @@ import ImageViewer from 'react-simple-image-viewer';
 import { validateAadhaar } from "../../services/utils";
 import { getImageFromMinio } from "../../services/api";
 import { useSelector } from "react-redux";
+import { getTbName } from "./tribe-names";
+import { Stepper } from "@mui/material";
+import { Step } from "@mui/material";
+import { StepLabel } from "@mui/material";
+
+const steps = [
+    'Aadhaar Details',
+    'Tribe & Land Details',
+    'Plot Details',
+];
 
 const CitizenForm = (props) => {
     const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
@@ -78,17 +89,20 @@ const CitizenForm = (props) => {
         getRecordImages();
     }, [])
 
-    console.log("land ->", landImages)
+    const tribeOptions = useMemo(() => getTbName(), []);
+
     return (
         <>
-            <MobileStepper
-                variant="progress"
-                steps={3}
-                position="static"
-                activeStep={activeStep}
-                sx={{ width: '170vw', marginRight: '-85vw', marginBottom: '1rem' }}
-            />
+            <Stepper activeStep={activeStep} alternativeLabel
+                sx={{ width: '100vw', marginBottom: '1rem' }}
 
+            >
+                {steps.map((label) => (
+                    <Step key={label}>
+                        <StepLabel>{label}</StepLabel>
+                    </Step>
+                ))}
+            </Stepper>
             {
 
                 activeStep == 0 && <form onSubmit={(e) => {
@@ -366,7 +380,7 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />}
-                    <TextField
+                    {/* <TextField
                         variant='standard'
                         label={"Tribe Name"}
                         onChange={e => setFormState((prevState) => ({ ...prevState, tribeName: e.target.value }))}
@@ -375,7 +389,25 @@ const CitizenForm = (props) => {
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
 
-                    />
+                    /> */}
+                    {formEditable && <Autocomplete
+                        disablePortal
+                        id="tribe-input"
+                        options={tribeOptions}
+                        sx={{ mb: 4, width: '80%' }}
+                        onChange={(e, value) => setFormState((prevState) => ({ ...prevState, tribeName: value.label }))}
+                        required
+                        renderInput={(params) => <TextField {...params} variant='standard' required label={"Tribe Name"} value={formState?.tribeName} />}
+                    />}
+                    {!formEditable && <TextField
+                        variant='standard'
+                        label={"Tribe Name"}
+                        value={formState?.tribeName}
+                        required
+                        sx={{ mb: 4, width: '80%' }}
+                        disabled={!formEditable ? true : false}
+
+                    />}
                     <TextField
                         variant='standard'
                         label={"Area (In Hectares)"}

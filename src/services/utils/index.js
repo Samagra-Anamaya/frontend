@@ -226,8 +226,16 @@ export const storeImages = async (data) => {
   return await localForage.setItem("imageRecords", imageRecords);
 }
 
-export const getImages = async (key) => {
+export const getImages = async () => {
   return await localForage.getItem("imageRecords");
+}
+
+export const getImagesForVillage = async (villageId) => {
+  let imageRecords = await getImages();
+  if (imageRecords?.length > 0) {
+    return imageRecords.filter(el => el.villageId == villageId)
+  }
+  return []
 }
 
 export const getCitizenImageRecords = async (citizenId) => {
@@ -287,3 +295,15 @@ export function validateAadhaar(aadharNumber) {
 
   return (c === 0)
 }
+
+// Function to split the array into chunks of a specified size
+export const chunkArray = (arr, size) => {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
+
+// Sleep function to introduce a delay
+export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
