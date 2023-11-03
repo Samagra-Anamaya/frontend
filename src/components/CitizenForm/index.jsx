@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./index.module.scss";
 import {
     TextField,
@@ -9,6 +9,7 @@ import {
     MenuItem,
     FormControl,
     Tooltip,
+    Autocomplete,
 } from "@mui/material";
 
 import MobileStepper from '@mui/material/MobileStepper';
@@ -22,6 +23,7 @@ import ImageViewer from 'react-simple-image-viewer';
 import { validateAadhaar } from "../../services/utils";
 import { getImageFromMinio } from "../../services/api";
 import { useSelector } from "react-redux";
+import { getTbName } from "./tribe-names";
 
 const CitizenForm = (props) => {
     const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
@@ -78,7 +80,8 @@ const CitizenForm = (props) => {
         getRecordImages();
     }, [])
 
-    console.log("land ->", landImages)
+    console.log("land ->", landImages);
+    const top100Films = useMemo(()=>getTbName(),[]);     
     return (
         <>
             <MobileStepper
@@ -366,7 +369,7 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />}
-                    <TextField
+                    {/* <TextField
                         variant='standard'
                         label={"Tribe Name"}
                         onChange={e => setFormState((prevState) => ({ ...prevState, tribeName: e.target.value }))}
@@ -375,7 +378,17 @@ const CitizenForm = (props) => {
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
 
-                    />
+                    /> */}
+                      <Autocomplete
+      disablePortal
+      id="combo-box-demo"
+      options={top100Films}
+      sx={{ width: 300 }}
+      renderInput={(params) => <TextField {...params}   variant='standard' label={"Tribe Name"} value={formState?.tribeName}
+      required
+      sx={{ mb: 4}}
+      disabled={!formEditable ? true : false}/>}
+    />
                     <TextField
                         variant='standard'
                         label={"Area (In Hectares)"}

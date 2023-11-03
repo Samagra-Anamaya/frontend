@@ -58,28 +58,36 @@ export default function App({ Component, pageProps }) {
         if (res?.type?.includes('fulfilled')) {
           console.log("Clearing Image Records for --->", response?.config?.meta?.citizenId)
           removeCitizenImageRecord(response?.config?.meta?.citizenId);
-
-          // Updating villageId in pending submissions
-          if (store.getState().userData.isOffline) {
-            let ps = [...store.getState().userData.pendingSubmissions];
-            if (!ps.includes(response?.config?.meta?.villageId)) ps.push(response?.config?.meta?.villageId);
-            store.dispatch(updatePendingSubmissions(ps));
-          }
-
-          const apiRequests = await localforage.getItem('apiRequests');
-
-          if (apiRequests?.length < 1) {
-            if (store.getState().userData.isOffline) {
-              store.dispatch(updateIsOffline(false));
-              setTimeout(() => {
-                performBatchSubmission(response);
-              }, 1000)
-            }
-          }
-
         }
       })
 
+      // Updating villageId in pending submissions
+      if (store.getState().userData.isOffline) {
+        let ps = [...store.getState().userData.pendingSubmissions];
+        if (!ps.includes(response?.config?.meta?.villageId)) ps.push(response?.config?.meta?.villageId);
+        store.dispatch(updatePendingSubmissions(ps));
+      }
+
+      const apiRequests = await localforage.getItem('apiRequests');
+
+      if (apiRequests?.length < 1) {
+        if (store.getState().userData.isOffline) {
+          store.dispatch(updateIsOffline(false));
+          setTimeout(() => {
+            setSyncing(false);
+          }, 1000)
+        }
+      }
+    }
+    console.log(response?.data?.status);
+    if (response?.data?.status == 201) {
+      // console.log(
+      //   "Clearing Submission for ->",
+      //   Object.keys(response?.config?.data)?.[0]
+      // );
+      // store.dispatch(
+      //   clearSubmissions(Object.keys(response?.config?.data)?.[0])
+      // );
     }
 
   };
@@ -111,18 +119,15 @@ export default function App({ Component, pageProps }) {
         theme: "light",
       });
     });
-    // submitData();
     setHydrated(true);
     logEvent(analytics, 'page_view');
   }, []);
 
-  const onHello = useCallback(() => {
-    console.log("hello");
-  }, []);
+
 
   async function performBatchSubmission(offlinePackage) {
     const BATCH_SIZE = 10;
-    const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
+    const DELAY_TIME = 1000; // Delay time in milliseconds (5 seconds)
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
     let ps = [...store.getState().userData.pendingSubmissions]
@@ -137,9 +142,6 @@ export default function App({ Component, pageProps }) {
 
         // Splitting the submission array into batches of 10
         const batches = chunkArray(submissions, BATCH_SIZE);
-        console.log("Batches ->", batches);
-
-
         for (let el in batches) {
 
           let batch = batches[el];
@@ -210,7 +212,7 @@ export default function App({ Component, pageProps }) {
   return hydrated ? (
     <Provider store={store} data-testid="redux-provider">
       <OfflineSyncProvider onCallback={onSyncSuccess}>
-        <Component {...pageProps} onHello={onHello} />
+        <Component {...pageProps} />
       </OfflineSyncProvider>
       <ToastContainer
         position="top-center"
