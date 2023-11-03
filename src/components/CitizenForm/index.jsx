@@ -81,7 +81,7 @@ const CitizenForm = (props) => {
     }, [])
 
     console.log("land ->", landImages);
-    const top100Films = useMemo(()=>getTbName(),[]);     
+    const tribeOptions = useMemo(() => getTbName(), []);
     return (
         <>
             <MobileStepper
@@ -379,16 +379,24 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     /> */}
-                      <Autocomplete
-      disablePortal
-      id="combo-box-demo"
-      options={top100Films}
-      sx={{ width: 300 }}
-      renderInput={(params) => <TextField {...params}   variant='standard' label={"Tribe Name"} value={formState?.tribeName}
-      required
-      sx={{ mb: 4}}
-      disabled={!formEditable ? true : false}/>}
-    />
+                    {formEditable && <Autocomplete
+                        disablePortal
+                        id="tribe-input"
+                        options={tribeOptions}
+                        sx={{ mb: 4, width: '80%' }}
+                        onChange={(e, value) => setFormState((prevState) => ({ ...prevState, tribeName: value.label }))}
+                        required
+                        renderInput={(params) => <TextField {...params} variant='standard' required label={"Tribe Name"} value={formState?.tribeName} />}
+                    />}
+                    {!formEditable && <TextField
+                        variant='standard'
+                        label={"Tribe Name"}
+                        value={formState?.tribeName}
+                        required
+                        sx={{ mb: 4, width: '80%' }}
+                        disabled={!formEditable ? true : false}
+
+                    />}
                     <TextField
                         variant='standard'
                         label={"Area (In Hectares)"}
