@@ -382,7 +382,7 @@ const SurveyPage = ({ params }) => {
                   showSubmitModal(true);
               }}
             >
-              Submit Saved Entries
+              Submit Saved Titles
             </div>
           )
         )}
@@ -412,7 +412,7 @@ const SurveyPage = ({ params }) => {
           }}
           leftImage={"/assets/assessment.png"}
           rightImage={"/assets/circleArrow.png"}
-          mainText={"View Completed Entries"}
+          mainText={"View Synced Titles"}
           href="/completed-entries"
         />
         <SelectionItem
@@ -426,7 +426,7 @@ const SurveyPage = ({ params }) => {
           }}
           leftImage={"/assets/savedEntries.png"}
           rightImage={"/assets/circleArrow.png"}
-          mainText={"View Saved Entries"}
+          mainText={"View Saved Titles"}
           href="/saved-entries"
         />
         <SelectionItem
@@ -526,7 +526,7 @@ const SurveyPage = ({ params }) => {
               offline mode.
             </div>
             <p style={warningModalStyles.mainText}>
-              You will have to resubmit saved entries in villages again{" "}
+              You will have to re-submit saved titles in villages again{" "}
               {"(your data is safe)"}
             </p>
             <div style={warningModalStyles.btnContainer}>

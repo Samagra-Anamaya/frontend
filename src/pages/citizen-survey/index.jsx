@@ -262,7 +262,7 @@ const CitizenSurveyPage = ({ params }) => {
                       marginTop: 30,
                     }}
                   >
-                    End Survey
+                   Return to Village Screen
                   </div>
                 </div>
               </div>

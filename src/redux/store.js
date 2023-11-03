@@ -5,6 +5,7 @@ import storage from "redux-persist/lib/storage"; // defaults to localStorage for
 import { replaceMediaObject } from "./actions/replaceMediaObject";
 import { _updateSubmissionMedia } from "./actions/updateSubmissionMedia";
 import { removeSubmission } from "./actions/removeSubmission";
+import { ptBR } from "@mui/x-date-pickers";
 // import storage from 'redux-persist-indexeddb-storage';
 
 // const authSlice = createSlice({
@@ -354,3 +355,10 @@ export { store, persistor };
 
 export const tokenSelector = (state) => state.userData.user.token;
 export const allSubmissionsSelector = (state) => state?.userData?.submissions;
+export const currentVillageSubmissions = (state) =>state.userData.submissions[state.userData.currentLocation.villageCode]
+export const getVillageSubmissions = (id) => (state) => {
+  console.log({id,state:state.userData.submissions});
+  return state.userData.submissions[id]
+}
+export const currentLocationSelector = (state) => state?.userData?.currentLocation
+

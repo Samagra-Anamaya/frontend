@@ -75,7 +75,7 @@ export default function App({ Component, pageProps }) {
         if (store.getState().userData.isOffline) {
           store.dispatch(updateIsOffline(false));
           setTimeout(() => {
-            performBatchSubmission(response);
+          setSyncing(false);
           }, 1000)
         }
       }
@@ -119,18 +119,15 @@ export default function App({ Component, pageProps }) {
         theme: "light",
       });
     });
-    // submitData();
     setHydrated(true);
     logEvent(analytics, 'page_view');
   }, []);
 
-  const onHello = useCallback(() => {
-    console.log("hello");
-  }, []);
+  
 
   async function performBatchSubmission(offlinePackage) {
-    const BATCH_SIZE = 1;
-    const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
+    const BATCH_SIZE = 10;
+    const DELAY_TIME = 1000; // Delay time in milliseconds (5 seconds)
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
     let ps = [...store.getState().userData.pendingSubmissions]
@@ -142,9 +139,6 @@ export default function App({ Component, pageProps }) {
 
         // Splitting the submission array into batches of 10
         const batches = chunkArray(submissions, BATCH_SIZE);
-        console.log("Batches ->", batches);
-
-
         for (let el in batches) {
 
           let batch = batches[el];
@@ -215,7 +209,7 @@ export default function App({ Component, pageProps }) {
   return hydrated ? (
     <Provider store={store} data-testid="redux-provider">
       <OfflineSyncProvider onCallback={onSyncSuccess}>
-        <Component {...pageProps} onHello={onHello} />
+        <Component {...pageProps}/>
       </OfflineSyncProvider>
       <ToastContainer
         position="top-center"
