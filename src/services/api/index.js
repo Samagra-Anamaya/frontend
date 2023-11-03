@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 const BASE_URL = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 const applicationId = process.env.NEXT_PUBLIC_APPLICATION_ID;
-const ENKETO_URL = process.env.NEXT_PUBLIC_ENKETO_EXPRESS_URL;
-const CENTRO_API = process.env.NEXT_PUBLIC_CENTRO_URL;
+// const ENKETO_URL = process.env.NEXT_PUBLIC_ENKETO_EXPRESS_URL;
+// const CENTRO_API = process.env.NEXT_PUBLIC_CENTRO_URL;
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 const USER = store.getState().userData.user;
 
@@ -114,77 +114,46 @@ export const getMedicalAssessmentsUpcoming = () => {
   return makeHasuraCalls(query);
 };
 
-export const getPrefillXML = async (form, onFormSuccessData, prefillXML, imageUrls) => {
-  try {
-    const appEnvs = await getFromLocalForage('appEnvs', false);
-    const ENKETO_MANAGER_URL = appEnvs.NEXT_PUBLIC_ENKETO_MANAGER_URL;
-    const res = await axios.post(
-      `${ENKETO_MANAGER_URL}/prefillXML?form=${form}&onFormSuccessData=${encodeURI(
-        JSON.stringify(onFormSuccessData)
-      )}`,
-      {
-        prefillXML,
-        imageUrls
-      },
-      { headers: {} }
-    );
-    return res.data;
-  } catch (err) {
-    console.log(err);
-    return null;
-  }
-};
+// export const getPrefillXML = async (form, onFormSuccessData, prefillXML, imageUrls) => {
+//   try {
+//     const appEnvs = await getFromLocalForage('appEnvs', false);
+//     const ENKETO_MANAGER_URL = appEnvs.NEXT_PUBLIC_ENKETO_MANAGER_URL;
+//     const res = await axios.post(
+//       `${ENKETO_MANAGER_URL}/prefillXML?form=${form}&onFormSuccessData=${encodeURI(
+//         JSON.stringify(onFormSuccessData)
+//       )}`,
+//       {
+//         prefillXML,
+//         imageUrls
+//       },
+//       { headers: {} }
+//     );
+//     return res.data;
+//   } catch (err) {
+//     console.log(err);
+//     return null;
+//   }
+// };
 
-export const getSubmissionXML = async (form, prefillXML, imageUrls) => {
-  try {
-    const appEnvs = await getFromLocalForage('appEnvs', false);
-    const ENKETO_MANAGER_URL = appEnvs.ENKETO_MANAGER_URL;
-    const res = await axios.post(
-      `${ENKETO_MANAGER_URL}/submissionXML?form=${form}`,
-      {
-        prefillXML,
-        imageUrls
-      },
-      { headers: {} }
-    );
-    return res.data;
-  } catch (err) {
-    console.log(err);
-    return null;
-  }
-};
+// export const getSubmissionXML = async (form, prefillXML, imageUrls) => {
+//   try {
+//     const appEnvs = await getFromLocalForage('appEnvs', false);
+//     const ENKETO_MANAGER_URL = appEnvs.ENKETO_MANAGER_URL;
+//     const res = await axios.post(
+//       `${ENKETO_MANAGER_URL}/submissionXML?form=${form}`,
+//       {
+//         prefillXML,
+//         imageUrls
+//       },
+//       { headers: {} }
+//     );
+//     return res.data;
+//   } catch (err) {
+//     console.log(err);
+//     return null;
+//   }
+// };
 
-export const getRandomOsceFormsTeacher = async (type) => {
-  try {
-    // const years = ['1st_year', '2nd_year', '3rd_year'];
-    const appEnvs = await getFromLocalForage('appEnvs', false);
-    const ENKETO_MANAGER_URL = appEnvs.ENKETO_MANAGER_URL;
-    const years = ["1st_year"];
-    const year = years[Math.floor(Math.random() * years.length)];
-    const res = await axios.get(
-      `${ENKETO_MANAGER_URL}/osceFormTeachers/${type}/${year}`
-    );
-    return res.data;
-  } catch (err) {
-    console.log(err);
-    return err;
-  }
-};
-
-export const getRandomOsceForm = async (type, year, speciality) => {
-  try {
-    const appEnvs = await getFromLocalForage('appEnvs', false);
-    const ENKETO_MANAGER_URL = appEnvs.ENKETO_MANAGER_URL;
-    let url = speciality
-      ? `${ENKETO_MANAGER_URL}/osceForm/${type}/${year}/${speciality}`
-      : `${ENKETO_MANAGER_URL}/osceForm/${type}/${year}`;
-    const res = await axios.get(url);
-    return res.data;
-  } catch (err) {
-    console.log(err);
-    return err;
-  }
-};
 
 export const createUser = async (data) => {
   try {
@@ -349,31 +318,31 @@ export const getDataFromHasura = (userData) => {
   return makeHasuraCalls(query, userData);
 };
 
-export const getOfflineCapableForm = async (formId, dispatch) => {
-  try {
-    if (navigator.onLine) {
-      let res = await axios.post(ENKETO_URL + "/api/v2/survey/offline",
-        {
-          server_url: CENTRO_API,
-          form_id: formId
-        },
-        {
-          headers: {
-            Authorization: 'Basic ' + btoa('enketorules:')
-          }
-        });
-      if (res?.data?.offline_url) {
-        dispatch(addFormUri({ formId: formId, formUrl: res?.data?.offline_url }))
-      }
-      return res?.data?.offline_url || undefined;
-    } else {
-      // Return false if offline
-      return false
-    }
-  } catch (err) {
-    console.log(err);
-  }
-}
+// export const getOfflineCapableForm = async (formId, dispatch) => {
+//   try {
+//     if (navigator.onLine) {
+//       let res = await axios.post(ENKETO_URL + "/api/v2/survey/offline",
+//         {
+//           server_url: CENTRO_API,
+//           form_id: formId
+//         },
+//         {
+//           headers: {
+//             Authorization: 'Basic ' + btoa('enketorules:')
+//           }
+//         });
+//       if (res?.data?.offline_url) {
+//         dispatch(addFormUri({ formId: formId, formUrl: res?.data?.offline_url }))
+//       }
+//       return res?.data?.offline_url || undefined;
+//     } else {
+//       // Return false if offline
+//       return false
+//     }
+//   } catch (err) {
+//     console.log(err);
+//   }
+// }
 
 export const getVillageDetails = async (id) => {
   try {
