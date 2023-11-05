@@ -249,7 +249,7 @@ const SavedEntries = ({ params }) => {
                   mainSubtext={moment(el?.capturedAt).format(
                     "DD MMM YYYY, hh:mm a"
                   )}
-                  mainText={el?.submissionData?.parentName}
+                  mainText={el?.submissionData?.claimantName}
                   sx={{
                     background: "#fff",
                     marginBottom: "0.5rem",
