@@ -1,5 +1,5 @@
 #get the latest alpine image from node registry
-FROM node:16-alpine AS build-stage
+FROM node:16-alpine AS dependencies
 RUN npm i -g pnpm
 #set the working directory
 WORKDIR /app
