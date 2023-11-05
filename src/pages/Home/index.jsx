@@ -84,7 +84,9 @@ const Home = () => {
       if (userIsAdminForPortal(loggedInUser.user.registrations)) {
         router.push(ROUTE_MAP.admin);
       } else {
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 200)
       }
       return;
     }

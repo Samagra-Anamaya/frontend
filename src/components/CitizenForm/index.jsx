@@ -396,7 +396,8 @@ const CitizenForm = (props) => {
                         id="tribe-input"
                         options={tribeOptions}
                         sx={{ mb: 4, width: '80%' }}
-                        onChange={(e, value) => setFormState((prevState) => ({ ...prevState, tribeName: value.label }))}
+                        value={formState?.tribeName}
+                        onChange={(e, value) => { setFormState((prevState) => ({ ...prevState, tribeName: value?.label })) }}
                         required
                         renderInput={(params) => <TextField {...params} variant='standard' required label={"Tribe Name"} value={formState?.tribeName} />}
                     />}
@@ -420,7 +421,10 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />
-                    <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Next</Button>
+                    <div className={styles.btnContainer}>
+                        <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(0)} className={styles.submitBtn}>Back</Button>
+                        <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Next</Button>
+                    </div>
                 </form>
             }
             {activeStep == 2 && <form
@@ -568,7 +572,11 @@ const CitizenForm = (props) => {
                         )}
                     </div>}
                 </> : <></>}
-                {!submittedModal && formEditable && <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Submit</Button>}
+                {!submittedModal && formEditable && <div className={styles.btnContainer}>
+                    <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(1)} className={styles.submitBtn}>Back</Button>
+                    <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Submit</Button>
+                </div>}
+                {!submittedModal && !formEditable && <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(1)} className={styles.submitBtn}>Back</Button>}
             </form>}
         </>
     );

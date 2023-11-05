@@ -431,7 +431,7 @@ const SurveyPage = ({ params }) => {
           mainText={"View Saved Records"}
           href="/saved-entries"
         />
-        <SelectionItem
+        {/* <SelectionItem
           key={_currLocation.id}
           onClick={() =>
             toast.warn("Unresolved Flags will unlock after evaluation", {
@@ -448,7 +448,7 @@ const SurveyPage = ({ params }) => {
           leftImage={"/assets/unresolvedFlags.png"}
           sx={{ background: "#b2b2b2" }}
           mainText={"Unresolved Flags"}
-        />
+        /> */}
       </div>
       {submitModal && (
         <CommonModal sx={{ maxHeight: "50vh", maxWidth: '80vw', overflow: "scroll" }}>
