@@ -261,6 +261,12 @@ const SurveyPage = ({ params }) => {
       const responses = await Promise.all(promises);
       console.log("hola 2", { responses })
       responses.forEach((res) => {
+        // In case offline
+        if (res == undefined || !res) {
+          showSubmitModal(false);
+          checkSavedRequests();
+          return;
+        }
         if (res?.type.includes("fulfilled")) {
           setIsMediaUploaded(true);
         }

@@ -8,9 +8,9 @@ import {
     Select,
     MenuItem,
     FormControl,
-    Tooltip,
-    Autocomplete,
+    Tooltip
 } from "@mui/material";
+import Autocomplete from '@mui/material/Autocomplete';
 
 import MobileStepper from '@mui/material/MobileStepper';
 import ImageUploading from 'react-images-uploading';
@@ -397,9 +397,12 @@ const CitizenForm = (props) => {
                         options={tribeOptions}
                         sx={{ mb: 4, width: '80%' }}
                         value={formState?.tribeName}
+                        disableClearable
                         onChange={(e, value) => { setFormState((prevState) => ({ ...prevState, tribeName: value?.label })) }}
-                        required
-                        renderInput={(params) => <TextField {...params} variant='standard' required label={"Tribe Name"} value={formState?.tribeName} />}
+                        renderInput={(params) => <TextField {...params} variant='standard' required label={"Tribe Name"} InputProps={{
+                            ...params.InputProps,
+                            type: 'search',
+                        }} />}
                     />}
                     {!formEditable && <TextField
                         variant='standard'

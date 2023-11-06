@@ -14,7 +14,6 @@ import { chunkArray, getImages, removeCitizenImageRecord, sleep } from "../servi
 import { _updateSubmissionMedia } from "../redux/actions/updateSubmissionMedia";
 import { isNull, omitBy, update } from "lodash";
 import localforage from "localforage";
-import { removeSubmission } from "../redux/actions/removeSubmission";
 import CommonModal from "../components/Modal";
 import { CircularProgress } from "@mui/material";
 
@@ -47,7 +46,11 @@ export default function App({ Component, pageProps }) {
 
 
   const onSyncSuccess = async (response) => {
-    if (store.getState().userData.isOffline) setSyncing(true);
+    const apiRequests = await localforage.getItem('apiRequests');
+
+    if (store.getState().userData.isOffline && apiRequests?.length > 0) {
+      setSyncing(true);
+    }
     console.log("debug sync response -->", response);
     const images = await getImages();
     console.log("debug: before", { images })
@@ -68,9 +71,7 @@ export default function App({ Component, pageProps }) {
         store.dispatch(updatePendingSubmissions(ps));
       }
 
-      const apiRequests = await localforage.getItem('apiRequests');
-
-      if (apiRequests?.length < 1) {
+      if (apiRequests?.length == 1) {
         if (store.getState().userData.isOffline) {
           store.dispatch(updateIsOffline(false));
           setTimeout(() => {
@@ -78,16 +79,6 @@ export default function App({ Component, pageProps }) {
           }, 1000)
         }
       }
-    }
-    console.log(response?.data?.status);
-    if (response?.data?.status == 201) {
-      // console.log(
-      //   "Clearing Submission for ->",
-      //   Object.keys(response?.config?.data)?.[0]
-      // );
-      // store.dispatch(
-      //   clearSubmissions(Object.keys(response?.config?.data)?.[0])
-      // );
     }
 
   };
@@ -107,7 +98,7 @@ export default function App({ Component, pageProps }) {
 
       store.dispatch(updateIsOffline(true));
     })
-    window.addEventListener('online', () => {
+    window.addEventListener('online', async () => {
       toast.success('App is back online', {
         position: "top-right",
         autoClose: 2500,
@@ -118,6 +109,7 @@ export default function App({ Component, pageProps }) {
         progress: undefined,
         theme: "light",
       });
+
     });
     setHydrated(true);
     logEvent(analytics, 'page_view');
