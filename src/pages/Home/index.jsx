@@ -113,7 +113,7 @@ const Home = () => {
             <div className={`${styles.loginFormContainer} my-auto text-left`}>
               <h3 className="">Data Collection App</h3>
               <p className={styles.loginText}><strong>Login to your account</strong></p>
-              <form autoComplete="off" onSubmit={handleSubmit} className={styles.loginForm + " animate__animated animate__fadeInDown"}>
+              <form autoComplete="off" onSubmit={handleSubmit} className={styles.loginForm + " animate__animated animate__fadeIn"}>
                 <TextField
                   label="Username"
                   onChange={e => setUsername(e.target.value)}
