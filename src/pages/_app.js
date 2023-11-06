@@ -72,7 +72,7 @@ export default function App({ Component, pageProps }) {
       }
 
       console.log("test log ->", apiRequests?.length, store.getState().userData.isOffline)
-      if (apiRequests?.length < 1) {
+      if (apiRequests?.length == 1) {
         if (store.getState().userData.isOffline) {
           store.dispatch(updateIsOffline(false));
           setTimeout(() => {
