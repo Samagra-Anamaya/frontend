@@ -71,25 +71,16 @@ export default function App({ Component, pageProps }) {
         store.dispatch(updatePendingSubmissions(ps));
       }
 
-
+      console.log("test log ->", apiRequests?.length, store.getState().userData.isOffline)
       if (apiRequests?.length < 1) {
         if (store.getState().userData.isOffline) {
           store.dispatch(updateIsOffline(false));
           setTimeout(() => {
+            console.log("Setting syncing as flse")
             setSyncing(false);
           }, 1000)
         }
       }
-    }
-    console.log(response?.data?.status);
-    if (response?.data?.status == 201) {
-      // console.log(
-      //   "Clearing Submission for ->",
-      //   Object.keys(response?.config?.data)?.[0]
-      // );
-      // store.dispatch(
-      //   clearSubmissions(Object.keys(response?.config?.data)?.[0])
-      // );
     }
 
   };
@@ -121,16 +112,6 @@ export default function App({ Component, pageProps }) {
         theme: "light",
       });
 
-      const apiRequests = await localforage.getItem('apiRequests');
-
-      if (apiRequests?.length < 1) {
-        if (store.getState().userData.isOffline) {
-          store.dispatch(updateIsOffline(false));
-          setTimeout(() => {
-            setSyncing(false);
-          }, 1000)
-        }
-      }
     });
     setHydrated(true);
     logEvent(analytics, 'page_view');
