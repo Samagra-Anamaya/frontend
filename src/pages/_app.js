@@ -46,7 +46,9 @@ export default function App({ Component, pageProps }) {
 
 
   const onSyncSuccess = async (response) => {
-    if (store.getState().userData.isOffline) {
+    const apiRequests = await localforage.getItem('apiRequests');
+
+    if (store.getState().userData.isOffline && apiRequests?.length > 0) {
       setSyncing(true);
     }
     console.log("debug sync response -->", response);
@@ -69,7 +71,6 @@ export default function App({ Component, pageProps }) {
         store.dispatch(updatePendingSubmissions(ps));
       }
 
-      const apiRequests = await localforage.getItem('apiRequests');
 
       if (apiRequests?.length < 1) {
         if (store.getState().userData.isOffline) {
