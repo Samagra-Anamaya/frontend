@@ -9,7 +9,6 @@ Bhumij, Teli Bhumij, Haladipokhria Bhumij, Haladi Pokharia Bhumija, Desi Bhumij,
 Bhunjia
 Binjhal, Binjhwar
 Binjhia, Binjhoa
-Birhor
 Bondo Poraja, Bonda Paroja, Banda Paroja
 Chenchu
 Dal
@@ -28,7 +27,7 @@ Kandha Gauda
 Kawar, Kanwar
 Kharia, Kharian, Berga Kharia, Dhelki Kharia, Dudh Kharia, Erenga Kharia, Munda Kharia, Oraon Kharia, Khadia, Pahari Kharia
 Kharwar
-Khond, Kond, Kandha, Nanguli Kandha, Sitha Kandha, Kondh, Kui, Buda Kondh, Bura Kandha, Desia Kandha, Dungaria Kondh, Kutia Kandha, Kandha Gauda, Muli Kondh, Malua Kondh, Pengo Kandha, Raja Kondh, Raj Khond
+Khond, Kond, Kandha, Nanguli Kandha, Sitha Kandha, Kondh, Kui, Buda Kondh, Bura Kandha, Desia Kandha, Dungaria Kondh, Kutia Kandha, Muli Kondh, Malua Kondh, Pengo Kandha, Raja Kondh, Raj Khond
 Kisan, Nagesar, Nagesia
 Kol
 Kolah Loharas, Kol Loharas
@@ -44,7 +43,7 @@ Lodha, Nodh, Nodha, Lodh
 Madia
 Mahali
 Mankidi
-Mankirdia, Mankria, Mankidi
+Mankirdia, Mankria,
 Matya, Matia
 Mirdhas, Kuda, Koda
 Munda, Munda Lohara, Munda Mahalis, Nagabanshi Munda, Oriya Munda
@@ -57,12 +56,11 @@ Pentia
 Rajuar
 Santal
 Saora, Savar, Saura, Sahara, Arsi Saora, Based Saora, Bhima Saora, Bhimma Saora, Chumura Saora, Jara Savar, Jadu Saora, Jati Saora, Juari Saora, Kampu Saora, Kampa Soura, Kapo Saora, Kindal Saora, Kumbi Kancher Saora, Kalapithia Saora, Kirat Saora, Lanjia Saora, Lamba Lanjia Saora, Luara Saora, Luar Saora, Laria Savar, Malia Saora, Malla Saora, Uriya Saora, Raika Saora, Sudda Saora, Sarda Saora, Tankala Saora, Patro Saora, Vesu Saora
-Shabar, Lodha
+Shabar,
 Sounti
 Tharua, Tharua Bindhani,
 Birhor
 Bondo
-Didayi
 Dongria-Khond
 Juangs
 Kharias
