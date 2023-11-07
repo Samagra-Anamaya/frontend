@@ -245,39 +245,51 @@ const userDataSlice = createSlice({
         state.error = action.error.message;
       })
       .addCase(_updateSubmissionMedia.fulfilled, (state, action) => {
-        console.log("shri ram _updateSubmissionMedia:", { state: cloneDeep(state), action });
+        console.log("Updating Submission Media ---->", { state: cloneDeep(state), action });
         forEach(action?.payload, (fileData) => {
           const fileMeta = JSON.parse(fileData?.meta);
           state.submissions[fileMeta.villageId] = map(
             state.submissions[fileMeta.villageId],
             (prev) => {
               if (prev?.citizenId === fileMeta?.citizenId) {
-                if (fileMeta?.isLandRecord)
-                  return {
-                    ...prev,
-                    submissionData: {
-                      ...prev?.submissionData,
-                      landRecords: prev?.submissionData?.landRecords
-                        ? [
-                          ...prev?.submissionData?.landRecords,
-                          fileData.filename,
-                        ]
-                        : [fileData.filename],
-                    },
-                  };
-                else
-                  return {
-                    ...prev,
-                    submissionData: {
-                      ...prev?.submissionData,
-                      rorRecords: prev?.submissionData?.rorRecords
-                        ? [
-                          ...prev?.submissionData?.rorRecords,
-                          fileData.filename,
-                        ]
-                        : [fileData.filename],
-                    },
-                  };
+                if (fileMeta?.isLandRecord) {
+                  let prevLandRecords = prev?.submissionData?.landRecords || [];
+                  if (prevLandRecords?.length) {
+                    return {
+                      ...prev,
+                      submissionData: {
+                        ...prev?.submissionData,
+                        landRecords: prevLandRecords.includes(fileData.filename) ? prevLandRecords : [...prevLandRecords, fileData.filename],
+                      },
+                    };
+                  } else
+                    return {
+                      ...prev,
+                      submissionData: {
+                        ...prev?.submissionData,
+                        landRecords: [fileData.filename],
+                      },
+                    };
+                }
+                else {
+                  let prevRorRecords = prev?.submissionData?.rorRecords || [];
+                  if (prevRorRecords?.length) {
+                    return {
+                      ...prev,
+                      submissionData: {
+                        ...prev?.submissionData,
+                        rorRecords: prevRorRecords.includes(fileData.filename) ? prevRorRecords : [...prevRorRecords, fileData.filename],
+                      },
+                    };
+                  } else
+                    return {
+                      ...prev,
+                      submissionData: {
+                        ...prev?.submissionData,
+                        rorRecords: [fileData.filename],
+                      },
+                    };
+                }
               } else return prev
             }
           );
