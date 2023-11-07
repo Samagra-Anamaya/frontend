@@ -252,7 +252,7 @@ const CitizenSurveyPage = ({ params }) => {
                   <p
                     style={{ fontSize: "1.5rem", marginTop: -40, fontWeight: 600 }}
                   >
-                    Citizen Data Saved
+                    Land Title Data Saved
                   </p>
                   <p>You will get edit access after next cycle</p>
                   <p>Please get the filled form validated by GP/Tehsildar before syncing</p>
@@ -270,7 +270,7 @@ const CitizenSurveyPage = ({ params }) => {
                       marginTop: 30,
                     }}
                   >
-                   Return to Village Screen
+                    Return to Village Screen
                   </div>
                 </div>
               </div>
