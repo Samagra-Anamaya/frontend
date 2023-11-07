@@ -577,7 +577,7 @@ const CitizenForm = (props) => {
                 </> : <></>}
                 {!submittedModal && formEditable && <div className={styles.btnContainer}>
                     <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(1)} className={styles.submitBtn}>Back</Button>
-                    <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Submit</Button>
+                    <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Save</Button>
                 </div>}
                 {!submittedModal && !formEditable && <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(1)} className={styles.submitBtn}>Back</Button>}
             </form>}

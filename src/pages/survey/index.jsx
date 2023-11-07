@@ -420,7 +420,7 @@ const SurveyPage = ({ params }) => {
           }}
           leftImage={"/assets/assessment.png"}
           rightImage={"/assets/circleArrow.png"}
-          mainText={"View Completed Records"}
+          mainText={"View Synced Titles"}
           href="/completed-entries"
         />
         <SelectionItem
@@ -434,7 +434,7 @@ const SurveyPage = ({ params }) => {
           }}
           leftImage={"/assets/savedEntries.png"}
           rightImage={"/assets/circleArrow.png"}
-          mainText={"View Saved Records"}
+          mainText={"View Submitted Titles"}
           href="/saved-entries"
         />
         {/* <SelectionItem
