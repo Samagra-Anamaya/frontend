@@ -32,6 +32,20 @@ import Breadcrumb from "../../components/Breadcrumb";
 import { chunkArray, getCitizenImageRecords, getImages, getImagesForVillage, sleep } from "../../services/utils";
 import { formDataToObject } from "../../utils/formdata-to-object";
 import { replaceMediaObject } from "../../redux/actions/replaceMediaObject";
+import * as done from "public/lottie/done.json";
+import { Button } from "@mui/material";
+import Lottie from "react-lottie";
+
+
+// Lottie Options
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: done,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+  },
+};
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -49,6 +63,7 @@ const SurveyPage = ({ params }) => {
   );
   const [hydrated, setHydrated] = React.useState(false);
   const [submitModal, showSubmitModal] = useState(false);
+  const [submissionCompleted, setSubmissionCompleted] = useState(false);
   const [disableSubmitEntries, setDisableSubmitEntries] = useState(false);
   const [warningModal, showWarningModal] = useState(false);
   const token = useSelector(tokenSelector);
@@ -348,7 +363,7 @@ const SurveyPage = ({ params }) => {
     console.log("Final Submission Responses ---->", { responses })
 
     setLoading(false);
-    showSubmitModal(false);
+    setSubmissionCompleted(true);
     console.log("Batch submission completed")
   }
 
@@ -460,66 +475,76 @@ const SurveyPage = ({ params }) => {
         <CommonModal sx={{ maxHeight: "50vh", maxWidth: '80vw', overflow: "scroll" }}>
           {loading ? (
             <div style={{ ...modalStyles.container, justifyContent: "center" }}>
-              <CircularProgress color="success" />
+              <CircularProgress color="success" size={70} />
             </div>
           ) : (
             <div style={modalStyles.container}>
-              <div style={modalStyles.mainText}>
-                A total of {submissions?.length} entries will be submitted for
-                {_currLocation.villageName}
-              </div>
-              <p style={modalStyles.warningText}>
-                Please ensure you are in good internet connectivity before
-                submitting
-              </p>
-              <div style={modalStyles.btnContainer}>
-                {isMediaUploaded ? (
-                  <div
-                    style={modalStyles.confirmBtn}
-                    onClick={() => {
-                      logEvent(analytics, "submit_entries_confirm", {
-                        villageId: _currLocation.villageCode,
-                        villageName: _currLocation.villageName,
-                        user_id: userData?.user?.user?.username,
-                        app_status: navigator.onLine ? "online" : "offline",
-                      });
-                      performBatchSubmission();
-                    }}
-                  >
-                    Submit
-                  </div>
-                ) : (
-                  <div
-                    style={modalStyles.confirmBtn}
-                    onClick={() => {
-                      logEvent(analytics, "submit_entries_confirm", {
-                        villageId: _currLocation.villageCode,
-                        villageName: _currLocation.villageName,
-                        user_id: userData?.user?.user?.username,
-                        app_status: navigator.onLine ? "online" : "offline",
-                      });
-                      uploadImagesInBatches();
-                    }}
-                  >
-                    Upload Media
-                  </div>
-                )}
-
-                <div
-                  style={modalStyles.exitBtn}
-                  onClick={() => {
-                    logEvent(analytics, "submit_entries_cancelled", {
-                      villageId: _currLocation.villageCode,
-                      villageName: _currLocation.villageName,
-                      user_id: userData?.user?.user?.username,
-                      app_status: navigator.onLine ? "online" : "offline",
-                    });
-                    showSubmitModal(false);
-                  }}
-                >
-                  Cancel
+              {submissionCompleted ? <>
+                <Lottie
+                  options={defaultOptions}
+                  style={{ marginTop: -20, marginBottom: -40 }}
+                  height={200}
+                  width={200}
+                />
+                <p style={modalStyles.mainText}>Land Titles Synced Successfully</p>
+                <Button color="success" variant="contained" fullWidth onClick={() => { setSubmissionCompleted(false); showSubmitModal(false); }}>Done</Button>
+              </> : <>
+                <div style={modalStyles.mainText}>
+                  A total of {submissions?.length} entries will be submitted for {_currLocation.villageName}
                 </div>
-              </div>
+                <p style={modalStyles.warningText}>
+                  Please ensure you are in good internet connectivity before
+                  submitting
+                </p>
+                <div style={modalStyles.btnContainer}>
+                  {isMediaUploaded ? (
+                    <div
+                      style={modalStyles.confirmBtn}
+                      onClick={() => {
+                        logEvent(analytics, "submit_entries_confirm", {
+                          villageId: _currLocation.villageCode,
+                          villageName: _currLocation.villageName,
+                          user_id: userData?.user?.user?.username,
+                          app_status: navigator.onLine ? "online" : "offline",
+                        });
+                        performBatchSubmission();
+                      }}
+                    >
+                      Submit
+                    </div>
+                  ) : (
+                    <div
+                      style={modalStyles.confirmBtn}
+                      onClick={() => {
+                        logEvent(analytics, "submit_entries_confirm", {
+                          villageId: _currLocation.villageCode,
+                          villageName: _currLocation.villageName,
+                          user_id: userData?.user?.user?.username,
+                          app_status: navigator.onLine ? "online" : "offline",
+                        });
+                        uploadImagesInBatches();
+                      }}
+                    >
+                      Upload Media
+                    </div>
+                  )}
+
+                  <div
+                    style={modalStyles.exitBtn}
+                    onClick={() => {
+                      logEvent(analytics, "submit_entries_cancelled", {
+                        villageId: _currLocation.villageCode,
+                        villageName: _currLocation.villageName,
+                        user_id: userData?.user?.user?.username,
+                        app_status: navigator.onLine ? "online" : "offline",
+                      });
+                      showSubmitModal(false);
+                    }}
+                  >
+                    Cancel
+                  </div>
+                </div>
+              </>}
             </div>
           )}
         </CommonModal>
@@ -572,6 +597,7 @@ const modalStyles = {
     color: "#007922",
     textAlign: "center",
     margin: "2rem 0rem",
+    fontWeight: 400
   },
   warningText: { color: "red", textAlign: "center" },
   btnContainer: {
