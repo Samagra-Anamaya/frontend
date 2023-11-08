@@ -6,6 +6,7 @@ import { replaceMediaObject } from "./actions/replaceMediaObject";
 import { _updateSubmissionMedia } from "./actions/updateSubmissionMedia";
 import { removeSubmission } from "./actions/removeSubmission";
 import { ptBR } from "@mui/x-date-pickers";
+import { loginUser } from "./actions/login";
 // import storage from 'redux-persist-indexeddb-storage';
 
 // const authSlice = createSlice({
@@ -324,6 +325,10 @@ const userDataSlice = createSlice({
           delete tempState[key];
         })
         state.submissions = tempState;
+      }).addCase(loginUser.fulfilled, (state, action) => {
+        state.isAuthenticated = true;
+        state.user = action.payload;
+        state.assignedLocations = action.payload?.user?.data?.villages;
       })
   },
 });

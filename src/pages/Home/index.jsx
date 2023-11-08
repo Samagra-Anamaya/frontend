@@ -7,12 +7,12 @@ import TextField from "@mui/material/TextField";
 import { userLogin } from "../../services/api";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { login } from '../../redux/store';
 import { CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "../../services/firebase/firebase";
 import Banner from "../../components/Banner";
+import { loginUser } from "../../redux/actions/login";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -74,21 +74,21 @@ const Home = () => {
       // }, 3000);
       return;
     }
+
     if (loginRes.responseCode == "OK" && loginRes.result) {
       let loggedInUser = loginRes.result.data.user;
       console.log("logged in user-->", loggedInUser)
       logEvent(analytics, "login_success", {
         user_id: username
       })
-      dispatch(login(loggedInUser));
-      if (userIsAdminForPortal(loggedInUser.user.registrations)) {
-        router.push(ROUTE_MAP.admin);
-      } else {
-        setTimeout(() => {
+      dispatch(loginUser(loggedInUser)).then(res => {
+        console.log("Aysn User loing ->", res)
+        if (userIsAdminForPortal(loggedInUser.user.registrations)) {
+          router.push(ROUTE_MAP.admin);
+        } else {
           window.location.reload();
-        }, 200)
-      }
-      return;
+        }
+      });
     }
     setApiCall(false);
     setError("An internal server error occured");

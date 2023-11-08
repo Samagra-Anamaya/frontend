@@ -26,6 +26,19 @@ import ListItem from "../../components/ListItem";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
 import moment from "moment";
+import Lottie from "react-lottie";
+import * as emptyState from "public/lottie/emptyState.json";
+
+
+// Lottie Options
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: emptyState,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+  },
+};
 
 const CompletedEntries = ({ params }) => {
   /* Component States and Refs*/
@@ -64,13 +77,14 @@ const CompletedEntries = ({ params }) => {
   }, [currPage]);
 
   const debouncedSearch = debounce(async (query) => {
+    console.log({ query, prevTempSubmissions })
     if (query?.length) {
       setFetching(true);
-      let res = await searchCitizen(_currLocation.villageCode, query);
+      let res = await searchCitizen(_currLocation.villageCode, query, userData.user);
       setPrevSubmissions(res?.result?.submissions || []);
       setFetching(false);
     } else setPrevSubmissions(prevTempSubmissions);
-  }, 300);
+  }, 500);
 
   // useEffect(() => {
   //     async function searchCitizens() {
@@ -95,17 +109,17 @@ const CompletedEntries = ({ params }) => {
       console.log(err);
     }
   };
-  const token =useSelector(tokenSelector);
-  console.log({token,userData})
+  const token = useSelector(tokenSelector);
+  console.log({ token, userData })
   const getVillageSubmissionData = async () => {
     try {
       if (_currLocation?.villageCode) {
-       
+
         setFetching(true);
         let data = await getVillageSubmissions(
           _currLocation.villageCode,
           currPage,
-        token
+          token
         );
         console.log("PREV SUBMISSIONS -->", data);
         setFetching(false);
@@ -137,36 +151,11 @@ const CompletedEntries = ({ params }) => {
     return num.toString().padStart(2, "0");
   }
 
-  function dateInYyyyMmDdHhMmSs(date, dateDiveder = "-") {
-    // :::: Exmple Usage ::::
-    // The function takes a Date object as a parameter and formats the date as YYYY-MM-DD hh:mm:ss.
-    // 👇️ 2023-04-11 16:21:23 (yyyy-mm-dd hh:mm:ss)
-    //console.log(dateInYyyyMmDdHhMmSs(new Date()));
-  
-    //  👇️️ 2025-05-04 05:24:07 (yyyy-mm-dd hh:mm:ss)
-    // console.log(dateInYyyyMmDdHhMmSs(new Date('May 04, 2025 05:24:07')));
-    // Date divider
-    // 👇️ 01/04/2023 10:20:07 (MM/DD/YYYY hh:mm:ss)
-    // console.log(dateInYyyyMmDdHhMmSs(new Date(), "/"));
-    return (
-      [
-        date.getFullYear(),
-        padTwoDigits(date.getMonth() + 1),
-        padTwoDigits(date.getDate()),
-      ].join(dateDiveder) +
-      " " +
-      [
-        padTwoDigits(date.getHours()),
-        padTwoDigits(date.getMinutes()),
-        padTwoDigits(date.getSeconds()),
-      ].join(":")
-    );
-  }
-const breadcrumbItems=useMemo(()=>([{label:"Home" ,to:"/"},{label:_currLocation?.villageName,to:"/survey"},{label:"Completed Entries"}]),[_currLocation?.villageName])
+  const breadcrumbItems = useMemo(() => ([{ label: "Home", to: "/" }, { label: _currLocation?.villageName, to: "/survey" }, { label: "Synced Titles" }]), [_currLocation?.villageName])
   return !hydrated ? null : (
     <div className={styles.container}>
-      <Banner/>
-      <Breadcrumb items={breadcrumbItems}/>
+      <Banner />
+      <Breadcrumb items={breadcrumbItems} />
       {/* <CommonHeader
         onBack={() => router.back()}
         text={`${_currLocation.villageName}`}
@@ -180,11 +169,11 @@ const breadcrumbItems=useMemo(()=>([{label:"Home" ,to:"/"},{label:_currLocation?
 
       <div
         className={
-          styles.citizenContainer + ` animate__animated animate__fadeInUp p-2`
+          styles.citizenContainer + ` animate__animated animate__fadeIn p-2`
         }
       >
         <div className={styles.submissionContainer}>
-          <TextField
+          {!(!fetching && !prevSubmissions?.length && !searchQuery) && <TextField
             id="search"
             color="success"
             type="search"
@@ -205,33 +194,42 @@ const breadcrumbItems=useMemo(()=>([{label:"Home" ,to:"/"},{label:_currLocation?
                 </InputAdornment>
               ),
             }}
-          />
+          />}
           {fetching && <CircularProgress color="success" />}
           <MDBListGroup style={{ minWidth: '22rem' }} light>
-          {!fetching &&
-            prevSubmissions?.length > 0 &&
-            prevSubmissions?.map((el) => (
-              <ListItem
-                key={el.id}
-                onSubBtnClick={()=>{
-                  console.log("sub btn clicked")
-              }}
-                leftImage={"/assets/citizen.svg"}
-                rightImage={"/assets/verified.png"}
-                mainText={el?.submissionData?.claimantName}
-                mainSubtext={moment(el?.updatedAt).format(
-                  "DD MMM YYYY, hh:mm a"
-                )}
-                sx={{ background: "#fff"}}
-                mode={1}
-                imgWidth={'70%'}
-                onClick={() => {
-                  dispatch(setCurrentCitizen(el));
-                  router.push(`/citizen-survey`);
-                }}
-              />
-            ))}
-            </MDBListGroup>
+            {!fetching &&
+              prevSubmissions?.length > 0 &&
+              prevSubmissions?.map((el) => (
+                <ListItem
+                  key={el.id}
+                  onSubBtnClick={() => {
+                    console.log("sub btn clicked")
+                  }}
+                  leftImage={"/assets/citizen.svg"}
+                  rightImage={"/assets/verified.png"}
+                  mainText={el?.submissionData?.claimantName}
+                  mainSubtext={moment(el?.updatedAt).format(
+                    "DD MMM YYYY, hh:mm a"
+                  )}
+                  sx={{ background: "#fff" }}
+                  mode={1}
+                  imgWidth={'70%'}
+                  onClick={() => {
+                    dispatch(setCurrentCitizen(el));
+                    router.push(`/citizen-survey`);
+                  }}
+                />
+              ))}
+          </MDBListGroup>
+          {!fetching && !prevSubmissions?.length && !searchQuery && <div>
+            <p className={styles.noRecordsFound}>No Records Found</p>
+            <p className={styles.noRecordsSubText}>Please sync land titles before you access them</p>
+            <Lottie
+              options={defaultOptions}
+              style={{ marginTop: -40 }}
+              height={300}
+              width={300}
+            /></div>}
         </div>
         {!searchQuery && (
           <Pagination

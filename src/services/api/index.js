@@ -373,11 +373,11 @@ export const getVillageSubmissions = async (id, page, token) => {
   }
 }
 
-export const searchCitizen = async (villageId, query) => {
+export const searchCitizen = async (villageId, query, user) => {
   try {
     let res = await axios.get(BACKEND_SERVICE_URL + `/submissions/search/${villageId}/${query}`, {
       headers: {
-        Authorization: `Bearer ${USER.token}`
+        Authorization: `Bearer ${user?.token}`
       }
     });
     return res.data;

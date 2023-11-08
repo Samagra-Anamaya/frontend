@@ -16,13 +16,27 @@ import { isNull, omitBy, update } from "lodash";
 import localforage from "localforage";
 import CommonModal from "../components/Modal";
 import { CircularProgress } from "@mui/material";
+import Lottie from "react-lottie";
+import * as done from "public/lottie/done.json";
+import { Button } from "@mui/material";
 
-const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
+
+// Lottie Options
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: done,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+  },
+};
+
 export default function App({ Component, pageProps }) {
   const [hydrated, setHydrated] = useState(false);
   const offlinePackage = useOfflineSyncContext();
   const userData = omitBy(store.getState()?.userData, isNull);
   const [syncing, setSyncing] = useState(false);
+  const [syncComplete, setSyncComplete] = useState(true);
 
   // const submitData = useCallback(async (data) => {
 
@@ -48,7 +62,7 @@ export default function App({ Component, pageProps }) {
   const onSyncSuccess = async (response) => {
     const apiRequests = await localforage.getItem('apiRequests');
 
-    if (store.getState().userData.isOffline && apiRequests?.length > 0) {
+    if (store.getState().userData.isOffline && apiRequests?.length > 0 && !syncing) {
       setSyncing(true);
     }
     console.log("debug sync response -->", response);
@@ -75,7 +89,8 @@ export default function App({ Component, pageProps }) {
         if (store.getState().userData.isOffline) {
           store.dispatch(updateIsOffline(false));
           setTimeout(() => {
-            setSyncing(false);
+            // setSyncing(false);
+            setSyncComplete(true);
           }, 1000)
         }
       }
@@ -117,89 +132,89 @@ export default function App({ Component, pageProps }) {
 
 
 
-  async function performBatchSubmission(offlinePackage) {
-    const BATCH_SIZE = 10;
-    const DELAY_TIME = 1000; // Delay time in milliseconds (5 seconds)
-    const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
+  // async function performBatchSubmission(offlinePackage) {
+  //   const BATCH_SIZE = 10;
+  //   const DELAY_TIME = 1000; // Delay time in milliseconds (5 seconds)
+  //   const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
-    let ps = [...store.getState().userData.pendingSubmissions]
-    console.log("PS -->", { ps })
-    if (ps?.length) {
-      const responses = [];
-      for (let i in ps) {
-        console.log({ i, ps })
-        let submissions = userData?.submissions[ps[i]];
+  //   let ps = [...store.getState().userData.pendingSubmissions]
+  //   console.log("PS -->", { ps })
+  //   if (ps?.length) {
+  //     const responses = [];
+  //     for (let i in ps) {
+  //       console.log({ i, ps })
+  //       let submissions = userData?.submissions[ps[i]];
 
-        console.log({ submissions })
+  //       console.log({ submissions })
 
-        // Splitting the submission array into batches of 10
-        const batches = chunkArray(submissions, BATCH_SIZE);
-        for (let el in batches) {
+  //       // Splitting the submission array into batches of 10
+  //       const batches = chunkArray(submissions, BATCH_SIZE);
+  //       for (let el in batches) {
 
-          let batch = batches[el];
+  //         let batch = batches[el];
 
-          const submissionData = {
-            [ps[i]]: batch,
-          };
+  //         const submissionData = {
+  //           [ps[i]]: batch,
+  //         };
 
-          const config = {
-            method: "POST",
-            url: BACKEND_SERVICE_URL + `/submissions/bulk`,
-            data: submissionData,
-            headers: {
-              Authorization: `Bearer ${userData?.user?.token}`,
-            },
-          };
+  //         const config = {
+  //           method: "POST",
+  //           url: BACKEND_SERVICE_URL + `/submissions/bulk`,
+  //           data: submissionData,
+  //           headers: {
+  //             Authorization: `Bearer ${userData?.user?.token}`,
+  //           },
+  //         };
 
-          try {
-            // Introduce a delay before processing the next batch
-            await sleep(DELAY_TIME);
-            const response = await offlinePackage?.sendRequest(config);
-            console.log("Batch Submission Response", { response })
+  //         try {
+  //           // Introduce a delay before processing the next batch
+  //           await sleep(DELAY_TIME);
+  //           const response = await offlinePackage?.sendRequest(config);
+  //           console.log("Batch Submission Response", { response })
 
-            if (response && Object.keys(response)?.length) {
-              // logEvent(analytics, "submission_successfull", {
-              //   villageId: _currLocation.villageCode,
-              //   villageName: _currLocation.villageName,
-              //   user_id: userData?.user?.user?.username,
-              //   app_status: navigator.onLine ? "online" : "offline",
-              // });
-              responses.push(response);
-              store.dispatch(clearSubmissionBatch(batch))
-            } else {
-              toast.error(
-                "An error occured while submitting form. Please try again \nError String : " +
-                JSON.stringify(response)
-              );
-              // logEvent(analytics, "submission_failure", {
-              //   villageId: _currLocation.villageCode,
-              //   villageName: _currLocation.villageName,
-              //   user_id: userData?.user?.user?.username,
-              //   app_status: navigator.onLine ? "online" : "offline",
-              // });
-              responses.push(response);
-            }
+  //           if (response && Object.keys(response)?.length) {
+  //             // logEvent(analytics, "submission_successfull", {
+  //             //   villageId: _currLocation.villageCode,
+  //             //   villageName: _currLocation.villageName,
+  //             //   user_id: userData?.user?.user?.username,
+  //             //   app_status: navigator.onLine ? "online" : "offline",
+  //             // });
+  //             responses.push(response);
+  //             store.dispatch(clearSubmissionBatch(batch))
+  //           } else {
+  //             toast.error(
+  //               "An error occured while submitting form. Please try again \nError String : " +
+  //               JSON.stringify(response)
+  //             );
+  //             // logEvent(analytics, "submission_failure", {
+  //             //   villageId: _currLocation.villageCode,
+  //             //   villageName: _currLocation.villageName,
+  //             //   user_id: userData?.user?.user?.username,
+  //             //   app_status: navigator.onLine ? "online" : "offline",
+  //             // });
+  //             responses.push(response);
+  //           }
 
-          } catch (error) {
-            console.error("Error Submitting Submission Data: ", error);
-          }
-        }
+  //         } catch (error) {
+  //           console.error("Error Submitting Submission Data: ", error);
+  //         }
+  //       }
 
-      }
-      console.log("Final Submission Responses ---->", { responses, ps })
+  //     }
+  //     console.log("Final Submission Responses ---->", { responses, ps })
 
-      // Clearing pending submissions array
-      responses.forEach(el => {
-        Object?.keys(el)?.forEach(x => {
-          ps = ps.filter(i => i != x);
-        })
-      })
-      store.dispatch(updatePendingSubmissions(ps));
-      setSyncing(false);
-      console.log("Batch submission completed")
-    }
-    setSyncing(false);
-  }
+  //     // Clearing pending submissions array
+  //     responses.forEach(el => {
+  //       Object?.keys(el)?.forEach(x => {
+  //         ps = ps.filter(i => i != x);
+  //       })
+  //     })
+  //     store.dispatch(updatePendingSubmissions(ps));
+  //     setSyncing(false);
+  //     console.log("Batch submission completed")
+  //   }
+  //   setSyncing(false);
+  // }
 
   return hydrated ? (
     <Provider store={store} data-testid="redux-provider">
@@ -220,9 +235,23 @@ export default function App({ Component, pageProps }) {
       />
       {syncing && <CommonModal sx={{ maxHeight: "50vh", maxWidth: '80vw', overflow: "scroll" }}>
         <div style={{ ...modalStyles.container, justifyContent: "center" }}>
-          <p style={modalStyles.mainText}>Please wait ✋, Data Sync in progress</p>
-          <CircularProgress color="success" />
-          <p style={modalStyles.warningText}>Do not refresh this page</p>
+          {!syncComplete ? <>
+            <p style={modalStyles.mainText}>Please wait ✋, Media Sync in progress</p>
+            <CircularProgress color="success" size={60} />
+            <p style={modalStyles.warningText}>Do not refresh this page</p>
+          </>
+            :
+            <>
+              <Lottie
+                options={defaultOptions}
+                style={{ marginTop: -40, marginBottom: -20 }}
+                height={200}
+                width={200}
+              />
+              <p style={modalStyles.mainText}>Media Sync Successful</p>
+              <Button color="success" variant="contained" fullWidth onClick={() => { setSyncComplete(false); setSyncing(false); }}>Done</Button>
+            </>
+          }
         </div>
       </CommonModal>}
     </Provider>
