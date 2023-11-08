@@ -486,7 +486,7 @@ const SurveyPage = ({ params }) => {
                   height={200}
                   width={200}
                 />
-                <p style={modalStyles.mainText}>Submissions Synced Successfully</p>
+                <p style={modalStyles.mainText}>Land Titles Synced Successfully</p>
                 <Button color="success" variant="contained" fullWidth onClick={() => { setSubmissionCompleted(false); showSubmitModal(false); }}>Done</Button>
               </> : <>
                 <div style={modalStyles.mainText}>
@@ -597,6 +597,7 @@ const modalStyles = {
     color: "#007922",
     textAlign: "center",
     margin: "2rem 0rem",
+    fontWeight: 400
   },
   warningText: { color: "red", textAlign: "center" },
   btnContainer: {
