@@ -32,9 +32,21 @@ import { getCitizenImageRecords, getImages } from "../../services/utils";
 import Breadcrumb from "../../components/Breadcrumb";
 import { MDBListGroup } from "mdbreact";
 import ListItem from "../../components/ListItem";
-import { dateInYyyyMmDdHhMmSs } from "../completed-entries";
 import moment from "moment";
 import Banner from "../../components/Banner";
+import Lottie from "react-lottie";
+import * as emptyState from "public/lottie/emptyState.json";
+
+
+// Lottie Options
+const defaultOptions = {
+  loop: true,
+  autoplay: true,
+  animationData: emptyState,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+  },
+};
 
 const SavedEntries = ({ params }) => {
   /* Component States and Refs*/
@@ -97,7 +109,7 @@ const SavedEntries = ({ params }) => {
       if (newSubmissions?.length) {
         let res = newSubmissions?.filter(
           (el) =>
-            el?.submissionData?.beneficiaryName
+            el?.submissionData?.claimantName
               ?.toLowerCase()
               ?.startsWith(searchQuery.toLowerCase()) ||
             el?.submissionData?.aadharNumber?.startsWith(
@@ -207,11 +219,11 @@ const SavedEntries = ({ params }) => {
 
       <div
         className={
-          styles.citizenContainer + ` animate__animated animate__fadeInUp pb-2`
+          styles.citizenContainer + ` animate__animated animate__fadeIn pb-2`
         }
       >
         <div className={styles.submissionContainer}>
-          <TextField
+          {!(!fetching && !prevSubmissions?.length && !searchQuery) && <TextField
             id="search"
             color="success"
             type="search"
@@ -232,7 +244,7 @@ const SavedEntries = ({ params }) => {
                 </InputAdornment>
               ),
             }}
-          />
+          />}
           {fileUploading && "loading"}
           {fetching && <CircularProgress color="success" />}
           <MDBListGroup style={{ minWidth: "22rem" }} className="mb-1" light>
@@ -265,6 +277,15 @@ const SavedEntries = ({ params }) => {
                 />
               ))}
           </MDBListGroup>
+          {!fetching && !prevSubmissions?.length && !searchQuery && <div>
+            <p className={styles.noRecordsFound}>No Records Found</p>
+            <p className={styles.noRecordsSubText}>Please try adding some new land titles</p>
+            <Lottie
+              options={defaultOptions}
+              style={{ marginTop: -40 }}
+              height={300}
+              width={300}
+            /></div>}
         </div>
         {!searchQuery && !fetching && (
           <Pagination

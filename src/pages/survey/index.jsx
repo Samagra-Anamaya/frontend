@@ -421,7 +421,7 @@ const SurveyPage = ({ params }) => {
           leftImage={"/assets/assessment.png"}
           rightImage={"/assets/circleArrow.png"}
           mainText={"View Synced Titles"}
-          href="/completed-entries"
+          href="/synced-titles"
         />
         <SelectionItem
           key={_currLocation.id}
