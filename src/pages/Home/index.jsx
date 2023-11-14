@@ -86,15 +86,17 @@ const Home = () => {
         if (userIsAdminForPortal(loggedInUser.user.registrations)) {
           router.push(ROUTE_MAP.admin);
         } else {
-          window.location.reload();
+          setTimeout(() => window.location.reload(), 200)
         }
       });
+    } else {
+      setError("An internal server error occured");
+      setTimeout(() => {
+        setError("");
+      }, 3000);
+
     }
     setApiCall(false);
-    setError("An internal server error occured");
-    setTimeout(() => {
-      setError("");
-    }, 3000);
 
   }
 
