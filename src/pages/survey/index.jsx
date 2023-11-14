@@ -393,8 +393,11 @@ const SurveyPage = ({ params }) => {
           </div>
         ) : (
           submissions?.length > 0 && (
-            <div
-              className={styles.submitBtn}
+            <Button
+              variant="contained"
+              color="success"
+              fullWidth
+              sx={{ marginBottom: 5 }}
               onClick={() => {
                 logEvent(analytics, "submit_entries_clicked", {
                   villageId: _currLocation.villageCode,
@@ -406,13 +409,13 @@ const SurveyPage = ({ params }) => {
               }}
             >
               Submit Saved Titles
-            </div>
+            </Button>
           )
         )}
 
         <SelectionItem
           key={_currLocation.id}
-          leftImage={"/assets/citizen.png"}
+          leftImage={"/assets/surveyIcon1.png"}
           rightImage={"/assets/circleArrow.png"}
           onClick={() => {
             logEvent(analytics, "add_new_citizen_clicked", {
@@ -447,7 +450,7 @@ const SurveyPage = ({ params }) => {
               user_id: userData?.user?.user?.username,
             });
           }}
-          leftImage={"/assets/savedEntries.png"}
+          leftImage={"/assets/surveyIcon3.png"}
           rightImage={"/assets/circleArrow.png"}
           mainText={"View Submitted Titles"}
           href="/saved-entries"
