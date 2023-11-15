@@ -242,8 +242,12 @@ const SurveyPage = ({ params }) => {
     const batches = chunkArray(images, BATCH_SIZE);
     console.log("Batches ->", batches);
 
+
     for (const batch of batches) {
-      const promises = batch.map(async (_image) => {
+
+      const promises = [];
+
+      for (const _image of batch) {
         let data = new FormData();
         _image?.images.forEach((file) => {
           data.append("files", file, uuidv4() + ".webp");
@@ -264,18 +268,18 @@ const SurveyPage = ({ params }) => {
 
         try {
           const response = await offlinePackage?.sendRequest(config);
-          console.log("hola 1", { response })
-          if (response?.result?.length)
-            return dispatch(replaceMediaObject(response));
+          if (response?.result?.length) {
+            dispatch(replaceMediaObject(response)).then(res => {
+              console.log("Dispatch Res ---->", res)
+              promises.push(res)
+            });
+          }
         } catch (error) {
           console.error("Error uploading image", error);
-          return null;
         }
-      });
+      };
 
-      const responses = await Promise.all(promises);
-      console.log("hola 2", { responses })
-      responses.forEach((res) => {
+      promises.forEach((res) => {
         // In case offline
         if (res == undefined || !res) {
           showSubmitModal(false);
