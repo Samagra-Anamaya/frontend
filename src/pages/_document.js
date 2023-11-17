@@ -82,8 +82,6 @@ export default function Document() {
       <body>
         <Main />
         <NextScript />
-        <div className="color-halo-1"></div>
-        <div className="color-halo-2"></div>
       </body>
     </Html>
   );
