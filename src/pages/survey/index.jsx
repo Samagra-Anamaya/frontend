@@ -242,8 +242,12 @@ const SurveyPage = ({ params }) => {
     const batches = chunkArray(images, BATCH_SIZE);
     console.log("Batches ->", batches);
 
+
     for (const batch of batches) {
-      const promises = batch.map(async (_image) => {
+
+      const promises = [];
+
+      for (const _image of batch) {
         let data = new FormData();
         _image?.images.forEach((file) => {
           data.append("files", file, uuidv4() + ".webp");
@@ -264,18 +268,18 @@ const SurveyPage = ({ params }) => {
 
         try {
           const response = await offlinePackage?.sendRequest(config);
-          console.log("hola 1", { response })
-          if (response?.result?.length)
-            return dispatch(replaceMediaObject(response));
+          if (response?.result?.length) {
+            dispatch(replaceMediaObject(response)).then(res => {
+              console.log("Dispatch Res ---->", res)
+              promises.push(res)
+            });
+          }
         } catch (error) {
           console.error("Error uploading image", error);
-          return null;
         }
-      });
+      };
 
-      const responses = await Promise.all(promises);
-      console.log("hola 2", { responses })
-      responses.forEach((res) => {
+      promises.forEach((res) => {
         // In case offline
         if (res == undefined || !res) {
           showSubmitModal(false);
@@ -393,8 +397,11 @@ const SurveyPage = ({ params }) => {
           </div>
         ) : (
           submissions?.length > 0 && (
-            <div
-              className={styles.submitBtn}
+            <Button
+              variant="contained"
+              color="success"
+              fullWidth
+              sx={{ marginBottom: 5 }}
               onClick={() => {
                 logEvent(analytics, "submit_entries_clicked", {
                   villageId: _currLocation.villageCode,
@@ -406,13 +413,13 @@ const SurveyPage = ({ params }) => {
               }}
             >
               Submit Saved Titles
-            </div>
+            </Button>
           )
         )}
 
         <SelectionItem
           key={_currLocation.id}
-          leftImage={"/assets/citizen.png"}
+          leftImage={"/assets/surveyIcon1.png"}
           rightImage={"/assets/circleArrow.png"}
           onClick={() => {
             logEvent(analytics, "add_new_citizen_clicked", {
@@ -447,7 +454,7 @@ const SurveyPage = ({ params }) => {
               user_id: userData?.user?.user?.username,
             });
           }}
-          leftImage={"/assets/savedEntries.png"}
+          leftImage={"/assets/surveyIcon3.png"}
           rightImage={"/assets/circleArrow.png"}
           mainText={"View Submitted Titles"}
           href="/saved-entries"
