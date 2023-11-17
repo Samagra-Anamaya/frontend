@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import AssignedLocations from "../assigned-locations";
 import { useMachine } from '@xstate/react';
-import authMachine from "src/app/xstate/stateMachine";
+import authMachine from "../../xstate/stateMachine";
 import Home from "../Home";
 import { useSelector } from "react-redux";
 const Login = () => {
