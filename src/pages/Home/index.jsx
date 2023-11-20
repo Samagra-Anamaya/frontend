@@ -9,8 +9,8 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
-import { logEvent } from "firebase/analytics";
-import { analytics } from "../../services/firebase/firebase";
+// import { logEvent } from "firebase/analytics";
+// import { analytics } from "../../services/firebase/firebase";
 import Banner from "../../components/Banner";
 import { loginUser } from "../../redux/actions/login";
 
@@ -38,7 +38,7 @@ const Home = () => {
     setTimeout(() => {
       setLoading(false);
     }, 2000)
-    logEvent(analytics, "page_view")
+    // logEvent(analytics, "page_view")
   }, [])
 
   const handleSubmit = async (event) => {
@@ -63,9 +63,9 @@ const Home = () => {
 
 
     if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
-      logEvent(analytics, "login_failure", {
-        user_id: username
-      })
+      // logEvent(analytics, "login_failure", {
+      //   user_id: username
+      // })
       setApiCall(false);
       // setError(loginRes?.params?.errMsg);
       toast.error(loginRes?.params?.errMsg)
@@ -78,9 +78,9 @@ const Home = () => {
     if (loginRes.responseCode == "OK" && loginRes.result) {
       let loggedInUser = loginRes.result.data.user;
       console.log("logged in user-->", loggedInUser)
-      logEvent(analytics, "login_success", {
-        user_id: username
-      })
+      // logEvent(analytics, "login_success", {
+      //   user_id: username
+      // })
       dispatch(loginUser(loggedInUser)).then(res => {
         console.log("Aysn User loing ->", res)
         if (userIsAdminForPortal(loggedInUser.user.registrations)) {

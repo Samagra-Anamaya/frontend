@@ -5,8 +5,8 @@ import { clearSubmissionBatch, store, updateIsOffline, updatePendingSubmissions 
 import { useState, useEffect, useCallback } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { analytics } from "../services/firebase/firebase";
-import { logEvent } from "firebase/analytics";
+// import { analytics } from "../services/firebase/firebase";
+// import { logEvent } from "firebase/analytics";
 import "animate.css";
 import "bootstrap-css-only/css/bootstrap.min.css";
 import "mdbreact/dist/css/mdb.css";
@@ -127,7 +127,7 @@ export default function App({ Component, pageProps }) {
 
     });
     setHydrated(true);
-    logEvent(analytics, 'page_view');
+    // logEvent(analytics, 'page_view');
   }, []);
 
 
