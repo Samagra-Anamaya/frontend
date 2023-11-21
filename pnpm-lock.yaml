@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 dependencies:
   '@emotion/react':
     specifier: ^11.11.1
@@ -86,8 +90,8 @@ dependencies:
     specifier: ^5.6.0
     version: 5.6.0(@babel/core@7.22.20)(next@13.5.2)(webpack@5.89.0)
   offline-sync-handler-test:
-    specifier: ^0.1.77
-    version: 0.1.77(react@18.2.0)
+    specifier: ^0.1.78
+    version: 0.1.78(react@18.2.0)
   postcss:
     specifier: 8.4.25
     version: 8.4.25
@@ -7475,8 +7479,8 @@ packages:
       has-symbols: 1.0.3
       object-keys: 1.1.1
 
-  /offline-sync-handler-test@0.1.77(react@18.2.0):
-    resolution: {integrity: sha512-JkvY6HgX5bEsJVYdGYpRD+HjTxbZSMAvnyBuDounrWLz/koddsAO9BdNXVB3E7oZyOEF8gA160522J/DJ8GVfQ==}
+  /offline-sync-handler-test@0.1.78(react@18.2.0):
+    resolution: {integrity: sha512-sPc1bssqdO91MkRfe+iOLjdsKvMggTDk0+ZiPDdi2+elY/7NxOu5K2zpjQdKfGrSX8I+tAegWsZD0n3gSOWSIQ==}
     engines: {node: '>=10'}
     peerDependencies:
       react: '>=16'
@@ -10116,7 +10120,3 @@ packages:
   /zod@3.21.4:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
     dev: false
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
