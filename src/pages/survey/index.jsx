@@ -24,8 +24,8 @@ import SelectionItem from "../../components/SelectionItem";
 import CircularProgress from "@mui/material/CircularProgress";
 import { toast } from "react-toastify";
 import CommonModal from "../../components/Modal";
-// import { logEvent } from "firebase/analytics";
-// import { analytics } from "../../services/firebase/firebase";
+import { logEvent } from "firebase/analytics";
+import { analytics } from "../../services/firebase/firebase";
 import { uploadMedia } from "../../services/api";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
@@ -336,12 +336,12 @@ const SurveyPage = ({ params }) => {
         console.log("Batch Submission Response", { response })
 
         if (response && Object.keys(response)?.length) {
-          // logEvent(analytics, "submission_successfull", {
-          //   villageId: _currLocation.villageCode,
-          //   villageName: _currLocation.villageName,
-          //   user_id: userData?.user?.user?.username,
-          //   app_status: navigator.onLine ? "online" : "offline",
-          // });
+          logEvent(analytics, "submission_successfull", {
+            villageId: _currLocation.villageCode,
+            villageName: _currLocation.villageName,
+            user_id: userData?.user?.user?.username,
+            app_status: navigator.onLine ? "online" : "offline",
+          });
           responses.push(response);
           dispatch(clearSubmissionBatch(batch))
         } else {
@@ -350,12 +350,12 @@ const SurveyPage = ({ params }) => {
             JSON.stringify(response)
           );
           checkSavedRequests();
-          // logEvent(analytics, "submission_failure", {
-          //   villageId: _currLocation.villageCode,
-          //   villageName: _currLocation.villageName,
-          //   user_id: userData?.user?.user?.username,
-          //   app_status: navigator.onLine ? "online" : "offline",
-          // });
+          logEvent(analytics, "submission_failure", {
+            villageId: _currLocation.villageCode,
+            villageName: _currLocation.villageName,
+            user_id: userData?.user?.user?.username,
+            app_status: navigator.onLine ? "online" : "offline",
+          });
           responses.push(response);
         }
 
@@ -403,12 +403,12 @@ const SurveyPage = ({ params }) => {
               fullWidth
               sx={{ marginBottom: 5 }}
               onClick={() => {
-                // logEvent(analytics, "submit_entries_clicked", {
-                //   villageId: _currLocation.villageCode,
-                //   villageName: _currLocation.villageName,
-                //   user_id: userData?.user?.user?.username,
-                //   app_status: navigator.onLine ? "online" : "offline",
-                // }),
+                logEvent(analytics, "submit_entries_clicked", {
+                  villageId: _currLocation.villageCode,
+                  villageName: _currLocation.villageName,
+                  user_id: userData?.user?.user?.username,
+                  app_status: navigator.onLine ? "online" : "offline",
+                }),
                   showSubmitModal(true);
               }}
             >
@@ -422,11 +422,11 @@ const SurveyPage = ({ params }) => {
           leftImage={"/assets/surveyIcon1.png"}
           rightImage={"/assets/circleArrow.png"}
           onClick={() => {
-            // logEvent(analytics, "add_new_citizen_clicked", {
-            //   villageId: _currLocation.villageCode,
-            //   villageName: _currLocation.villageName,
-            //   user_id: userData?.user?.user?.username,
-            // });
+            logEvent(analytics, "add_new_citizen_clicked", {
+              villageId: _currLocation.villageCode,
+              villageName: _currLocation.villageName,
+              user_id: userData?.user?.user?.username,
+            });
             addNewCitizen();
           }}
           mainText={"Add New Land Record"}
@@ -434,11 +434,11 @@ const SurveyPage = ({ params }) => {
         <SelectionItem
           key={_currLocation.id}
           onClick={() => {
-            // logEvent(analytics, "completed_entries_clicked", {
-            //   villageId: _currLocation.villageCode,
-            //   villageName: _currLocation.villageName,
-            //   user_id: userData?.user?.user?.username,
-            // });
+            logEvent(analytics, "completed_entries_clicked", {
+              villageId: _currLocation.villageCode,
+              villageName: _currLocation.villageName,
+              user_id: userData?.user?.user?.username,
+            });
           }}
           leftImage={"/assets/assessment.png"}
           rightImage={"/assets/circleArrow.png"}
@@ -448,11 +448,11 @@ const SurveyPage = ({ params }) => {
         <SelectionItem
           key={_currLocation.id}
           onClick={() => {
-            // logEvent(analytics, "saved_entries_clicked", {
-            //   villageId: _currLocation.villageCode,
-            //   villageName: _currLocation.villageName,
-            //   user_id: userData?.user?.user?.username,
-            // });
+            logEvent(analytics, "saved_entries_clicked", {
+              villageId: _currLocation.villageCode,
+              villageName: _currLocation.villageName,
+              user_id: userData?.user?.user?.username,
+            });
           }}
           leftImage={"/assets/surveyIcon3.png"}
           rightImage={"/assets/circleArrow.png"}
@@ -508,12 +508,12 @@ const SurveyPage = ({ params }) => {
                     <div
                       style={modalStyles.confirmBtn}
                       onClick={() => {
-                        // logEvent(analytics, "submit_entries_confirm", {
-                        //   villageId: _currLocation.villageCode,
-                        //   villageName: _currLocation.villageName,
-                        //   user_id: userData?.user?.user?.username,
-                        //   app_status: navigator.onLine ? "online" : "offline",
-                        // });
+                        logEvent(analytics, "submit_entries_confirm", {
+                          villageId: _currLocation.villageCode,
+                          villageName: _currLocation.villageName,
+                          user_id: userData?.user?.user?.username,
+                          app_status: navigator.onLine ? "online" : "offline",
+                        });
                         performBatchSubmission();
                       }}
                     >
@@ -523,12 +523,12 @@ const SurveyPage = ({ params }) => {
                     <div
                       style={modalStyles.confirmBtn}
                       onClick={() => {
-                        // logEvent(analytics, "submit_entries_confirm", {
-                        //   villageId: _currLocation.villageCode,
-                        //   villageName: _currLocation.villageName,
-                        //   user_id: userData?.user?.user?.username,
-                        //   app_status: navigator.onLine ? "online" : "offline",
-                        // });
+                        logEvent(analytics, "submit_entries_confirm", {
+                          villageId: _currLocation.villageCode,
+                          villageName: _currLocation.villageName,
+                          user_id: userData?.user?.user?.username,
+                          app_status: navigator.onLine ? "online" : "offline",
+                        });
                         uploadImagesInBatches();
                       }}
                     >
@@ -539,12 +539,12 @@ const SurveyPage = ({ params }) => {
                   <div
                     style={modalStyles.exitBtn}
                     onClick={() => {
-                      // logEvent(analytics, "submit_entries_cancelled", {
-                      //   villageId: _currLocation.villageCode,
-                      //   villageName: _currLocation.villageName,
-                      //   user_id: userData?.user?.user?.username,
-                      //   app_status: navigator.onLine ? "online" : "offline",
-                      // });
+                      logEvent(analytics, "submit_entries_cancelled", {
+                        villageId: _currLocation.villageCode,
+                        villageName: _currLocation.villageName,
+                        user_id: userData?.user?.user?.username,
+                        app_status: navigator.onLine ? "online" : "offline",
+                      });
                       showSubmitModal(false);
                     }}
                   >

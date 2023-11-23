@@ -11,10 +11,10 @@ import Lottie from "react-lottie";
 import { useOfflineSyncContext } from "offline-sync-handler-test";
 import CitizenForm from "../../components/CitizenForm";
 // import QrReader from 'react-qr-scanner'
-// import { QrScanner } from "@yudiel/react-qr-scanner";
-// import { logEvent } from "firebase/analytics";
+import { QrScanner } from "@yudiel/react-qr-scanner";
+import { logEvent } from "firebase/analytics";
 import CircularProgress from "@mui/material/CircularProgress";
-// import { analytics } from "../../services/firebase/firebase";
+import { analytics } from "../../services/firebase/firebase";
 import { compressImage, getCitizenImageRecords, getImages, storeImages } from "../../services/utils";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
@@ -147,13 +147,13 @@ const CitizenSurveyPage = ({ params }) => {
       );
       // }
       setLoading(false);
-      // logEvent(analytics, "form_saved", {
-      //   villageId: _currLocation.villageCode,
-      //   villageName: _currLocation.villageName,
-      //   user_id: user?.username,
-      //   app_status: navigator.onLine ? 'online' : 'offline',
-      //   capturedAt: capturedAt
-      // });
+      logEvent(analytics, "form_saved", {
+        villageId: _currLocation.villageCode,
+        villageName: _currLocation.villageName,
+        user_id: user?.username,
+        app_status: navigator.onLine ? 'online' : 'offline',
+        capturedAt: capturedAt
+      });
     } catch (err) {
       console.log(err);
       setLoading(false);

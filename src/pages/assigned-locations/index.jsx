@@ -7,8 +7,8 @@ import { useDispatch } from "react-redux";
 import { currentLocationSelector, currentVillageSubmissions, setCurrentLocation } from "../../redux/store";
 import CommonHeader from "../../components/Commonheader";
 import { getEntriesMade } from "../../services/api";
-// import { logEvent } from "firebase/analytics";
-// import { analytics } from "../../services/firebase/firebase";
+import { logEvent } from "firebase/analytics";
+import { analytics } from "../../services/firebase/firebase";
 import Banner from "../../components/Banner";
 import { every } from "lodash";
 
@@ -76,11 +76,11 @@ const AssignedLocations = () => {
                 <SelectionItem
                   key={el.villageCode}
                   onClick={() => {
-                    // logEvent(analytics, "village_clicked", {
-                    //   villageId: el.villageCode,
-                    //   villageName: el.villageName,
-                    //   user_id: user?.user?.username,
-                    // });
+                    logEvent(analytics, "village_clicked", {
+                      villageId: el.villageCode,
+                      villageName: el.villageName,
+                      user_id: user?.user?.username,
+                    });
                     dispatch(setCurrentLocation(el));
                   }}
                   villageCode={el.villageCode}
