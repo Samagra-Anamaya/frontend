@@ -28,7 +28,6 @@ import { Stepper } from "@mui/material";
 import { Step } from "@mui/material";
 import { StepLabel } from "@mui/material";
 
-
 const steps = [
     'Aadhaar Details',
     'Tribe & Land Details',
@@ -206,7 +205,7 @@ const CitizenForm = (props) => {
                         </div>
                         {isViewerOpen && (
                             <ImageViewer
-                                src={landImages.map(el => typeof el == 'string' ? el : URL.createObjectURL(el))}
+                                src={landImages}
                                 currentIndex={currentImage}
                                 disableScroll={false}
                                 closeOnClickOutside={true}
@@ -357,30 +356,6 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />
-                    {formEditable && <FormControl sx={{ mb: 4, width: '80%' }}>
-                        <InputLabel id="social-category-label">Social Category</InputLabel>
-                        <Select
-                            labelId="social-category-label"
-                            id="social-category"
-                            value={formState?.socialCategory}
-                            variant="standard"
-                            label="Social Category"
-                            required
-                            onChange={e => setFormState((prevState) => ({ ...prevState, socialCategory: e.target.value }))}
-                        >
-                            <MenuItem value={'FDST'}>Forest Dwelling Scheduled Tribe {'(FDST)'}</MenuItem>
-                            <MenuItem value={'OTFD'}>Other Tribal Forest Dwellers {`(OTFD)`}</MenuItem>
-                        </Select>
-                    </FormControl>}
-                    {!formEditable && <TextField
-                        variant='standard'
-                        label={"Social Category"}
-                        value={formState?.socialCategory}
-                        required
-                        sx={{ mb: 4, width: '80%' }}
-                        disabled={!formEditable ? true : false}
-
-                    />}
                     {/* <TextField
                         variant='standard'
                         label={"Tribe Name"}
@@ -413,9 +388,33 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />}
+                    {formEditable && <FormControl sx={{ mb: 4, width: '80%' }}>
+                        <InputLabel id="area-units-label">Area Units</InputLabel>
+                        <Select
+                            labelId="area-units-label"
+                            id="area-units"
+                            value={formState?.areaUnits}
+                            variant="standard"
+                            label="Area Units"
+                            required
+                            onChange={e => setFormState((prevState) => ({ ...prevState, areaUnits: e.target.value }))}
+                        >
+                            <MenuItem value={'Acres'}>Acres</MenuItem>
+                            <MenuItem value={'Hectares'}>Hectares</MenuItem>
+                        </Select>
+                    </FormControl>}
+                    {!formEditable && <TextField
+                        variant='standard'
+                        label={"Area Units"}
+                        value={formState?.areaUnits}
+                        required
+                        sx={{ mb: 4, width: '80%' }}
+                        disabled={!formEditable ? true : false}
+
+                    />}
                     <TextField
                         variant='standard'
-                        label={"Area in Hectares (xx.xx)"}
+                        label={"Area"}
                         onChange={e => setFormState((prevState) => ({ ...prevState, area: e.target.value }))}
                         value={formState?.area}
                         required

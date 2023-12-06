@@ -427,7 +427,7 @@ export const getImageFromMinio = async (filename, user) => {
         Authorization: `Bearer ${user?.token}`
       }
     });
-    return res?.data;
+    return res?.data?.includes("http://minio:9000") ? res?.data?.replace("http://minio:9000", process.env.NEXT_PUBLIC_MINIO_SERVICE_URL) : res?.data;
   } catch (err) {
     throw err;
   }

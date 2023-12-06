@@ -11,7 +11,7 @@ import Lottie from "react-lottie";
 import { useOfflineSyncContext } from "offline-sync-handler-test";
 import CitizenForm from "../../components/CitizenForm";
 // import QrReader from 'react-qr-scanner'
-// import { QrScanner } from "@yudiel/react-qr-scanner";
+import { QrScanner } from "@yudiel/react-qr-scanner";
 import { logEvent } from "firebase/analytics";
 import CircularProgress from "@mui/material/CircularProgress";
 import { analytics } from "../../services/firebase/firebase";
