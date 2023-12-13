@@ -142,11 +142,11 @@ const CitizenForm = (props) => {
                         sx={{ mb: 4, width: "80%" }}
                     />}
                     {formState?.isAadhaarAvailable ?
-                        <Tooltip title={!formEditable ? "Aadhar will be display in hashed format" : ''}>
+                        <Tooltip title={!formEditable ? "Aadhaar will be display in hashed format" : ''}>
                             <TextField
                                 type={"text"}
                                 variant="standard"
-                                label={"Aadhar Number"}
+                                label={"Aadhaar Number"}
                                 onChange={(e) => {
                                     if (/^[0-9]*$/.test(e.target.value))
                                         setFormState((prevState) => ({
