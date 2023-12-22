@@ -54,7 +54,7 @@ const AssignedLocations = () => {
           <img src="/assets/infoHeaderIcon.png" />
           <div className={`${styles.infoitem} p-2 mb-2`}>
             <div>Enumerator Id:</div>
-            <div className={styles.subtext}>{user?.user?.username}</div>
+            <div className={styles.subtext} id="enumeratorId">{user?.user?.username}</div>
           </div>
           <div className={`${styles.infoitem} p-2 mb-2`}>
             <div>Villages Under GP:</div>
