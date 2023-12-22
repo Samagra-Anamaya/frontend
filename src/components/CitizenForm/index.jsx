@@ -94,7 +94,7 @@ const CitizenForm = (props) => {
     return (
         <>
             <Stepper activeStep={activeStep} alternativeLabel
-                sx={{ width: '100vw', marginBottom: '1rem' }}
+                sx={{ width: window.innerWidth > 500 ? '100%' : '100vw', marginBottom: '1rem' }}
 
             >
                 {steps.map((label) => (

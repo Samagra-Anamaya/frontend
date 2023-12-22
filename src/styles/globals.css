@@ -142,3 +142,16 @@ Note: Beware of modifying this element as it can break the animations - you shou
 .bm-overlay {
   background: rgba(0, 0, 0, 0.3);
 }
+
+
+
+@media only screen and (min-width: 320px) {
+  .rootDiv {
+    width: 500px;
+    margin: auto;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    height: 100vh;
+    overflow: scroll;
+  }
+
+}
