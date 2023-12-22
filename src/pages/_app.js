@@ -37,6 +37,7 @@ export default function App({ Component, pageProps }) {
   const userData = omitBy(store.getState()?.userData, isNull);
   const [syncing, setSyncing] = useState(false);
   const [syncComplete, setSyncComplete] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(true);
 
   // const submitData = useCallback(async (data) => {
 
@@ -128,134 +129,93 @@ export default function App({ Component, pageProps }) {
     });
     setHydrated(true);
     logEvent(analytics, 'page_view');
+    if (window.innerWidth > 500) setIsDesktop(true);
+    else setIsDesktop(false);
   }, []);
 
-
-
-  // async function performBatchSubmission(offlinePackage) {
-  //   const BATCH_SIZE = 10;
-  //   const DELAY_TIME = 1000; // Delay time in milliseconds (5 seconds)
-  //   const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
-
-  //   let ps = [...store.getState().userData.pendingSubmissions]
-  //   console.log("PS -->", { ps })
-  //   if (ps?.length) {
-  //     const responses = [];
-  //     for (let i in ps) {
-  //       console.log({ i, ps })
-  //       let submissions = userData?.submissions[ps[i]];
-
-  //       console.log({ submissions })
-
-  //       // Splitting the submission array into batches of 10
-  //       const batches = chunkArray(submissions, BATCH_SIZE);
-  //       for (let el in batches) {
-
-  //         let batch = batches[el];
-
-  //         const submissionData = {
-  //           [ps[i]]: batch,
-  //         };
-
-  //         const config = {
-  //           method: "POST",
-  //           url: BACKEND_SERVICE_URL + `/submissions/bulk`,
-  //           data: submissionData,
-  //           headers: {
-  //             Authorization: `Bearer ${userData?.user?.token}`,
-  //           },
-  //         };
-
-  //         try {
-  //           // Introduce a delay before processing the next batch
-  //           await sleep(DELAY_TIME);
-  //           const response = await offlinePackage?.sendRequest(config);
-  //           console.log("Batch Submission Response", { response })
-
-  //           if (response && Object.keys(response)?.length) {
-  //             // logEvent(analytics, "submission_successfull", {
-  //             //   villageId: _currLocation.villageCode,
-  //             //   villageName: _currLocation.villageName,
-  //             //   user_id: userData?.user?.user?.username,
-  //             //   app_status: navigator.onLine ? "online" : "offline",
-  //             // });
-  //             responses.push(response);
-  //             store.dispatch(clearSubmissionBatch(batch))
-  //           } else {
-  //             toast.error(
-  //               "An error occured while submitting form. Please try again \nError String : " +
-  //               JSON.stringify(response)
-  //             );
-  //             // logEvent(analytics, "submission_failure", {
-  //             //   villageId: _currLocation.villageCode,
-  //             //   villageName: _currLocation.villageName,
-  //             //   user_id: userData?.user?.user?.username,
-  //             //   app_status: navigator.onLine ? "online" : "offline",
-  //             // });
-  //             responses.push(response);
-  //           }
-
-  //         } catch (error) {
-  //           console.error("Error Submitting Submission Data: ", error);
-  //         }
-  //       }
-
-  //     }
-  //     console.log("Final Submission Responses ---->", { responses, ps })
-
-  //     // Clearing pending submissions array
-  //     responses.forEach(el => {
-  //       Object?.keys(el)?.forEach(x => {
-  //         ps = ps.filter(i => i != x);
-  //       })
-  //     })
-  //     store.dispatch(updatePendingSubmissions(ps));
-  //     setSyncing(false);
-  //     console.log("Batch submission completed")
-  //   }
-  //   setSyncing(false);
-  // }
-
-  return hydrated ? (
-    <Provider store={store} data-testid="redux-provider">
-      <OfflineSyncProvider onCallback={onSyncSuccess}>
-        <Component {...pageProps} />
-      </OfflineSyncProvider>
-      <ToastContainer
-        position="top-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
-      {syncing && <CommonModal sx={{ maxHeight: "50vh", maxWidth: '80vw', overflow: "scroll" }}>
-        <div style={{ ...modalStyles.container, justifyContent: "center" }}>
-          {!syncComplete ? <>
-            <p style={modalStyles.mainText}>Please wait ✋, Media Sync in progress</p>
-            <CircularProgress color="success" size={60} />
-            <p style={modalStyles.warningText}>Do not refresh this page</p>
-          </>
-            :
-            <>
-              <Lottie
-                options={defaultOptions}
-                style={{ marginTop: -40, marginBottom: -20 }}
-                height={200}
-                width={200}
-              />
-              <p style={modalStyles.mainText}>Media Sync Successful</p>
-              <Button color="success" variant="contained" fullWidth onClick={() => { setSyncComplete(false); setSyncing(false); }}>Done</Button>
+  return hydrated ? (<>
+    {isDesktop ? <div className="rootDiv">
+      <Provider store={store} data-testid="redux-provider">
+        <OfflineSyncProvider onCallback={onSyncSuccess}>
+          <Component {...pageProps} />
+        </OfflineSyncProvider>
+        <ToastContainer
+          position="top-center"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+        {syncing && <CommonModal sx={{ maxHeight: "50vh", maxWidth: '80vw', overflow: "scroll" }}>
+          <div style={{ ...modalStyles.container, justifyContent: "center" }}>
+            {!syncComplete ? <>
+              <p style={modalStyles.mainText}>Please wait ✋, Media Sync in progress</p>
+              <CircularProgress color="success" size={60} />
+              <p style={modalStyles.warningText}>Do not refresh this page</p>
             </>
-          }
-        </div>
-      </CommonModal>}
-    </Provider>
-  ) : null;
+              :
+              <>
+                <Lottie
+                  options={defaultOptions}
+                  style={{ marginTop: -40, marginBottom: -20 }}
+                  height={200}
+                  width={200}
+                />
+                <p style={modalStyles.mainText}>Media Sync Successful</p>
+                <Button color="success" variant="contained" fullWidth onClick={() => { setSyncComplete(false); setSyncing(false); }}>Done</Button>
+              </>
+            }
+          </div>
+        </CommonModal>}
+      </Provider>
+    </div> :
+      <>
+        <Provider store={store} data-testid="redux-provider">
+          <OfflineSyncProvider onCallback={onSyncSuccess}>
+            <Component {...pageProps} />
+          </OfflineSyncProvider>
+          <ToastContainer
+            position="top-center"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+          {syncing && <CommonModal sx={{ maxHeight: "50vh", maxWidth: '80vw', overflow: "scroll" }}>
+            <div style={{ ...modalStyles.container, justifyContent: "center" }}>
+              {!syncComplete ? <>
+                <p style={modalStyles.mainText}>Please wait ✋, Media Sync in progress</p>
+                <CircularProgress color="success" size={60} />
+                <p style={modalStyles.warningText}>Do not refresh this page</p>
+              </>
+                :
+                <>
+                  <Lottie
+                    options={defaultOptions}
+                    style={{ marginTop: -40, marginBottom: -20 }}
+                    height={200}
+                    width={200}
+                  />
+                  <p style={modalStyles.mainText}>Media Sync Successful</p>
+                  <Button color="success" variant="contained" fullWidth onClick={() => { setSyncComplete(false); setSyncing(false); }}>Done</Button>
+                </>
+              }
+            </div>
+          </CommonModal>}
+        </Provider>
+      </>
+    }
+  </>) : null;
 }
 
 const modalStyles = {

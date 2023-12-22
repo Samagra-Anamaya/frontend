@@ -204,17 +204,6 @@ const SavedEntries = ({ params }) => {
   return !hydrated ? null : (
     <div className={styles.container} ref={containerRef}>
       <Banner />
-      {/* <CommonHeader
-        onBack={() => router.back()}
-        text={`${_currLocation.villageName}`}
-        subText={`Saved Entries`}
-        showLogout={false}
-        sx={{
-          justifyContent: "space-between !important",
-          padding: "2rem 1rem",
-        }}
-      /> */}
-
       <Breadcrumb items={breadcrumbItems} />
 
       <div
