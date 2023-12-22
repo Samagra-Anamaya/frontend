@@ -118,6 +118,7 @@ const Home = () => {
               <form autoComplete="off" onSubmit={handleSubmit} className={styles.loginForm + " animate__animated animate__fadeIn"}>
                 <TextField
                   label="Username"
+                  id="username"
                   onChange={e => setUsername(e.target.value)}
                   required
                   variant="filled"
@@ -131,13 +132,14 @@ const Home = () => {
                   onChange={e => setPassword(e.target.value)}
                   required
                   variant="filled"
+                  id="password"
                   type="password"
                   value={password}
                   error={passwordError}
                   fullWidth
                   sx={{ mb: 3 }}
                 />
-                <Button variant="contained" color="success" type="submit" sx={{ padding: 1, width: '80%', height: '3rem', fontSize: 16, marginTop: 5 }}>{apiCall ? <CircularProgress color="inherit" /> : 'Login'} </Button>
+                <Button id="loginBtn" variant="contained" color="success" type="submit" sx={{ padding: 1, width: '80%', height: '3rem', fontSize: 16, marginTop: 5 }}>{apiCall ? <CircularProgress color="inherit" /> : 'Login'} </Button>
                 {error?.length > 0 && <p style={{ color: 'red' }}>{error}</p>}
               </form>
             </div>
