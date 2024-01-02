@@ -268,6 +268,7 @@ const CitizenSurveyPage = ({ params }) => {
                       borderRadius: "0.75rem",
                       color: "#fff",
                       marginTop: 30,
+                      cursor: 'pointer'
                     }}
                   >
                     Return to Village Screen

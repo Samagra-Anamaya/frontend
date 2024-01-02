@@ -20,28 +20,30 @@ const SelectionItem = (props) => {
         href,
         imgWidth,
         onSubBtnClick,
-        rightActionLogo=null,
+        rightActionLogo = null,
         villageCode,
-        names
+        names,
+        clName,
+        htmlId
     } = props
     const router = useRouter();
 
 
     const submissions = useSelector(getVillageSubmissions(villageCode));
-  
+
     const showSubmitBtn = useMemo(() => {
 
-      return names==='submitBtn' && submissions ? every(submissions, (r) => {
-        const sd = r.submissionData
-        return sd.rorUpdated ? sd?.rorRecords?.length > 0 && sd?.landRecords?.length > 0 : sd?.landRecords ? sd?.landRecords?.length > 0 : false 
-      }) : false
+        return names === 'submitBtn' && submissions ? every(submissions, (r) => {
+            const sd = r.submissionData
+            return sd.rorUpdated ? sd?.rorRecords?.length > 0 && sd?.landRecords?.length > 0 : sd?.landRecords ? sd?.landRecords?.length > 0 : false
+        }) : false
     }, [submissions]);
 
-    console.log("shri ram",{showSubmitBtn,submissions});
+    console.log("shri ram", { showSubmitBtn, submissions });
 
     return href?.length ?
         (
-            <Link href={href} className={`${styles.container}`} onClick={onClick} style={{ ...props.sx, textDecoration: 'none' }}>
+            <Link href={href} className={`${styles.container} ${clName || ''}`} id={htmlId} onClick={onClick} style={{ ...props.sx, textDecoration: 'none' }}>
                 <div style={{ width: '45px', height: '45px' }} >
                     <img src={leftImage} style={{ width: '40px', height: '40px' }} />
                 </div>
@@ -55,7 +57,7 @@ const SelectionItem = (props) => {
                 {/* {showSubmitBtn && <span style={{width:'5px' ,height:'5px' ,border:'1px solid red',borderRadius:'50%'}}></span>} */}
             </Link>
         ) : (
-            <div className={styles.container} onClick={onClick} style={{ ...props.sx }} >
+            <div className={`${styles.container} ${clName || ''}`} id={htmlId} onClick={onClick} style={{ ...props.sx }} >
                 <div style={{ width: rightImage ? '' : '10%', margin: rightImage ? '' : '1.5rem' }}>
                     <img src={leftImage} style={{ width: '40px', height: '40px' }} />
                 </div>
