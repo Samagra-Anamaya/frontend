@@ -15,11 +15,12 @@ const ListItem = (props) => {
     onSecondaryAction,
     secondaryImage = null,
     secondaryLoading = false,
+    clName
   } = props;
   console.log({ props });
   return (
     <MDBListGroupItem
-      className="d-flex justify-content-between align-items-center"
+      className={`d-flex justify-content-between align-items-center ${clName}`}
       style={{ borderRadius: "10px", marginBottom: "5px", ...props.sx }}
     >
       <div className="d-flex align-items-center" onClick={onClick ?? null}>
@@ -41,7 +42,7 @@ const ListItem = (props) => {
           src={rightImage}
           alt=""
           style={{ width: "40px", height: "40px" }}
-          // className='rounded-circle'
+        // className='rounded-circle'
         />
       )}
 
@@ -55,10 +56,10 @@ const ListItem = (props) => {
               onClick={
                 onSecondaryAction
                   ? (ev) => {
-                      ev.preventDefault();
-                      ev.stopPropagation();
-                      onSecondaryAction();
-                    }
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    onSecondaryAction();
+                  }
                   : null
               }
               style={{ width: "40px", height: "40px" }}

@@ -201,6 +201,7 @@ const CompletedEntries = ({ params }) => {
               prevSubmissions?.length > 0 &&
               prevSubmissions?.map((el) => (
                 <ListItem
+                  clName="titles"
                   key={el.id}
                   onSubBtnClick={() => {
                     console.log("sub btn clicked")

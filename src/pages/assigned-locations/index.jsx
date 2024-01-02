@@ -58,7 +58,7 @@ const AssignedLocations = () => {
           </div>
           <div className={`${styles.infoitem} p-2 mb-2`}>
             <div>Villages Under GP:</div>
-            <div className={styles.subtext}>{locations?.length}</div>
+            <div className={styles.subtext} id="gpVillages">{locations?.length}</div>
           </div>
           <div className={`${styles.infoitem} p-2 mb-2`}>
             <div>Total titles submitted (across all villages under gp):</div>
@@ -90,6 +90,7 @@ const AssignedLocations = () => {
                   rightImage={"/assets/circleArrow.png"}
                   href="/survey"
                   names="submitBtn"
+                  clName="villages"
                 />
               ))}
           </div>
@@ -113,7 +114,7 @@ const AssignedLocations = () => {
           />)}
         </div> */}
       </div>
-    </div>
+    </div >
   );
 };
 
