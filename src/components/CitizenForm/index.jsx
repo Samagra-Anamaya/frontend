@@ -289,53 +289,51 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />
-                    {formEditable && <FormControl sx={{ mb: 4, width: '80%' }}>
-                        <InputLabel id="co-claimant-select-label">Co-Claimant Available?</InputLabel>
-                        <Select
-                            labelId="co-claimant-select-label"
-                            id="co-claimant-select"
-                            value={formState?.coClaimantAvailable}
-                            variant="standard"
-                            label="Co-Claimant Available"
-                            required
-                            onChange={e => setFormState((prevState) => ({ ...prevState, coClaimantAvailable: e.target.value }))}
-                        >
-                            <MenuItem value={true}>Yes</MenuItem>
-                            <MenuItem value={false}>No</MenuItem>
-                        </Select>
-                    </FormControl>}
 
-                    {!formEditable && <FormControl sx={{ mb: 4, width: '80%' }}>
-                        <InputLabel id="co-claimant-select-label">Co-Claimant Available?</InputLabel>
-                        <Select
-                            labelId="co-claimant-select-label"
-                            id="co-claimant-select"
-                            value={formState?.coClaimantAvailable}
-                            variant="standard"
-                            label="Co-Claimant Available"
-                            required
-                            disabled
-                            onChange={e => setFormState((prevState) => ({ ...prevState, coClaimantAvailable: e.target.value }))}
-                        >
-                            <MenuItem value={true}>Yes</MenuItem>
-                            <MenuItem value={false}>No</MenuItem>
-                        </Select>
-                    </FormControl>}
-                    {formState?.coClaimantAvailable ? <TextField
+                    <TextField
                         variant='standard'
-                        label={"Co-Claimant Name"}
-                        onChange={e => {
-                            if (/^[a-zA-Z ]*$/.test(e.target.value))
-                                setFormState((prevState) => ({
-                                    ...prevState, coClaimantName: e.target.value
-                                }))
-                        }}
-                        value={formState?.coClaimantName}
+                        label={"No. of Co Claimants"}
+                        onChange={e => { if (Number(e.target.value) <= 20) setFormState((prevState) => ({ ...prevState, noOfCoClaimants: e.target.value })) }}
+                        value={formState?.noOfCoClaimants}
                         required
+                        type={'number'}
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
+                    />
+                    {formState.noOfCoClaimants > 0 && Array.from(Array(Number(formState.noOfCoClaimants)).keys()).map(el => {
+                        return <TextField
+                            variant='standard'
+                            label={`Co Claiamant ${el + 1} Name`}
+                            onChange={e => { if (/^[a-zA-Z ]*$/.test(e.target.value)) setFormState((prevState) => ({ ...prevState, [`coClaimant${el + 1}`]: e.target.value })) }}
+                            value={formState?.[`coClaimant${el + 1}`]}
+                            required
+                            sx={{ mb: 4, width: '80%' }}
+                            disabled={!formEditable ? true : false}
+                        />
+                    })}
 
-                    /> : <></>}
+                    <TextField
+                        variant='standard'
+                        label={"No. of Dependents"}
+                        onChange={e => { if (Number(e.target.value) <= 20) setFormState((prevState) => ({ ...prevState, noOfDependents: e.target.value })) }}
+                        value={formState?.noOfDependents}
+                        required
+                        type={'number'}
+                        sx={{ mb: 4, width: '80%' }}
+                        disabled={!formEditable ? true : false}
+                    />
+                    {formState.noOfDependents > 0 && Array.from(Array(Number(formState.noOfDependents)).keys()).map(el => {
+                        return <TextField
+                            variant='standard'
+                            label={`Dependent ${el + 1} Name`}
+                            onChange={e => { if (/^[a-zA-Z ]*$/.test(e.target.value)) setFormState((prevState) => ({ ...prevState, [`dependent${el + 1}`]: e.target.value })) }}
+                            value={formState?.[`dependent${el + 1}`]}
+                            required
+                            sx={{ mb: 4, width: '80%' }}
+                            disabled={!formEditable ? true : false}
+                        />
+                    })}
+
                     <TextField
                         variant='standard'
                         label={"Mother/Father's Name"}

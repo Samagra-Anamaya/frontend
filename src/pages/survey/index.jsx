@@ -444,6 +444,8 @@ const SurveyPage = ({ params }) => {
           rightImage={"/assets/circleArrow.png"}
           mainText={"View Synced Titles"}
           href="/synced-titles"
+          clName="synced"
+          htmlId={'syncedTitles'}
         />
         <SelectionItem
           key={_currLocation.id}
@@ -458,6 +460,7 @@ const SurveyPage = ({ params }) => {
           rightImage={"/assets/circleArrow.png"}
           mainText={"View Submitted Titles"}
           href="/saved-entries"
+          htmlId="submittedTitles"
         />
         {/* <SelectionItem
           key={_currLocation.id}
@@ -669,6 +672,7 @@ const warningModalStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "0.5rem",
+    cursor: 'pointer'
   },
   exitBtn: {
     width: "50%",
@@ -679,6 +683,7 @@ const warningModalStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "0.5rem",
+    cursor: 'pointer'
   },
 };
 

@@ -37,7 +37,7 @@ const Banner = (props) => {
             <Menu >
               <div>Hi there 👋,</div>
               <div style={{ marginBottom: 20 }}>Enumerator {userData?.user?.user?.username}</div>
-              <div onClick={() => { showLogoutModal(true) }}>
+              <div onClick={() => { showLogoutModal(true) }} style={{ cursor: 'pointer' }}>
                 <span><LogoutIcon style={{ color: '#007922', fontSize: 40 }} /></span>&nbsp;&nbsp;&nbsp;
                 <span>Logout</span>
               </div>
@@ -93,8 +93,8 @@ const modalStyles = {
   confirmationText: { fontSize: '1rem', textAlign: 'center', marginTop: 10, fontWeight: '500' },
   image: { height: '100%', width: '30%' },
   btnContainer: { width: '100%', display: 'flex', flexDirection: 'row', gap: '1rem', justifyContent: 'space-evenly', marginTop: 30 },
-  confirmBtn: { width: '50%', height: '3rem', background: '#017922', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem' },
-  exitBtn: { width: '50%', height: '3rem', border: '1px solid #017922', color: '#017922', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem' },
+  confirmBtn: { width: '50%', height: '3rem', background: '#017922', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', cursor: 'pointer' },
+  exitBtn: { width: '50%', height: '3rem', border: '1px solid #017922', color: '#017922', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.5rem', cursor: 'pointer' },
 
 }
 
