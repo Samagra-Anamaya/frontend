@@ -283,7 +283,7 @@ const CitizenForm = (props) => {
                                     ...prevState, claimantName: e.target.value
                                 }))
                         }}
-                        value={formState?.claimantName}
+                        value={formState?.claimantName || ""}
                         required
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
@@ -339,8 +339,8 @@ const CitizenForm = (props) => {
                     <TextField
                         variant='standard'
                         label={"Mother/Father's Name"}
-                        onChange={e => setFormState((prevState) => ({ ...prevState, parentName: e.target.value }))}
-                        value={formState?.parentName}
+                        onChange={e => { if (/^[a-zA-Z ]*$/.test(e.target.value)) setFormState((prevState) => ({ ...prevState, parentName: e.target.value })) }}
+                        value={formState?.parentName || ""}
                         required
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
