@@ -672,6 +672,7 @@ const warningModalStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "0.5rem",
+    cursor: 'pointer'
   },
   exitBtn: {
     width: "50%",
@@ -682,6 +683,7 @@ const warningModalStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "0.5rem",
+    cursor: 'pointer'
   },
 };
 

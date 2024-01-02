@@ -212,7 +212,7 @@ const CompletedEntries = ({ params }) => {
                   mainSubtext={moment(el?.updatedAt).format(
                     "DD MMM YYYY, hh:mm a"
                   )}
-                  sx={{ background: "#fff" }}
+                  sx={{ background: "#fff", marginTop: '1rem', cursor: 'pointer' }}
                   mode={1}
                   imgWidth={'70%'}
                   onClick={() => {
