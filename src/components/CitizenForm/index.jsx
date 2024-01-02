@@ -293,7 +293,7 @@ const CitizenForm = (props) => {
                     <TextField
                         variant='standard'
                         label={"No. of Co Claimants"}
-                        onChange={e => { if (Number(e.target.value) <= 20) setFormState((prevState) => ({ ...prevState, noOfCoClaimants: e.target.value })) }}
+                        onChange={e => { if (Number(e.target.value) <= 20 && !isNaN(e.target.value)) setFormState((prevState) => ({ ...prevState, noOfCoClaimants: e.target.value })) }}
                         value={formState?.noOfCoClaimants}
                         required
                         type={'number'}
@@ -304,8 +304,10 @@ const CitizenForm = (props) => {
                         return <TextField
                             variant='standard'
                             label={`Co Claiamant ${el + 1} Name`}
-                            onChange={e => { if (/^[a-zA-Z ]*$/.test(e.target.value)) setFormState((prevState) => ({ ...prevState, [`coClaimant${el + 1}`]: e.target.value })) }}
-                            value={formState?.[`coClaimant${el + 1}`]}
+                            onChange={e => {
+                                if (/^[a-zA-Z ]*$/.test(e.target.value)) setFormState((prevState) => ({ ...prevState, [`coClaimant${el + 1}`]: e.target.value }))
+                            }}
+                            value={formState?.[`coClaimant${el + 1}`] || ""}
                             required
                             sx={{ mb: 4, width: '80%' }}
                             disabled={!formEditable ? true : false}
@@ -315,7 +317,7 @@ const CitizenForm = (props) => {
                     <TextField
                         variant='standard'
                         label={"No. of Dependents"}
-                        onChange={e => { if (Number(e.target.value) <= 20) setFormState((prevState) => ({ ...prevState, noOfDependents: e.target.value })) }}
+                        onChange={e => { if (Number(e.target.value) <= 20 && !isNaN(e.target.value)) setFormState((prevState) => ({ ...prevState, noOfDependents: e.target.value })) }}
                         value={formState?.noOfDependents}
                         required
                         type={'number'}
@@ -327,7 +329,7 @@ const CitizenForm = (props) => {
                             variant='standard'
                             label={`Dependent ${el + 1} Name`}
                             onChange={e => { if (/^[a-zA-Z ]*$/.test(e.target.value)) setFormState((prevState) => ({ ...prevState, [`dependent${el + 1}`]: e.target.value })) }}
-                            value={formState?.[`dependent${el + 1}`]}
+                            value={formState?.[`dependent${el + 1}`] || ""}
                             required
                             sx={{ mb: 4, width: '80%' }}
                             disabled={!formEditable ? true : false}
