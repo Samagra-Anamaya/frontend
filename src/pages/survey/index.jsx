@@ -15,6 +15,7 @@ import {
   clearSubmissionBatch,
   clearSubmissions,
   setCurrentCitizen,
+  store,
   tokenSelector,
   updateCitizenFormData,
 } from "../../redux/store";
@@ -33,19 +34,10 @@ import { chunkArray, getCitizenImageRecords, getImages, getImagesForVillage, sle
 import { formDataToObject } from "../../utils/formdata-to-object";
 import { replaceMediaObject } from "../../redux/actions/replaceMediaObject";
 import * as done from "public/lottie/done.json";
+import * as warning from "public/lottie/warning.json";
 import { Button } from "@mui/material";
 import Lottie from "react-lottie";
-
-
-// Lottie Options
-const defaultOptions = {
-  loop: true,
-  autoplay: true,
-  animationData: done,
-  rendererSettings: {
-    preserveAspectRatio: "xMidYMid slice",
-  },
-};
+import isOnline from "is-online";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -66,6 +58,7 @@ const SurveyPage = ({ params }) => {
   const [submissionCompleted, setSubmissionCompleted] = useState(false);
   const [disableSubmitEntries, setDisableSubmitEntries] = useState(false);
   const [warningModal, showWarningModal] = useState(false);
+  const [isOfflineResponse, setIsOfflineResponse] = useState(false);
   const token = useSelector(tokenSelector);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -140,91 +133,6 @@ const SurveyPage = ({ params }) => {
     router.push(`/citizen-survey`);
   };
 
-  // const submitData2 = async () => {
-  //   try {
-  //     setLoading(true);
-
-  //     const submissionData = {
-  //       [_currLocation.villageCode]: submissions,
-  //     };
-  //     console.log("shri ram: submit2", { submissionData, submissions });
-  //     const config = {
-  //       method: "POST",
-  //       url: BACKEND_SERVICE_URL + `/submissions/bulk`,
-  //       data: submissionData,
-  //       headers: {
-  //         Authorization: `Bearer ${userData?.user?.token}`,
-  //       },
-  //     };
-  //     const response = await offlinePackage?.sendRequest(config);
-  //     if (response && Object.keys(response)?.length) {
-  //       // dispatch(saveCitizenFormData({ id: currCitizen.citizenId, data: formState, capturedAt: capturedAt }))
-  //       dispatch(clearSubmissions(_currLocation?.villageCode));
-  //       setLoading(false);
-  //       showSubmitModal(false);
-  //       logEvent(analytics, "submission_successfull", {
-  //         villageId: _currLocation.villageCode,
-  //         villageName: _currLocation.villageName,
-  //         user_id: userData?.user?.user?.username,
-  //         app_status: navigator.onLine ? "online" : "offline",
-  //       });
-  //     } else {
-  //       toast.error(
-  //         "An error occured while submitting form. Please try again \nError String : " +
-  //         JSON.stringify(response)
-  //       );
-  //       showSubmitModal(false);
-  //       setLoading(false);
-  //       checkSavedRequests();
-  //       logEvent(analytics, "submission_failure", {
-  //         villageId: _currLocation.villageCode,
-  //         villageName: _currLocation.villageName,
-  //         user_id: userData?.user?.user?.username,
-  //         app_status: navigator.onLine ? "online" : "offline",
-  //       });
-  //     }
-  //   } catch (err) {
-  //     console.error("ERR", err);
-  //   }
-  // };
-
-  // const submitData = useCallback(async () => {
-  //   setLoading(true);
-  //   const images = await getImages();
-
-  //   for (const _image of images) {
-  //     let data = new FormData();
-  //     _image?.images.forEach((file) => {
-  //       data.append("files", file, uuidv4() + '.webp');
-  //     });
-
-  //     data.append("meta", JSON.stringify(_image));
-
-  //     const config = {
-  //       method: "POST",
-  //       url: BACKEND_SERVICE_URL + `/upload/multiple`,
-  //       meta: _image,
-  //       data,
-  //       isFormdata: true,
-  //       headers: {
-  //         Authorization: `Bearer ${userData?.user?.token}`,
-  //       },
-  //     };
-
-  //     const response = await offlinePackage?.sendRequest(config);
-  //     if (response?.result?.length)
-  //       dispatch(replaceMediaObject(response)).then((res) => {
-  //         if (res.type.includes("fulfilled")) {
-  //           setIsMediaUploaded(true);
-  //         }
-  //       });
-  //     else {
-  //       showSubmitModal(false);
-  //     }
-  //   }
-  //   setLoading(false);
-  // }, []);
-
   const breadcrumbItems = useMemo(
     () => [{ label: "Home", to: "/" }, { label: _currLocation?.villageName }],
     [_currLocation?.villageName]
@@ -264,10 +172,16 @@ const SurveyPage = ({ params }) => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          timeout: process.env.NEXT_PUBLIC_REQUEST_TIMEOUT
         };
 
         try {
           const response = await offlinePackage?.sendRequest(config);
+          if (!response || response == undefined) {
+            showSubmitModal(false);
+            checkSavedRequests();
+            toast.warn("Your request has been saved, it'll be submitted once you're back in connection");
+          }
           if (response?.result?.length) {
             dispatch(replaceMediaObject(response)).then(res => {
               console.log("Dispatch Res ---->", res)
@@ -327,6 +241,7 @@ const SurveyPage = ({ params }) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        timeout: process.env.NEXT_PUBLIC_REQUEST_TIMEOUT
       };
 
       try {
@@ -345,18 +260,23 @@ const SurveyPage = ({ params }) => {
           responses.push(response);
           dispatch(clearSubmissionBatch(batch))
         } else {
-          toast.error(
-            "An error occured while submitting form. Please try again \nError String : " +
-            JSON.stringify(response)
-          );
-          checkSavedRequests();
-          logEvent(analytics, "submission_failure", {
-            villageId: _currLocation.villageCode,
-            villageName: _currLocation.villageName,
-            user_id: userData?.user?.user?.username,
-            app_status: navigator.onLine ? "online" : "offline",
-          });
-          responses.push(response);
+          if (!response || response == undefined) {
+            toast.warn("Your request has been saved, it'll be submitted once you're back in connection");
+            setIsOfflineResponse(true);
+          } else {
+            toast.error(
+              "An error occured while submitting form. Please try again \nError String : " +
+              JSON.stringify(response)
+            );
+            checkSavedRequests();
+            logEvent(analytics, "submission_failure", {
+              villageId: _currLocation.villageCode,
+              villageName: _currLocation.villageName,
+              user_id: userData?.user?.user?.username,
+              app_status: navigator.onLine ? "online" : "offline",
+            });
+            responses.push(response);
+          }
         }
 
       } catch (error) {
@@ -369,6 +289,20 @@ const SurveyPage = ({ params }) => {
     setLoading(false);
     setSubmissionCompleted(true);
     console.log("Batch submission completed")
+  }
+
+  const startSubmission = () => {
+    if (!store.getState().userData.canSubmit) {
+      toast.warn('You are not connected to internet, please try once back in network')
+      return;
+    }
+    logEvent(analytics, "submit_entries_clicked", {
+      villageId: _currLocation.villageCode,
+      villageName: _currLocation.villageName,
+      user_id: userData?.user?.user?.username,
+      app_status: navigator.onLine ? "online" : "offline",
+    }),
+      showSubmitModal(true);
   }
 
 
@@ -402,15 +336,7 @@ const SurveyPage = ({ params }) => {
               color="success"
               fullWidth
               sx={{ marginBottom: 5 }}
-              onClick={() => {
-                logEvent(analytics, "submit_entries_clicked", {
-                  villageId: _currLocation.villageCode,
-                  villageName: _currLocation.villageName,
-                  user_id: userData?.user?.user?.username,
-                  app_status: navigator.onLine ? "online" : "offline",
-                }),
-                  showSubmitModal(true);
-              }}
+              onClick={startSubmission}
             >
               Submit Saved Titles
             </Button>
@@ -491,13 +417,20 @@ const SurveyPage = ({ params }) => {
             <div style={modalStyles.container}>
               {submissionCompleted ? <>
                 <Lottie
-                  options={defaultOptions}
-                  style={{ marginTop: -20, marginBottom: -40 }}
-                  height={200}
-                  width={200}
+                  options={{
+                    loop: true,
+                    autoplay: true,
+                    animationData: isOfflineResponse ? warning : done,
+                    rendererSettings: {
+                      preserveAspectRatio: "xMidYMid slice",
+                    },
+                  }}
+                  style={!isOfflineResponse && { marginTop: -20, marginBottom: -40 }}
+                  height={isOfflineResponse ? 150 : 200}
+                  width={isOfflineResponse ? 150 : 200}
                 />
-                <p style={modalStyles.mainText}>Land Titles Synced Successfully</p>
-                <Button color="success" variant="contained" fullWidth onClick={() => { setSubmissionCompleted(false); showSubmitModal(false); }}>Done</Button>
+                <p style={isOfflineResponse ? modalStyles.warningOfflineText : modalStyles.mainText}>{isOfflineResponse ? `Your request has been saved, it'll be submitted once you're back in connection` : 'Land Titles Synced Successfully'}</p>
+                <Button color={isOfflineResponse ? 'warning' : 'success'} variant="contained" fullWidth onClick={() => { setSubmissionCompleted(false); showSubmitModal(false); setIsOfflineResponse(false) }}>{isOfflineResponse ? 'Close' : 'Done'}</Button>
               </> : <>
                 <div style={modalStyles.mainText}>
                   A total of {submissions?.length} entries will be submitted for {_currLocation.villageName}
@@ -610,6 +543,7 @@ const modalStyles = {
     fontWeight: 400
   },
   warningText: { color: "red", textAlign: "center" },
+  warningOfflineText: { color: '#f0952a', margin: "4rem 0rem", textAlign: 'center' },
   btnContainer: {
     width: "100%",
     display: "flex",
@@ -627,6 +561,7 @@ const modalStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "0.5rem",
+    cursor: 'pointer'
   },
   exitBtn: {
     width: "50%",
@@ -637,6 +572,7 @@ const modalStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "0.5rem",
+    cursor: 'pointer'
   },
 };
 

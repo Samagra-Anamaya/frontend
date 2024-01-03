@@ -50,6 +50,7 @@ const userDataSlice = createSlice({
     status: "",
     error: {},
     isOffline: false,
+    canSubmit: true,
     pendingSubmissions: []
   },
   reducers: {
@@ -189,6 +190,9 @@ const userDataSlice = createSlice({
     },
     updateIsOffline: (state, action) => {
       state.isOffline = action.payload
+    },
+    updateCanSubmit: (state, action) => {
+      state.canSubmit = action.payload
     },
     clearSubmissionBatch: (state, action) => {
       let currSubmission = current(state.submissions[action.payload[0]?.spdpVillageId]);
@@ -368,6 +372,7 @@ export const {
   updateCitizenFormData,
   updateSubmissionMedia,
   updateIsOffline,
+  updateCanSubmit,
   bulkSaveSubmission,
   clearSubmissionBatch,
   updatePendingSubmissions
