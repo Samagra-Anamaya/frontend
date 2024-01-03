@@ -1,7 +1,7 @@
 import "../styles/globals.css";
 import { OfflineSyncProvider, useOfflineSyncContext } from "offline-sync-handler-test";
 import { Provider, useDispatch } from "react-redux";
-import { clearSubmissionBatch, store, updateIsOffline, updatePendingSubmissions } from "../redux/store";
+import { clearSubmissionBatch, store, updateCanSubmit, updateIsOffline, updatePendingSubmissions } from "../redux/store";
 import { useState, useEffect, useCallback } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -92,6 +92,7 @@ export default function App({ Component, pageProps }) {
           setTimeout(() => {
             // setSyncing(false);
             setSyncComplete(true);
+            window.location.reload();
           }, 1000)
         }
       }
@@ -113,7 +114,9 @@ export default function App({ Component, pageProps }) {
       });
 
       store.dispatch(updateIsOffline(true));
+      store.dispatch(updateCanSubmit(false));
     })
+
     window.addEventListener('online', async () => {
       toast.success('App is back online', {
         position: "top-right",
@@ -125,8 +128,9 @@ export default function App({ Component, pageProps }) {
         progress: undefined,
         theme: "light",
       });
-
+      store.dispatch(updateCanSubmit(true));
     });
+
     setHydrated(true);
     logEvent(analytics, 'page_view');
     if (window.innerWidth > 500) setIsDesktop(true);
@@ -136,7 +140,7 @@ export default function App({ Component, pageProps }) {
   return hydrated ? (<>
     {isDesktop ? <div className="rootDiv">
       <Provider store={store} data-testid="redux-provider">
-        <OfflineSyncProvider onCallback={onSyncSuccess}>
+        <OfflineSyncProvider onCallback={onSyncSuccess} >
           <Component {...pageProps} />
         </OfflineSyncProvider>
         <ToastContainer
@@ -167,7 +171,7 @@ export default function App({ Component, pageProps }) {
                   width={200}
                 />
                 <p style={modalStyles.mainText}>Media Sync Successful</p>
-                <Button color="success" variant="contained" fullWidth onClick={() => { setSyncComplete(false); setSyncing(false); }}>Done</Button>
+                <Button color="success" variant="contained" fullWidth onClick={() => { setSyncComplete(false); setSyncing(false); window.location.reload(); }}>Done</Button>
               </>
             }
           </div>
@@ -207,7 +211,7 @@ export default function App({ Component, pageProps }) {
                     width={200}
                   />
                   <p style={modalStyles.mainText}>Media Sync Successful</p>
-                  <Button color="success" variant="contained" fullWidth onClick={() => { setSyncComplete(false); setSyncing(false); }}>Done</Button>
+                  <Button color="success" variant="contained" fullWidth onClick={() => { setSyncComplete(false); setSyncing(false); window.location.reload(); }}>Done</Button>
                 </>
               }
             </div>
