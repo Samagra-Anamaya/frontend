@@ -151,7 +151,7 @@ const CompletedEntries = ({ params }) => {
     return num.toString().padStart(2, "0");
   }
 
-  const breadcrumbItems = useMemo(() => ([{ label: "Home", to: "/" }, { label: _currLocation?.villageName, to: "/survey" }, { label: "Synced Titles" }]), [_currLocation?.villageName])
+  const breadcrumbItems = useMemo(() => ([{ label: "Home", to: "/" }, { label: _currLocation?.villageName, to: "/survey" }, { label: "Submitted Titles" }]), [_currLocation?.villageName])
   return !hydrated ? null : (
     <div className={styles.container}>
       <Banner />
@@ -224,7 +224,7 @@ const CompletedEntries = ({ params }) => {
           </MDBListGroup>
           {!fetching && !prevSubmissions?.length && !searchQuery && <div>
             <p className={styles.noRecordsFound}>No Records Found</p>
-            <p className={styles.noRecordsSubText}>Please sync land titles before you access them</p>
+            <p className={styles.noRecordsSubText}>Please submit land titles before you access them</p>
             <Lottie
               options={defaultOptions}
               style={{ marginTop: -40 }}
