@@ -195,7 +195,7 @@ const SavedEntries = ({ params }) => {
     () => [
       { label: "Home", to: "/" },
       { label: `${_currLocation.villageName}`, to: "/survey" },
-      { label: "Submitted titles" },
+      { label: "Saved titles" },
     ],
     []
   );

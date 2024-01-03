@@ -442,7 +442,7 @@ const SurveyPage = ({ params }) => {
           }}
           leftImage={"/assets/assessment.png"}
           rightImage={"/assets/circleArrow.png"}
-          mainText={"View Synced Titles"}
+          mainText={"View Submitted Titles"}
           href="/synced-titles"
           clName="synced"
           htmlId={'syncedTitles'}
@@ -458,7 +458,7 @@ const SurveyPage = ({ params }) => {
           }}
           leftImage={"/assets/surveyIcon3.png"}
           rightImage={"/assets/circleArrow.png"}
-          mainText={"View Submitted Titles"}
+          mainText={"View Saved Titles"}
           href="/saved-entries"
           htmlId="submittedTitles"
         />
