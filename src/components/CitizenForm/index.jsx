@@ -450,7 +450,7 @@ const CitizenForm = (props) => {
                 <TextField
                     variant='standard'
                     label={"No. of Plots Claimed Under FRA"}
-                    onChange={e => { if (Number(e.target.value) <= 20) setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: e.target.value })) }}
+                    onChange={e => { if (Number(e.target.value) <= 50) setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: e.target.value })) }}
                     value={formState?.fraPlotsClaimed}
                     required
                     type={'number'}
