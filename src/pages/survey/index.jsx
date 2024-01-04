@@ -214,6 +214,10 @@ const SurveyPage = ({ params }) => {
   }
 
   async function performBatchSubmission() {
+    if (!store.getState().userData.canSubmit) {
+      toast.warn('You are not connected to internet, please try once back in network')
+      return;
+    }
     const BATCH_SIZE = 10;
     const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
@@ -292,10 +296,6 @@ const SurveyPage = ({ params }) => {
   }
 
   const startSubmission = () => {
-    if (!store.getState().userData.canSubmit) {
-      toast.warn('You are not connected to internet, please try once back in network')
-      return;
-    }
     logEvent(analytics, "submit_entries_clicked", {
       villageId: _currLocation.villageCode,
       villageName: _currLocation.villageName,
