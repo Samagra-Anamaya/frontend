@@ -143,8 +143,8 @@ const Home = () => {
                 <Button id="loginBtn" variant="contained" color="success" type="submit" sx={{ padding: 1, width: '80%', height: '3rem', fontSize: 16, marginTop: 5 }}>{apiCall ? <CircularProgress color="inherit" /> : 'Login'} </Button>
                 {error?.length > 0 && <p style={{ color: 'red' }}>{error}</p>}
               </form>
-              <Footer />
             </div>
+            <Footer />
           </div>
         </>}
     </div>

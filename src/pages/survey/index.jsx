@@ -157,8 +157,9 @@ const SurveyPage = ({ params }) => {
     const batches = chunkArray(images, BATCH_SIZE);
     console.log("Batches ->", batches);
 
+    const promises = [];
+
     for (const batch of batches) {
-      const promises = [];
 
       for (const _image of batch) {
         let data = new FormData();
@@ -182,6 +183,12 @@ const SurveyPage = ({ params }) => {
 
         try {
           const response = await offlinePackage?.sendRequest(config);
+          if (response?.name == "AxiosError") {
+            toast.error(
+              `Something went wrong:${response?.response?.data?.message || response?.message
+              }`
+            );
+          }
           if (!response || response == undefined) {
             showSubmitModal(false);
             checkSavedRequests();
@@ -200,21 +207,22 @@ const SurveyPage = ({ params }) => {
         }
       }
 
-      promises.forEach((res) => {
-        // In case offline
-        if (res == undefined || !res) {
-          showSubmitModal(false);
-          checkSavedRequests();
-          return;
-        }
-        if (res?.type.includes("fulfilled")) {
-          setIsMediaUploaded(true);
-        }
-      });
-
       // Introduce a delay before processing the next batch
       await sleep(DELAY_TIME);
     }
+
+    promises.forEach((res) => {
+      // In case offline
+      if (res == undefined || !res) {
+        showSubmitModal(false);
+        checkSavedRequests();
+        return;
+      }
+      if (res?.type.includes("fulfilled")) {
+        setIsMediaUploaded(true);
+      }
+    });
+
     setLoading(false);
     console.log("hola all done");
   }
