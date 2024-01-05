@@ -157,8 +157,9 @@ const SurveyPage = ({ params }) => {
     const batches = chunkArray(images, BATCH_SIZE);
     console.log("Batches ->", batches);
 
+    const promises = [];
+
     for (const batch of batches) {
-      const promises = [];
 
       for (const _image of batch) {
         let data = new FormData();
@@ -182,6 +183,12 @@ const SurveyPage = ({ params }) => {
 
         try {
           const response = await offlinePackage?.sendRequest(config);
+          if (response?.name == "AxiosError") {
+            toast.error(
+              `Something went wrong:${response?.response?.data?.message || response?.message
+              }`
+            );
+          }
           if (!response || response == undefined) {
             showSubmitModal(false);
             checkSavedRequests();
@@ -200,21 +207,22 @@ const SurveyPage = ({ params }) => {
         }
       }
 
-      promises.forEach((res) => {
-        // In case offline
-        if (res == undefined || !res) {
-          showSubmitModal(false);
-          checkSavedRequests();
-          return;
-        }
-        if (res?.type.includes("fulfilled")) {
-          setIsMediaUploaded(true);
-        }
-      });
-
       // Introduce a delay before processing the next batch
       await sleep(DELAY_TIME);
     }
+
+    promises.forEach((res) => {
+      // In case offline
+      if (res == undefined || !res) {
+        showSubmitModal(false);
+        checkSavedRequests();
+        return;
+      }
+      if (res?.type.includes("fulfilled")) {
+        setIsMediaUploaded(true);
+      }
+    });
+
     setLoading(false);
     console.log("hola all done");
   }
@@ -259,15 +267,18 @@ const SurveyPage = ({ params }) => {
         // Introduce a delay before processing the next batch
         await sleep(DELAY_TIME);
         const response = await offlinePackage?.sendRequest(config);
-        console.log("Batch Submission Response", { response });
-        if (response.name === "AxiosError") {
+        console.log("Batch Submission Response", { response }, response.name);
+        if (response?.name == "AxiosError") {
           toast.error(
-            `Something went wrong:${
-              response.response.data.message || response.message
+            `Something went wrong:${response?.response?.data?.message || response?.message
             }`
           );
-          showSubmitModal(false);
-          return;
+
+          if (el == batches.length - 1) {
+            setLoading(false);
+            showSubmitModal(false);
+            return;
+          }
         }
         if (response && Object.keys(response)?.length) {
           logEvent(analytics, "submission_successfull", {
@@ -287,7 +298,7 @@ const SurveyPage = ({ params }) => {
           } else {
             toast.error(
               "An error occured while submitting form. Please try again \nError String : " +
-                JSON.stringify(response)
+              JSON.stringify(response)
             );
             checkSavedRequests();
             logEvent(analytics, "submission_failure", {
