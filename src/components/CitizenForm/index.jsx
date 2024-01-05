@@ -34,33 +34,12 @@ const steps = [
     'Plot Details',
 ];
 
-const defaultValues = {
-    "isAadhaarAvailable": false,
-    "landTitleSerialNumber": "Land Title",
-    "claimantName": "Claimant",
-    "noOfCoClaimants": "0",
-    "noOfDependents": "0",
-    "parentName": "Mother Father",
-    "address": "Address",
-    "tribeName": "Bagata",
-    "areaUnits": "Acres",
-    "area": "123",
-    "fraPlotsClaimed": "1",
-    "rorUpdated": false,
-    "khataNumber": "",
-    "plotNumber1": "1"
-}
-
 const CitizenForm = (props) => {
     const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
     const [currentImage, setCurrentImage] = useState(0);
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
     const user = useSelector((state) => state?.userData?.user);
-
-    useEffect(() => {
-        setFormState(defaultValues)
-    }, [])
 
     console.log("FORM EDITABLE -->", formEditable)
     console.log("formState ->", formState)
