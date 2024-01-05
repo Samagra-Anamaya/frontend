@@ -122,6 +122,10 @@ const SurveyPage = ({ params }) => {
     checkSavedRequests();
   }, [loading]);
 
+  useEffect(() => {
+    checkSavedRequests();
+  }, [])
+
   /* Utility Functions */
   const addNewCitizen = () => {
     if (disableSubmitEntries) {
@@ -179,7 +183,7 @@ const SurveyPage = ({ params }) => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          timeout: process.env.NEXT_PUBLIC_REQUEST_TIMEOUT,
+          timeout: 120000,
         };
 
         try {
@@ -197,12 +201,13 @@ const SurveyPage = ({ params }) => {
               );
             }
             promises.push(response);
-          }
-          if (response?.result?.length) {
-            dispatch(replaceMediaObject(response)).then((res) => {
-              console.log("Dispatch Res ---->", res);
-              promises.push(res);
-            });
+          } else {
+            if (response?.result?.length) {
+              dispatch(replaceMediaObject(response)).then((res) => {
+                console.log("Dispatch Res ---->", res);
+                promises.push(res);
+              });
+            }
           }
         } catch (error) {
           console.error("Error uploading image", error);
@@ -285,35 +290,37 @@ const SurveyPage = ({ params }) => {
             return;
           }
         }
-        if (response && Object.keys(response)?.length) {
-          logEvent(analytics, "submission_successfull", {
-            villageId: _currLocation.villageCode,
-            villageName: _currLocation.villageName,
-            user_id: userData?.user?.user?.username,
-            app_status: navigator.onLine ? "online" : "offline",
-          });
-          responses.push(response);
-          dispatch(clearSubmissionBatch(batch));
-        } else {
-          if (!response || response == undefined) {
-            Sentry.captureException({ response, userData });
-            toast.warn(
-              "Your request has been saved, it'll be submitted once you're back in connection"
-            );
-            setIsOfflineResponse(true);
-          } else {
-            toast.error(
-              "An error occured while submitting form. Please try again \nError String : " +
-              JSON.stringify(response)
-            );
-            checkSavedRequests();
-            logEvent(analytics, "submission_failure", {
+        else {
+          if (response && Object.keys(response)?.length) {
+            logEvent(analytics, "submission_successfull", {
               villageId: _currLocation.villageCode,
               villageName: _currLocation.villageName,
               user_id: userData?.user?.user?.username,
               app_status: navigator.onLine ? "online" : "offline",
             });
             responses.push(response);
+            dispatch(clearSubmissionBatch(batch));
+          } else {
+            if (!response || response == undefined) {
+              Sentry.captureException({ response, userData });
+              toast.warn(
+                "Your request has been saved, it'll be submitted once you're back in connection"
+              );
+              setIsOfflineResponse(true);
+            } else {
+              toast.error(
+                "An error occured while submitting form. Please try again \nError String : " +
+                JSON.stringify(response)
+              );
+              checkSavedRequests();
+              logEvent(analytics, "submission_failure", {
+                villageId: _currLocation.villageCode,
+                villageName: _currLocation.villageName,
+                user_id: userData?.user?.user?.username,
+                app_status: navigator.onLine ? "online" : "offline",
+              });
+              responses.push(response);
+            }
           }
         }
       } catch (error) {
@@ -419,6 +426,19 @@ const SurveyPage = ({ params }) => {
           mainText={"View Saved Titles"}
           href="/saved-entries"
           htmlId="submittedTitles"
+        />
+        <SelectionItem
+          key={_currLocation.id}
+          onClick={() => {
+            logEvent(analytics, "view_status_clickde", {
+              villageId: _currLocation.villageCode,
+              villageName: _currLocation.villageName,
+              user_id: userData?.user?.user?.username,
+            });
+          }}
+          rightImage={"/assets/circleArrow.png"}
+          mainText={"View Request Status"}
+          href="/request-status"
         />
         {/* <SelectionItem
           key={_currLocation.id}

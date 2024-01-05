@@ -1,12 +1,13 @@
 {
   "name": "my-app",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -38,7 +39,7 @@
     "moment": "^2.29.4",
     "next": "13.5.2",
     "next-pwa": "^5.6.0",
-    "offline-sync-handler-test": "^0.1.79",
+    "offline-sync-handler-test": "^0.1.82",
     "postcss": "8.4.25",
     "react": "18.2.0",
     "react-burger-menu": "^3.0.9",
@@ -78,6 +79,11 @@
     "workbox-streams": "^7.0.0",
     "xstate": "^4.38.2"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm version patch && git add package.json"
+    }
+  },
   "devDependencies": {
     "@babel/preset-react": "^7.22.5",
     "@testing-library/jest-dom": "^6.0.1",
@@ -85,6 +91,7 @@
     "babel-jest": "^29.6.2",
     "cypress": "^12.17.4",
     "eslint": "^8.51.0",
+    "husky": "^8.0.3",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.6.2",
     "jest-environment-jsdom": "^29.6.2",
