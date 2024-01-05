@@ -185,19 +185,18 @@ const SurveyPage = ({ params }) => {
         try {
           const response = await offlinePackage?.sendRequest(config);
           if (response?.name == "AxiosError") {
-            Sentry.captureException({ response, userData });
-            toast.error(
-              `Something went wrong:${response?.response?.data?.message || response?.message
-              }`
-            );
-          }
-          if (!response || response == undefined) {
-            Sentry.captureException({ response, userData });
-            showSubmitModal(false);
-            checkSavedRequests();
-            toast.warn(
-              "Your request has been saved, it'll be submitted once you're back in connection"
-            );
+            if (response?.message == 'Network Error') {
+              toast.warn(
+                "Your request has been saved, it'll be submitted once you're back in connection"
+              );
+            } else {
+              Sentry.captureException({ response, userData });
+              toast.error(
+                `Something went wrong:${response?.response?.data?.message || response?.message
+                }`
+              );
+            }
+            promises.push(response);
           }
           if (response?.result?.length) {
             dispatch(replaceMediaObject(response)).then((res) => {
@@ -217,7 +216,7 @@ const SurveyPage = ({ params }) => {
 
     promises.forEach((res) => {
       // In case offline
-      if (res == undefined || !res) {
+      if (res == undefined || !res || res?.name == 'AxiosError') {
         showSubmitModal(false);
         checkSavedRequests();
         return;
