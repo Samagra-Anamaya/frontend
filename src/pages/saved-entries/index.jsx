@@ -37,7 +37,6 @@ import Banner from "../../components/Banner";
 import Lottie from "react-lottie";
 import * as emptyState from "public/lottie/emptyState.json";
 
-
 // Lottie Options
 const defaultOptions = {
   loop: true,
@@ -141,15 +140,17 @@ const SavedEntries = ({ params }) => {
   });
 
   const onMediaUpload = useCallback(async (el) => {
-
     setFileUploading(true);
     let newSubmission = Object.assign({}, el);
-    let landSuccess = false, rorSuccess = false;
-    let { landRecords, rorRecords } = await getCitizenImageRecords(currCitizen.citizenId);
+    let landSuccess = false,
+      rorSuccess = false;
+    let { landRecords, rorRecords } = await getCitizenImageRecords(
+      currCitizen.citizenId
+    );
 
     let landRecordsBlob = landRecords?.images;
     let rorRecordsBlob = rorRecords?.images;
-    console.log(landRecordsBlob, rorRecordsBlob)
+    console.log(landRecordsBlob, rorRecordsBlob);
 
     if (landRecordsBlob?.length) {
       try {
@@ -159,7 +160,7 @@ const SavedEntries = ({ params }) => {
         } else {
           landRecords = landUploadRes;
           landSuccess = true;
-        };
+        }
       } catch (error) {
         toast.error(landRecords?.err?.response?.data?.message);
       }
@@ -212,28 +213,30 @@ const SavedEntries = ({ params }) => {
         }
       >
         <div className={styles.submissionContainer}>
-          {!(!fetching && !prevSubmissions?.length && !searchQuery) && <TextField
-            id="search"
-            color="success"
-            type="search"
-            label={searchQuery ? "" : "Search entries here ..."}
-            value={searchQuery}
-            onChange={searchCitizenSubmission}
-            sx={{
-              marginBottom: "2rem",
-              border: "none",
-              // border: "2px solid #007922",
-              borderRadius: "1rem",
-            }}
-            fullWidth
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />}
+          {!(!fetching && !prevSubmissions?.length && !searchQuery) && (
+            <TextField
+              id="search"
+              color="success"
+              type="search"
+              label={searchQuery ? "" : "Search entries here ..."}
+              value={searchQuery}
+              onChange={searchCitizenSubmission}
+              sx={{
+                marginBottom: "2rem",
+                border: "none",
+                // border: "2px solid #007922",
+                borderRadius: "1rem",
+              }}
+              fullWidth
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          )}
           {fileUploading && "loading"}
           {fetching && <CircularProgress color="success" />}
           <MDBListGroup style={{ minWidth: "22rem" }} className="mb-1" light>
@@ -246,7 +249,6 @@ const SavedEntries = ({ params }) => {
                   leftImage={"/assets/citizen.svg"}
                   //rightImage={"/assets/upload-icon.png"}
                   secondaryLoading={fileUploading}
-
                   mainSubtext={moment(el?.capturedAt).format(
                     "DD MMM YYYY, hh:mm a"
                   )}
@@ -266,15 +268,20 @@ const SavedEntries = ({ params }) => {
                 />
               ))}
           </MDBListGroup>
-          {!fetching && !prevSubmissions?.length && !searchQuery && <div>
-            <p className={styles.noRecordsFound}>No Records Found</p>
-            <p className={styles.noRecordsSubText}>Please try adding some new land titles</p>
-            <Lottie
-              options={defaultOptions}
-              style={{ marginTop: -40 }}
-              height={300}
-              width={300}
-            /></div>}
+          {!fetching && !prevSubmissions?.length && !searchQuery && (
+            <div>
+              <p className={styles.noRecordsFound}>No Records Found</p>
+              <p className={styles.noRecordsSubText}>
+                Please try adding some new land titles
+              </p>
+              <Lottie
+                options={defaultOptions}
+                style={{ marginTop: -40 }}
+                height={300}
+                width={300}
+              />
+            </div>
+          )}
         </div>
         {!searchQuery && !fetching && (
           <Pagination

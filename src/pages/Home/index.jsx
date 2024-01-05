@@ -113,6 +113,7 @@ const Home = () => {
         <>
           <div className={`${styles.loginContainer} card`}>
             <Banner />
+            
             <div className={`${styles.loginFormContainer} my-auto text-left`}>
               <h3 className="">Data Collection App</h3>
               <p className={styles.loginText}><strong>Login to your account</strong></p>

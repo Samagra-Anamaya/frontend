@@ -52,3 +52,6 @@ yarn-error.log*
 
 # Custom files or directories to ignore
 scripts/form_submission_upload.py
+
+# Sentry Config File
+.sentryclirc
