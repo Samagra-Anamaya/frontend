@@ -8,10 +8,12 @@ import React, { useMemo, useState } from "react";
 import { slide as Menu } from 'react-burger-menu'
 import LogoutIcon from '@mui/icons-material/Logout';
 import CommonModal from "../Modal";
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useDispatch } from "react-redux";
 import { logoutUser } from "../../redux/store";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
+import localforage from "localforage";
 
 const Banner = (props) => {
   const [logoutModal, showLogoutModal] = useState(false);
@@ -20,6 +22,7 @@ const Banner = (props) => {
 
   const logout = () => {
     dispatch(logoutUser());
+    localforage.setItem('imageRecords', []);
     showLogoutModal(false);
     setTimeout(() => {
       window.location.href = "/";
@@ -40,6 +43,10 @@ const Banner = (props) => {
               <div onClick={() => { showLogoutModal(true) }} style={{ cursor: 'pointer' }}>
                 <span><LogoutIcon style={{ color: '#007922', fontSize: 40 }} /></span>&nbsp;&nbsp;&nbsp;
                 <span>Logout</span>
+              </div>
+              <div onClick={() => { window.location.reload() }} style={{ cursor: 'pointer', marginTop: 30, marginLeft: -3 }}>
+                <span><RefreshIcon style={{ color: '#007922', fontSize: 40 }} /></span>&nbsp;&nbsp;&nbsp;
+                <span>Refresh</span>
               </div>
             </Menu>
           </MDBCol>

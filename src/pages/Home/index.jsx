@@ -13,6 +13,8 @@ import { logEvent } from "firebase/analytics";
 import { analytics } from "../../services/firebase/firebase";
 import Banner from "../../components/Banner";
 import { loginUser } from "../../redux/actions/login";
+import Footer from "../../components/Footer";
+import isOnline from "is-online";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -58,45 +60,48 @@ const Home = () => {
       return;
     }
 
-    const loginRes = await userLogin(username, password);
-    console.log({ loginRes })
-
-
-    if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
-      logEvent(analytics, "login_failure", {
-        user_id: username
-      })
-      setApiCall(false);
-      // setError(loginRes?.params?.errMsg);
-      toast.error(loginRes?.params?.errMsg)
-      // setTimeout(() => {
-      //   setError("");
-      // }, 3000);
+    const online = await isOnline();
+    if (!online) {
+      toast.error('Unable to login while being offline, please try again later once back in network')
       return;
     }
+    try {
+      const loginRes = await userLogin(username, password);
 
-    if (loginRes.responseCode == "OK" && loginRes.result) {
-      let loggedInUser = loginRes.result.data.user;
-      console.log("logged in user-->", loggedInUser)
-      logEvent(analytics, "login_success", {
-        user_id: username
-      })
-      dispatch(loginUser(loggedInUser)).then(res => {
-        console.log("Aysn User loing ->", res)
-        if (userIsAdminForPortal(loggedInUser.user.registrations)) {
-          router.push(ROUTE_MAP.admin);
-        } else {
-          setTimeout(() => window.location.reload(), 200)
-        }
-      });
-    } else {
-      setError("An internal server error occured");
-      setTimeout(() => {
-        setError("");
-      }, 3000);
+      if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
+        Sentry.captureException({ loginRes, username, password });
+        logEvent(analytics, "login_failure", {
+          user_id: username
+        })
+        setApiCall(false);
+        toast.error(loginRes?.params?.errMsg)
+        return;
+      }
 
+      if (loginRes.responseCode == "OK" && loginRes.result) {
+        let loggedInUser = loginRes.result.data.user;
+        logEvent(analytics, "login_success", {
+          user_id: username
+        })
+        dispatch(loginUser(loggedInUser)).then(res => {
+          if (userIsAdminForPortal(loggedInUser.user.registrations)) {
+            router.push(ROUTE_MAP.admin);
+          } else {
+            setTimeout(() => window.location.reload(), 200)
+          }
+        });
+      } else {
+        setError("An internal server error occured");
+        setTimeout(() => {
+          setError("");
+        }, 3000);
+
+      }
+      setApiCall(false);
+    } catch (err) {
+      Sentry.captureException({ err, username, password });
+      toast.error(err?.message || err?.toString())
     }
-    setApiCall(false);
 
   }
 
@@ -112,6 +117,7 @@ const Home = () => {
         <>
           <div className={`${styles.loginContainer} card`}>
             <Banner />
+
             <div className={`${styles.loginFormContainer} my-auto text-left`}>
               <h3 className="">Data Collection App</h3>
               <p className={styles.loginText}><strong>Login to your account</strong></p>
@@ -143,6 +149,7 @@ const Home = () => {
                 {error?.length > 0 && <p style={{ color: 'red' }}>{error}</p>}
               </form>
             </div>
+            <Footer />
           </div>
         </>}
     </div>

@@ -11,6 +11,7 @@ import { logEvent } from "firebase/analytics";
 import { analytics } from "../../services/firebase/firebase";
 import Banner from "../../components/Banner";
 import { every } from "lodash";
+import Footer from "../../components/Footer";
 
 const AssignedLocations = () => {
   const [hydrated, setHydrated] = React.useState(false);
@@ -114,6 +115,7 @@ const AssignedLocations = () => {
           />)}
         </div> */}
       </div>
+      <Footer />
     </div >
   );
 };

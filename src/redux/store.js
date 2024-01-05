@@ -4,6 +4,7 @@ import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
 import { replaceMediaObject } from "./actions/replaceMediaObject";
 import { _updateSubmissionMedia } from "./actions/updateSubmissionMedia";
+import { saveCitizenFormData } from "./actions/saveCitizenFormData";
 import { removeSubmission } from "./actions/removeSubmission";
 import { ptBR } from "@mui/x-date-pickers";
 import { loginUser } from "./actions/login";
@@ -111,16 +112,16 @@ const userDataSlice = createSlice({
         [action.payload.formId]: action.payload.formUrl,
       };
     },
-    saveCitizenFormData: (state, action) => {
-      // state.submissions = { ...state?.submissions, [action.payload.spdpVillageId]: [...(state?.submissions?.[action.payload.spdpVillageId] || []), action.payload.formData] }
-      state.submissions = {
-        ...state?.submissions,
-        [action.payload.spdpVillageId]: [
-          ...(state?.submissions?.[action.payload.spdpVillageId] || []),
-          action.payload,
-        ],
-      };
-    },
+    // saveCitizenFormData: (state, action) => {
+    //   // state.submissions = { ...state?.submissions, [action.payload.spdpVillageId]: [...(state?.submissions?.[action.payload.spdpVillageId] || []), action.payload.formData] }
+    //   state.submissions = {
+    //     ...state?.submissions,
+    //     [action.payload.spdpVillageId]: [
+    //       ...(state?.submissions?.[action.payload.spdpVillageId] || []),
+    //       action.payload,
+    //     ],
+    //   };
+    // },
     bulkSaveSubmission: (state, action) => {
       state.submissions = action.payload;
 
@@ -333,6 +334,14 @@ const userDataSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload;
         state.assignedLocations = action.payload?.user?.data?.villages;
+      }).addCase(saveCitizenFormData.fulfilled, (state, action) => {
+        state.submissions = {
+          ...state?.submissions,
+          [action.payload.spdpVillageId]: [
+            ...(state?.submissions?.[action.payload.spdpVillageId] || []),
+            action.payload,
+          ],
+        };
       })
   },
 });
@@ -363,7 +372,6 @@ export const {
   setCurrentLocation,
   setAssignedLocations,
   addCitizen,
-  saveCitizenFormData,
   addFormUri,
   setCurrentCitizen,
   updateSearchQuery,

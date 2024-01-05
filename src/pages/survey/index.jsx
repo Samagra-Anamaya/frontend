@@ -30,7 +30,13 @@ import { analytics } from "../../services/firebase/firebase";
 import { uploadMedia } from "../../services/api";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
-import { chunkArray, getCitizenImageRecords, getImages, getImagesForVillage, sleep } from "../../services/utils";
+import {
+  chunkArray,
+  getCitizenImageRecords,
+  getImages,
+  getImagesForVillage,
+  sleep,
+} from "../../services/utils";
 import { formDataToObject } from "../../utils/formdata-to-object";
 import { replaceMediaObject } from "../../redux/actions/replaceMediaObject";
 import * as done from "public/lottie/done.json";
@@ -38,6 +44,7 @@ import * as warning from "public/lottie/warning.json";
 import { Button } from "@mui/material";
 import Lottie from "react-lottie";
 import isOnline from "is-online";
+import * as Sentry from "@sentry/nextjs";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -77,22 +84,25 @@ const SurveyPage = ({ params }) => {
   });
 
   useEffect(() => {
-    console.log({ submissions })
+    console.log({ submissions });
     if (submissions?.length) {
       let mediaUploaded = false;
       for (let el in submissions) {
         if (
-          (!submissions[el]?.submissionData?.landRecords?.length && submissions[el]?.submissionData?.rorRecords?.length)
-          || (submissions[el]?.submissionData?.landRecords?.length && !submissions[el]?.submissionData?.rorRecords?.length)
-          || (submissions[el]?.submissionData?.landRecords?.length && submissions[el]?.submissionData?.rorRecords?.length)
+          (!submissions[el]?.submissionData?.landRecords?.length &&
+            submissions[el]?.submissionData?.rorRecords?.length) ||
+          (submissions[el]?.submissionData?.landRecords?.length &&
+            !submissions[el]?.submissionData?.rorRecords?.length) ||
+          (submissions[el]?.submissionData?.landRecords?.length &&
+            submissions[el]?.submissionData?.rorRecords?.length)
         ) {
           mediaUploaded = true;
         } else mediaUploaded = false;
       }
-      console.log("Setting Media Uploaded as ->", mediaUploaded)
+      console.log("Setting Media Uploaded as ->", mediaUploaded);
       setIsMediaUploaded(mediaUploaded);
     }
-  }, [])
+  }, []);
 
   async function checkSavedRequests() {
     let savedRequests = await offlinePackage.getStoredRequests();
@@ -101,14 +111,12 @@ const SurveyPage = ({ params }) => {
       let currRequest = savedRequests.filter(
         (el) => el?.meta?.villageId == _currLocation.villageCode
       );
-      console.log("curr Reques->", currRequest)
+      console.log("curr Reques->", currRequest);
       if (currRequest?.length && submissions?.length > 0) {
         setDisableSubmitEntries(true);
       }
     }
   }
-
-
 
   useEffect(() => {
     checkSavedRequests();
@@ -140,7 +148,7 @@ const SurveyPage = ({ params }) => {
 
   async function uploadImagesInBatches() {
     const images = await getImagesForVillage(_currLocation?.villageCode);
-    console.log("Images for ", _currLocation.villageCode, images)
+    console.log("Images for ", _currLocation.villageCode, images);
     const BATCH_SIZE = 10;
     const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
     const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
@@ -150,10 +158,9 @@ const SurveyPage = ({ params }) => {
     const batches = chunkArray(images, BATCH_SIZE);
     console.log("Batches ->", batches);
 
+    const promises = [];
 
     for (const batch of batches) {
-
-      const promises = [];
 
       for (const _image of batch) {
         let data = new FormData();
@@ -172,50 +179,63 @@ const SurveyPage = ({ params }) => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          timeout: process.env.NEXT_PUBLIC_REQUEST_TIMEOUT
+          timeout: process.env.NEXT_PUBLIC_REQUEST_TIMEOUT,
         };
 
         try {
           const response = await offlinePackage?.sendRequest(config);
-          if (!response || response == undefined) {
-            showSubmitModal(false);
-            checkSavedRequests();
-            toast.warn("Your request has been saved, it'll be submitted once you're back in connection");
+          if (response?.name == "AxiosError") {
+            if (response?.message == 'Network Error') {
+              toast.warn(
+                "Your request has been saved, it'll be submitted once you're back in connection"
+              );
+            } else {
+              Sentry.captureException({ response, userData });
+              toast.error(
+                `Something went wrong:${response?.response?.data?.message || response?.message
+                }`
+              );
+            }
+            promises.push(response);
           }
           if (response?.result?.length) {
-            dispatch(replaceMediaObject(response)).then(res => {
-              console.log("Dispatch Res ---->", res)
-              promises.push(res)
+            dispatch(replaceMediaObject(response)).then((res) => {
+              console.log("Dispatch Res ---->", res);
+              promises.push(res);
             });
           }
         } catch (error) {
           console.error("Error uploading image", error);
+          Sentry.captureException({ error, userData });
         }
-      };
-
-      promises.forEach((res) => {
-        // In case offline
-        if (res == undefined || !res) {
-          showSubmitModal(false);
-          checkSavedRequests();
-          return;
-        }
-        if (res?.type.includes("fulfilled")) {
-          setIsMediaUploaded(true);
-        }
-      });
+      }
 
       // Introduce a delay before processing the next batch
       await sleep(DELAY_TIME);
-
     }
+
+    promises.forEach((res) => {
+      // In case offline
+      if (res == undefined || !res || res?.name == 'AxiosError') {
+        showSubmitModal(false);
+        checkSavedRequests();
+        return;
+      }
+      if (res?.type.includes("fulfilled")) {
+        setIsMediaUploaded(true);
+      }
+    });
+
     setLoading(false);
-    console.log("hola all done")
+    console.log("hola all done");
   }
 
   async function performBatchSubmission() {
-    if (!store.getState().userData.canSubmit) {
-      toast.warn('You are not connected to internet, please try once back in network')
+    let online = await isOnline();
+    if (!online) {
+      toast.warn(
+        "You are not connected to internet, please try once back in network"
+      );
       return;
     }
     const BATCH_SIZE = 10;
@@ -231,7 +251,6 @@ const SurveyPage = ({ params }) => {
     const responses = [];
 
     for (let el in batches) {
-
       let batch = batches[el];
 
       const submissionData = {
@@ -245,15 +264,27 @@ const SurveyPage = ({ params }) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        timeout: process.env.NEXT_PUBLIC_REQUEST_TIMEOUT
+        timeout: process.env.NEXT_PUBLIC_REQUEST_TIMEOUT,
       };
 
       try {
         // Introduce a delay before processing the next batch
         await sleep(DELAY_TIME);
         const response = await offlinePackage?.sendRequest(config);
-        console.log("Batch Submission Response", { response })
+        console.log("Batch Submission Response", { response }, response.name);
+        if (response?.name == "AxiosError") {
+          Sentry.captureException({ response, userData });
+          toast.error(
+            `Something went wrong:${response?.response?.data?.message || response?.message
+            }`
+          );
 
+          if (el == batches.length - 1) {
+            setLoading(false);
+            showSubmitModal(false);
+            return;
+          }
+        }
         if (response && Object.keys(response)?.length) {
           logEvent(analytics, "submission_successfull", {
             villageId: _currLocation.villageCode,
@@ -262,10 +293,13 @@ const SurveyPage = ({ params }) => {
             app_status: navigator.onLine ? "online" : "offline",
           });
           responses.push(response);
-          dispatch(clearSubmissionBatch(batch))
+          dispatch(clearSubmissionBatch(batch));
         } else {
           if (!response || response == undefined) {
-            toast.warn("Your request has been saved, it'll be submitted once you're back in connection");
+            Sentry.captureException({ response, userData });
+            toast.warn(
+              "Your request has been saved, it'll be submitted once you're back in connection"
+            );
             setIsOfflineResponse(true);
           } else {
             toast.error(
@@ -282,17 +316,17 @@ const SurveyPage = ({ params }) => {
             responses.push(response);
           }
         }
-
       } catch (error) {
         console.error("Error Submitting Submission Data: ", error);
+        Sentry.captureException({ error, userData });
       }
     }
 
-    console.log("Final Submission Responses ---->", { responses })
+    console.log("Final Submission Responses ---->", { responses });
 
     setLoading(false);
     setSubmissionCompleted(true);
-    console.log("Batch submission completed")
+    console.log("Batch submission completed");
   }
 
   const startSubmission = () => {
@@ -303,15 +337,13 @@ const SurveyPage = ({ params }) => {
       app_status: navigator.onLine ? "online" : "offline",
     }),
       showSubmitModal(true);
-  }
-
+  };
 
   //const showSubmitBtn =useMemo(()=>,[]);
   return !hydrated ? null : (
     <div className={styles.container} ref={containerRef}>
       <Banner />
       <Breadcrumb items={breadcrumbItems} />
-
 
       <div className="px-3">
         {/* <SelectionItem
@@ -371,7 +403,7 @@ const SurveyPage = ({ params }) => {
           mainText={"View Submitted Titles"}
           href="/synced-titles"
           clName="synced"
-          htmlId={'syncedTitles'}
+          htmlId={"syncedTitles"}
         />
         <SelectionItem
           key={_currLocation.id}
@@ -408,86 +440,119 @@ const SurveyPage = ({ params }) => {
         /> */}
       </div>
       {submitModal && (
-        <CommonModal sx={{ maxHeight: "50vh", maxWidth: '80vw', overflow: "scroll" }}>
+        <CommonModal
+          sx={{ maxHeight: "50vh", maxWidth: "80vw", overflow: "scroll" }}
+        >
           {loading ? (
             <div style={{ ...modalStyles.container, justifyContent: "center" }}>
               <CircularProgress color="success" size={70} />
             </div>
           ) : (
             <div style={modalStyles.container}>
-              {submissionCompleted ? <>
-                <Lottie
-                  options={{
-                    loop: true,
-                    autoplay: true,
-                    animationData: isOfflineResponse ? warning : done,
-                    rendererSettings: {
-                      preserveAspectRatio: "xMidYMid slice",
-                    },
-                  }}
-                  style={!isOfflineResponse && { marginTop: -20, marginBottom: -40 }}
-                  height={isOfflineResponse ? 150 : 200}
-                  width={isOfflineResponse ? 150 : 200}
-                />
-                <p style={isOfflineResponse ? modalStyles.warningOfflineText : modalStyles.mainText}>{isOfflineResponse ? `Your request has been saved, it'll be submitted once you're back in connection` : 'Land Titles Synced Successfully'}</p>
-                <Button color={isOfflineResponse ? 'warning' : 'success'} variant="contained" fullWidth onClick={() => { setSubmissionCompleted(false); showSubmitModal(false); setIsOfflineResponse(false) }}>{isOfflineResponse ? 'Close' : 'Done'}</Button>
-              </> : <>
-                <div style={modalStyles.mainText}>
-                  A total of {submissions?.length} entries will be submitted for {_currLocation.villageName}
-                </div>
-                <p style={modalStyles.warningText}>
-                  Please ensure you are in good internet connectivity before
-                  submitting
-                </p>
-                <div style={modalStyles.btnContainer}>
-                  {isMediaUploaded ? (
-                    <div
-                      style={modalStyles.confirmBtn}
-                      onClick={() => {
-                        logEvent(analytics, "submit_entries_confirm", {
-                          villageId: _currLocation.villageCode,
-                          villageName: _currLocation.villageName,
-                          user_id: userData?.user?.user?.username,
-                          app_status: navigator.onLine ? "online" : "offline",
-                        });
-                        performBatchSubmission();
-                      }}
-                    >
-                      Submit
-                    </div>
-                  ) : (
-                    <div
-                      style={modalStyles.confirmBtn}
-                      onClick={() => {
-                        logEvent(analytics, "submit_entries_confirm", {
-                          villageId: _currLocation.villageCode,
-                          villageName: _currLocation.villageName,
-                          user_id: userData?.user?.user?.username,
-                          app_status: navigator.onLine ? "online" : "offline",
-                        });
-                        uploadImagesInBatches();
-                      }}
-                    >
-                      Upload Media
-                    </div>
-                  )}
-
-                  <div
-                    style={modalStyles.exitBtn}
+              {submissionCompleted ? (
+                <>
+                  <Lottie
+                    options={{
+                      loop: true,
+                      autoplay: true,
+                      animationData: isOfflineResponse ? warning : done,
+                      rendererSettings: {
+                        preserveAspectRatio: "xMidYMid slice",
+                      },
+                    }}
+                    style={
+                      !isOfflineResponse && {
+                        marginTop: -20,
+                        marginBottom: -40,
+                      }
+                    }
+                    height={isOfflineResponse ? 150 : 200}
+                    width={isOfflineResponse ? 150 : 200}
+                  />
+                  <p
+                    style={
+                      isOfflineResponse
+                        ? modalStyles.warningOfflineText
+                        : modalStyles.mainText
+                    }
+                  >
+                    {isOfflineResponse
+                      ? `Your request has been saved, it'll be submitted once you're back in connection`
+                      : "Land Titles Synced Successfully"}
+                  </p>
+                  <Button
+                    color={isOfflineResponse ? "warning" : "success"}
+                    variant="contained"
+                    fullWidth
                     onClick={() => {
-                      logEvent(analytics, "submit_entries_cancelled", {
-                        villageId: _currLocation.villageCode,
-                        villageName: _currLocation.villageName,
-                        user_id: userData?.user?.user?.username,
-                        app_status: navigator.onLine ? "online" : "offline",
-                      });
+                      setSubmissionCompleted(false);
                       showSubmitModal(false);
+                      setIsOfflineResponse(false);
                     }}
                   >
-                    Cancel
+                    {isOfflineResponse ? "Close" : "Done"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div style={modalStyles.mainText}>
+                    A total of {submissions?.length} entries will be submitted
+                    for {_currLocation.villageName}
                   </div>
-                </div>
-              </>}
+                  <p style={modalStyles.warningText}>
+                    Please ensure you are in good internet connectivity before
+                    submitting
+                  </p>
+                  <div style={modalStyles.btnContainer}>
+                    {isMediaUploaded ? (
+                      <div
+                        style={modalStyles.confirmBtn}
+                        onClick={() => {
+                          logEvent(analytics, "submit_entries_confirm", {
+                            villageId: _currLocation.villageCode,
+                            villageName: _currLocation.villageName,
+                            user_id: userData?.user?.user?.username,
+                            app_status: navigator.onLine ? "online" : "offline",
+                          });
+                          performBatchSubmission();
+                        }}
+                      >
+                        Submit
+                      </div>
+                    ) : (
+                      <div
+                        style={modalStyles.confirmBtn}
+                        onClick={() => {
+                          logEvent(analytics, "submit_entries_confirm", {
+                            villageId: _currLocation.villageCode,
+                            villageName: _currLocation.villageName,
+                            user_id: userData?.user?.user?.username,
+                            app_status: navigator.onLine ? "online" : "offline",
+                          });
+                          uploadImagesInBatches();
+                        }}
+                      >
+                        Upload Media
+                      </div>
+                    )}
+
+                    <div
+                      style={modalStyles.exitBtn}
+                      onClick={() => {
+                        logEvent(analytics, "submit_entries_cancelled", {
+                          villageId: _currLocation.villageCode,
+                          villageName: _currLocation.villageName,
+                          user_id: userData?.user?.user?.username,
+                          app_status: navigator.onLine ? "online" : "offline",
+                        });
+                        showSubmitModal(false);
+                      }}
+                    >
+                      Cancel
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </CommonModal>
@@ -540,10 +605,14 @@ const modalStyles = {
     color: "#007922",
     textAlign: "center",
     margin: "2rem 0rem",
-    fontWeight: 400
+    fontWeight: 400,
   },
   warningText: { color: "red", textAlign: "center" },
-  warningOfflineText: { color: '#f0952a', margin: "4rem 0rem", textAlign: 'center' },
+  warningOfflineText: {
+    color: "#f0952a",
+    margin: "4rem 0rem",
+    textAlign: "center",
+  },
   btnContainer: {
     width: "100%",
     display: "flex",
@@ -561,7 +630,7 @@ const modalStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "0.5rem",
-    cursor: 'pointer'
+    cursor: "pointer",
   },
   exitBtn: {
     width: "50%",
@@ -572,7 +641,7 @@ const modalStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "0.5rem",
-    cursor: 'pointer'
+    cursor: "pointer",
   },
 };
 
@@ -608,7 +677,7 @@ const warningModalStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "0.5rem",
-    cursor: 'pointer'
+    cursor: "pointer",
   },
   exitBtn: {
     width: "50%",
@@ -619,7 +688,7 @@ const warningModalStyles = {
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "0.5rem",
-    cursor: 'pointer'
+    cursor: "pointer",
   },
 };
 

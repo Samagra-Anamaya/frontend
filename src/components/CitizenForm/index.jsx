@@ -293,10 +293,14 @@ const CitizenForm = (props) => {
                     <TextField
                         variant='standard'
                         label={"No. of Co Claimants"}
-                        onChange={e => { if (Number(e.target.value) <= 20 && !isNaN(e.target.value)) setFormState((prevState) => ({ ...prevState, noOfCoClaimants: e.target.value })) }}
-                        value={formState?.noOfCoClaimants}
+                        onChange={e => {
+                            const newValue = e.target.value;
+                            if (newValue === '' || (parseInt(newValue, 10) >= 0 && parseInt(newValue, 10) <= 20)) {
+                                setFormState((prevState) => ({ ...prevState, noOfCoClaimants: newValue }))
+                            }
+                        }}
+                        value={formState?.noOfCoClaimants || ''}
                         required
-                        type={'number'}
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
                     />
@@ -317,10 +321,14 @@ const CitizenForm = (props) => {
                     <TextField
                         variant='standard'
                         label={"No. of Dependents"}
-                        onChange={e => { if (Number(e.target.value) <= 20 && !isNaN(e.target.value)) setFormState((prevState) => ({ ...prevState, noOfDependents: e.target.value })) }}
+                        onChange={e => {
+                            const newValue = e.target.value;
+                            if (newValue === '' || (parseInt(newValue, 10) >= 0 && parseInt(newValue, 10) <= 20)) {
+                                setFormState((prevState) => ({ ...prevState, noOfDependents: newValue }))
+                            }
+                        }}
                         value={formState?.noOfDependents}
                         required
-                        type={'number'}
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
                     />
@@ -415,10 +423,14 @@ const CitizenForm = (props) => {
                     <TextField
                         variant='standard'
                         label={"Area"}
-                        onChange={e => setFormState((prevState) => ({ ...prevState, area: e.target.value }))}
+                        onChange={e => {
+                            const newValue = e.target.value;
+                            if (newValue === '' || (parseFloat(newValue, 10) >= 0)) {
+                                setFormState((prevState) => ({ ...prevState, area: newValue }))
+                            }
+                        }}
                         value={formState?.area}
                         required
-                        type={'number'}
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
 
@@ -450,10 +462,14 @@ const CitizenForm = (props) => {
                 <TextField
                     variant='standard'
                     label={"No. of Plots Claimed Under FRA"}
-                    onChange={e => { if (Number(e.target.value) <= 50) setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: e.target.value })) }}
+                    onChange={e => {
+                        const newValue = e.target.value;
+                        if (newValue === '' || (parseInt(newValue, 10) >= 0)) {
+                            setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: newValue }))
+                        }
+                    }}
                     value={formState?.fraPlotsClaimed}
                     required
-                    type={'number'}
                     sx={{ mb: 4, width: '80%' }}
                     disabled={!formEditable ? true : false}
                 />

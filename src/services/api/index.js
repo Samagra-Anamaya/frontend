@@ -432,3 +432,16 @@ export const getImageFromMinio = async (filename, user) => {
     throw err;
   }
 }
+
+export const sendLogs = async (data, user) => {
+  try {
+    let res = await axios.post(BACKEND_SERVICE_URL + `/utils/logSubmissionError`, data, {
+      headers: {
+        Authorization: `Bearer ${user?.token}`
+      }
+    });
+    return res?.data;
+  } catch (err) {
+    throw err;
+  }
+}
