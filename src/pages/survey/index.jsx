@@ -44,6 +44,7 @@ import * as warning from "public/lottie/warning.json";
 import { Button } from "@mui/material";
 import Lottie from "react-lottie";
 import isOnline from "is-online";
+import * as Sentry from "@sentry/nextjs";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -184,12 +185,14 @@ const SurveyPage = ({ params }) => {
         try {
           const response = await offlinePackage?.sendRequest(config);
           if (response?.name == "AxiosError") {
+            Sentry.captureException({ response, userData });
             toast.error(
               `Something went wrong:${response?.response?.data?.message || response?.message
               }`
             );
           }
           if (!response || response == undefined) {
+            Sentry.captureException({ response, userData });
             showSubmitModal(false);
             checkSavedRequests();
             toast.warn(
@@ -204,6 +207,7 @@ const SurveyPage = ({ params }) => {
           }
         } catch (error) {
           console.error("Error uploading image", error);
+          Sentry.captureException({ error, userData });
         }
       }
 
@@ -228,7 +232,8 @@ const SurveyPage = ({ params }) => {
   }
 
   async function performBatchSubmission() {
-    if (!store.getState().userData.canSubmit) {
+    let online = await isOnline();
+    if (!online) {
       toast.warn(
         "You are not connected to internet, please try once back in network"
       );
@@ -269,6 +274,7 @@ const SurveyPage = ({ params }) => {
         const response = await offlinePackage?.sendRequest(config);
         console.log("Batch Submission Response", { response }, response.name);
         if (response?.name == "AxiosError") {
+          Sentry.captureException({ response, userData });
           toast.error(
             `Something went wrong:${response?.response?.data?.message || response?.message
             }`
@@ -291,6 +297,7 @@ const SurveyPage = ({ params }) => {
           dispatch(clearSubmissionBatch(batch));
         } else {
           if (!response || response == undefined) {
+            Sentry.captureException({ response, userData });
             toast.warn(
               "Your request has been saved, it'll be submitted once you're back in connection"
             );
@@ -312,6 +319,7 @@ const SurveyPage = ({ params }) => {
         }
       } catch (error) {
         console.error("Error Submitting Submission Data: ", error);
+        Sentry.captureException({ error, userData });
       }
     }
 

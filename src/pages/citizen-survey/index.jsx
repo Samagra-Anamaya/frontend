@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import CommonHeader from "../../components/Commonheader";
 import * as submissionLottie from "public/lottie/submission.json";
-import { saveCitizenFormData } from "../../redux/store";
 import CommonModal from "../../components/Modal";
 import Lottie from "react-lottie";
 import { useOfflineSyncContext } from "offline-sync-handler-test";
@@ -15,12 +14,16 @@ import { QrScanner } from "@yudiel/react-qr-scanner";
 import { logEvent } from "firebase/analytics";
 import CircularProgress from "@mui/material/CircularProgress";
 import { analytics } from "../../services/firebase/firebase";
-import { compressImage, getCitizenImageRecords, getImages, storeImages } from "../../services/utils";
+import { compressImage, getCitizenImageRecords, getImages, removeCitizenImageRecord, storeImages } from "../../services/utils";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
 import moment from "moment";
 import { MobileStepper } from "@mui/material";
 import { v4 as uuidv4 } from "uuid";
+import { toast } from "react-toastify";
+import { saveCitizenFormData } from "../../redux/actions/saveCitizenFormData";
+import { sendLogs } from "../../services/api";
+import * as Sentry from "@sentry/nextjs";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -55,8 +58,10 @@ const CitizenSurveyPage = ({ params }) => {
   const [submittedModal, showSubmittedModal] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [formEditable, setFormEditable] = useState(false);
+  const user2 = useSelector((state) => state?.userData?.user);
 
   console.log("CURR CITIZEN -->", currCitizen);
 
@@ -98,10 +103,6 @@ const CitizenSurveyPage = ({ params }) => {
         rorImages[el] = compressedImg;
       }
 
-      // for (let i = 0; i < 100; i++) {
-      // console.log("SAVING FORM ", i)
-      // let c = uuidv4();
-
       if (landImages?.length) await storeImages(
         {
           citizenId: currCitizen.citizenId,
@@ -134,8 +135,6 @@ const CitizenSurveyPage = ({ params }) => {
         delete formState?.coClaimantName;
       }
 
-      console.log("Final Submission Object: ", newFormState)
-
       dispatch(
         saveCitizenFormData({
           submissionData: newFormState,
@@ -144,17 +143,41 @@ const CitizenSurveyPage = ({ params }) => {
           submitterId: user.username,
           capturedAt,
         })
-      );
+      ).then(async (res) => {
+        if (res?.type?.includes('fulfilled')) {
+          setSaveSuccess(true);
+          logEvent(analytics, "form_saved", {
+            villageId: _currLocation.villageCode,
+            villageName: _currLocation.villageName,
+            user_id: user?.username,
+            app_status: navigator.onLine ? 'online' : 'offline',
+            capturedAt: capturedAt
+          });
+        }
+        else {
+          await sendLogs(res, user2);
+          toast.warn("Something went wrong while saving form, " + JSON.stringify(res?.error));
+          removeCitizenImageRecord(currCitizen.citizenId);
+          setLoading(false);
+          showSubmittedModal(false)
+          logEvent(analytics, "unable_to_save_form", {
+            villageId: _currLocation.villageCode,
+            villageName: _currLocation.villageName,
+            user_id: user?.username,
+            app_status: navigator.onLine ? 'online' : 'offline',
+            capturedAt: capturedAt,
+            res: JSON.stringify(res)
+          });
+          Sentry.captureException({ err, user });
+        }
+      })
       // }
+
       setLoading(false);
-      logEvent(analytics, "form_saved", {
-        villageId: _currLocation.villageCode,
-        villageName: _currLocation.villageName,
-        user_id: user?.username,
-        app_status: navigator.onLine ? 'online' : 'offline',
-        capturedAt: capturedAt
-      });
+
     } catch (err) {
+      Sentry.captureException({ err, user });
+      toast.error("An error occurred while saving", err?.message || err?.toString())
       console.log(err);
       setLoading(false);
     }
@@ -230,7 +253,7 @@ const CitizenSurveyPage = ({ params }) => {
               />
               <p>{activeStep}/{totalSteps}</p>
 
-            </div> :
+            </div> : saveSuccess ?
               <div className={styles.submitModal}>
                 <div>
                   <Lottie
@@ -274,7 +297,7 @@ const CitizenSurveyPage = ({ params }) => {
                     Return to Village Screen
                   </div>
                 </div>
-              </div>
+              </div> : <></>
             }
           </CommonModal>
         )}
