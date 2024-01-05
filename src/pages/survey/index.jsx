@@ -259,15 +259,18 @@ const SurveyPage = ({ params }) => {
         // Introduce a delay before processing the next batch
         await sleep(DELAY_TIME);
         const response = await offlinePackage?.sendRequest(config);
-        console.log("Batch Submission Response", { response });
-        if (response.name === "AxiosError") {
+        console.log("Batch Submission Response", { response }, response.name);
+        if (response?.name == "AxiosError") {
           toast.error(
-            `Something went wrong:${
-              response.response.data.message || response.message
+            `Something went wrong:${response?.response?.data?.message || response?.message
             }`
           );
-          showSubmitModal(false);
-          return;
+
+          if (el == batches.length - 1) {
+            setLoading(false);
+            showSubmitModal(false);
+            return;
+          }
         }
         if (response && Object.keys(response)?.length) {
           logEvent(analytics, "submission_successfull", {
@@ -287,7 +290,7 @@ const SurveyPage = ({ params }) => {
           } else {
             toast.error(
               "An error occured while submitting form. Please try again \nError String : " +
-                JSON.stringify(response)
+              JSON.stringify(response)
             );
             checkSavedRequests();
             logEvent(analytics, "submission_failure", {

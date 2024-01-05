@@ -12,6 +12,7 @@ import { useDispatch } from "react-redux";
 import { logoutUser } from "../../redux/store";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
+import localforage from "localforage";
 
 const Banner = (props) => {
   const [logoutModal, showLogoutModal] = useState(false);
@@ -20,6 +21,7 @@ const Banner = (props) => {
 
   const logout = () => {
     dispatch(logoutUser());
+    localforage.setItem('imageRecords', []);
     showLogoutModal(false);
     setTimeout(() => {
       window.location.href = "/";
