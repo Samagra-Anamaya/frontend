@@ -1,6 +1,6 @@
 {
   "name": "my-app",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -38,7 +38,7 @@
     "moment": "^2.29.4",
     "next": "13.5.2",
     "next-pwa": "^5.6.0",
-    "offline-sync-handler-test": "^0.1.79",
+    "offline-sync-handler-test": "^0.1.82",
     "postcss": "8.4.25",
     "react": "18.2.0",
     "react-burger-menu": "^3.0.9",

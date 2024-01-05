@@ -15,6 +15,7 @@ import Banner from "../../components/Banner";
 import { loginUser } from "../../redux/actions/login";
 import Footer from "../../components/Footer";
 import isOnline from "is-online";
+import * as Sentry from "@sentry/nextjs";
 
 const Home = () => {
   const dispatch = useDispatch();
