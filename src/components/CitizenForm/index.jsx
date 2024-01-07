@@ -126,7 +126,10 @@ const CitizenForm = (props) => {
                             label="Is Aadhaar Available"
                             required
                             className={styles.testClass}
-                            onChange={e => setFormState((prevState) => ({ ...prevState, isAadhaarAvailable: e.target.value }))}
+                            onChange={e => {
+                                setFormState((prevState) => ({ ...prevState, isAadhaarAvailable: e.target.value }))
+                                if (!e.target.value) setFormState((prevState) => ({ ...prevState, aadharNumber: "" }))
+                            }}
                         >
                             <MenuItem value={true}>Yes</MenuItem>
                             <MenuItem value={false}>No</MenuItem>
