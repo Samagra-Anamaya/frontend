@@ -82,29 +82,11 @@ const CitizenSurveyPage = ({ params }) => {
     getImagesFromStore();
   }, []);
 
-  useEffect(() => {
-    logEvent(analytics, "form_start", {
-      villageId: _currLocation.villageCode,
-      villageName: _currLocation.villageName,
-      user_id: user?.username,
-      app_status: navigator.onLine ? 'online' : 'offline',
-      capturedAt: moment().utc(),
-      time: new Date().toISOString()
-    });
-  }, []);
 
   /* Util Functions */
   const handleSubmit = async () => {
     if (loading) return;
     try {
-      logEvent(analytics, "form_end", {
-        villageId: _currLocation.villageCode,
-        villageName: _currLocation.villageName,
-        user_id: user?.username,
-        app_status: navigator.onLine ? 'online' : 'offline',
-        capturedAt: capturedAt,
-        time: new Date().toISOString()
-      });
       setLoading(true);
       showSubmittedModal(true);
       let capturedAt = moment().utc();
@@ -195,9 +177,8 @@ const CitizenSurveyPage = ({ params }) => {
 
     } catch (err) {
       Sentry.captureException({ err, user });
-      toast.error(`An error occurred while saving, ${err?.message || err?.toString()}`)
+      toast.error("An error occurred while saving", err?.message || err?.toString())
       console.log(err);
-      showSubmittedModal(false)
       setLoading(false);
     }
   };
