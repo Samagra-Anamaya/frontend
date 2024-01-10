@@ -88,7 +88,8 @@ const CitizenSurveyPage = ({ params }) => {
       villageName: _currLocation.villageName,
       user_id: user?.username,
       app_status: navigator.onLine ? 'online' : 'offline',
-      capturedAt: capturedAt
+      capturedAt: moment().utc(),
+      time: new Date().toISOString() 
     });
   },[]);
 
