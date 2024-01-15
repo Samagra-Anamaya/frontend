@@ -1,7 +1,17 @@
+"use client"
 import "../styles/globals.css";
-import { OfflineSyncProvider, useOfflineSyncContext } from "offline-sync-handler-test";
+import {
+  OfflineSyncProvider,
+  useOfflineSyncContext,
+} from "offline-sync-handler-test";
 import { Provider, useDispatch } from "react-redux";
-import { clearSubmissionBatch, store, updateCanSubmit, updateIsOffline, updatePendingSubmissions } from "../redux/store";
+import {
+  clearSubmissionBatch,
+  store,
+  updateCanSubmit,
+  updateIsOffline,
+  updatePendingSubmissions,
+} from "../redux/store";
 import { useState, useEffect, useCallback } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,7 +20,12 @@ import { logEvent } from "firebase/analytics";
 import "animate.css";
 import "bootstrap-css-only/css/bootstrap.min.css";
 import "mdbreact/dist/css/mdb.css";
-import { chunkArray, getImages, removeCitizenImageRecord, sleep } from "../services/utils";
+import {
+  chunkArray,
+  getImages,
+  removeCitizenImageRecord,
+  sleep,
+} from "../services/utils";
 import { _updateSubmissionMedia } from "../redux/actions/updateSubmissionMedia";
 import { isNull, omitBy, update } from "lodash";
 import localforage from "localforage";
@@ -59,30 +74,39 @@ export default function App({ Component, pageProps }) {
   //   console.log("debug -submitDataresponse:", { response, data });
   // }, [BACKEND_SERVICE_URL]);
 
-
   const onSyncSuccess = async (response) => {
-    const apiRequests = await localforage.getItem('apiRequests');
+    const apiRequests = await localforage.getItem("apiRequests");
 
-    if (store.getState().userData.isOffline && apiRequests?.length > 0 && !syncing) {
+    if (
+      store.getState().userData.isOffline &&
+      apiRequests?.length > 0 &&
+      !syncing
+    ) {
       setSyncing(true);
     }
     console.log("debug sync response -->", response);
     const images = await getImages();
-    console.log("debug: before", { images })
+    console.log("debug: before", { images });
     if (response?.config?.meta?.citizenId) {
       //  store?.dispatch(_updateSubmissionMedia(response?.config?.meta)).then(res => {
-      store?.dispatch(_updateSubmissionMedia(response?.data?.data?.result)).then(async res => {
-        console.log("debug: _app then", res)
-        if (res?.type?.includes('fulfilled')) {
-          console.log("Clearing Image Records for --->", response?.config?.meta?.citizenId)
-          removeCitizenImageRecord(response?.config?.meta?.citizenId);
-        }
-      })
+      store
+        ?.dispatch(_updateSubmissionMedia(response?.data?.data?.result))
+        .then(async (res) => {
+          console.log("debug: _app then", res);
+          if (res?.type?.includes("fulfilled")) {
+            console.log(
+              "Clearing Image Records for --->",
+              response?.config?.meta?.citizenId
+            );
+            removeCitizenImageRecord(response?.config?.meta?.citizenId);
+          }
+        });
 
       // Updating villageId in pending submissions
       if (store.getState().userData.isOffline) {
         let ps = [...store.getState().userData.pendingSubmissions];
-        if (!ps.includes(response?.config?.meta?.villageId)) ps.push(response?.config?.meta?.villageId);
+        if (!ps.includes(response?.config?.meta?.villageId))
+          ps.push(response?.config?.meta?.villageId);
         store.dispatch(updatePendingSubmissions(ps));
       }
 
@@ -93,16 +117,15 @@ export default function App({ Component, pageProps }) {
             // setSyncing(false);
             setSyncComplete(true);
             window.location.reload();
-          }, 1000)
+          }, 1000);
         }
       }
     }
-
   };
 
   useEffect(() => {
-    window.addEventListener('offline', () => {
-      toast.error('Operating now in offline mode!', {
+    window.addEventListener("offline", () => {
+      toast.error("Operating now in offline mode!", {
         position: "top-right",
         autoClose: 2500,
         hideProgressBar: false,
@@ -115,10 +138,10 @@ export default function App({ Component, pageProps }) {
 
       store.dispatch(updateIsOffline(true));
       store.dispatch(updateCanSubmit(false));
-    })
+    });
 
-    window.addEventListener('online', async () => {
-      toast.success('App is back online', {
+    window.addEventListener("online", async () => {
+      toast.success("App is back online", {
         position: "top-right",
         autoClose: 2500,
         hideProgressBar: false,
@@ -132,94 +155,142 @@ export default function App({ Component, pageProps }) {
     });
 
     setHydrated(true);
-    logEvent(analytics, 'page_view');
+    logEvent(analytics, "page_view");
     if (window.innerWidth > 500) setIsDesktop(true);
     else setIsDesktop(false);
   }, []);
 
-  return hydrated ? (<>
-    {isDesktop ? <div className="rootDiv">
-      <Provider store={store} data-testid="redux-provider">
-        <OfflineSyncProvider onCallback={onSyncSuccess} >
-          <Component {...pageProps} />
-        </OfflineSyncProvider>
-        <ToastContainer
-          position="top-center"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
-        {syncing && <CommonModal sx={{ maxHeight: "50vh", maxWidth: '80vw', overflow: "scroll" }}>
-          <div style={{ ...modalStyles.container, justifyContent: "center" }}>
-            {!syncComplete ? <>
-              <p style={modalStyles.mainText}>Please wait ✋, Media Sync in progress</p>
-              <CircularProgress color="success" size={60} />
-              <p style={modalStyles.warningText}>Do not refresh this page</p>
-            </>
-              :
-              <>
-                <Lottie
-                  options={defaultOptions}
-                  style={{ marginTop: -40, marginBottom: -20 }}
-                  height={200}
-                  width={200}
-                />
-                <p style={modalStyles.mainText}>Media Sync Successful</p>
-                <Button color="success" variant="contained" fullWidth onClick={() => { setSyncComplete(false); setSyncing(false); window.location.reload(); }}>Done</Button>
-              </>
-            }
-          </div>
-        </CommonModal>}
-      </Provider>
-    </div> :
-      <>
-        <Provider store={store} data-testid="redux-provider">
-          <OfflineSyncProvider onCallback={onSyncSuccess}>
-            <Component {...pageProps} />
-          </OfflineSyncProvider>
-          <ToastContainer
-            position="top-center"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
-          {syncing && <CommonModal sx={{ maxHeight: "50vh", maxWidth: '80vw', overflow: "scroll" }}>
-            <div style={{ ...modalStyles.container, justifyContent: "center" }}>
-              {!syncComplete ? <>
-                <p style={modalStyles.mainText}>Please wait ✋, Media Sync in progress</p>
-                <CircularProgress color="success" size={60} />
-                <p style={modalStyles.warningText}>Do not refresh this page</p>
-              </>
-                :
-                <>
-                  <Lottie
-                    options={defaultOptions}
-                    style={{ marginTop: -40, marginBottom: -20 }}
-                    height={200}
-                    width={200}
-                  />
-                  <p style={modalStyles.mainText}>Media Sync Successful</p>
-                  <Button color="success" variant="contained" fullWidth onClick={() => { setSyncComplete(false); setSyncing(false); window.location.reload(); }}>Done</Button>
-                </>
-              }
-            </div>
-          </CommonModal>}
-        </Provider>
-      </>
-    }
-  </>) : null;
+  return hydrated ? (
+    <>
+      {isDesktop ? (
+        <div className="rootDiv">
+          <Provider store={store} data-testid="redux-provider">
+            <OfflineSyncProvider onCallback={onSyncSuccess}>
+              <Component {...pageProps} />
+            </OfflineSyncProvider>
+            <ToastContainer
+              position="top-center"
+              autoClose={5000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
+            {syncing && (
+              <CommonModal
+                sx={{ maxHeight: "50vh", maxWidth: "80vw", overflow: "scroll" }}
+              >
+                <div
+                  style={{ ...modalStyles.container, justifyContent: "center" }}
+                >
+                  {!syncComplete ? (
+                    <>
+                      <p style={modalStyles.mainText}>
+                        Please wait ✋, Media Sync in progress
+                      </p>
+                      <CircularProgress color="success" size={60} />
+                      <p style={modalStyles.warningText}>
+                        Do not refresh this page
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Lottie
+                        options={defaultOptions}
+                        style={{ marginTop: -40, marginBottom: -20 }}
+                        height={200}
+                        width={200}
+                      />
+                      <p style={modalStyles.mainText}>Media Sync Successful</p>
+                      <Button
+                        color="success"
+                        variant="contained"
+                        fullWidth
+                        onClick={() => {
+                          setSyncComplete(false);
+                          setSyncing(false);
+                          window.location.reload();
+                        }}
+                      >
+                        Done
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CommonModal>
+            )}
+          </Provider>
+        </div>
+      ) : (
+        <>
+          <Provider store={store} data-testid="redux-provider">
+            <OfflineSyncProvider onCallback={onSyncSuccess}>
+              <Component {...pageProps} />
+            </OfflineSyncProvider>
+            <ToastContainer
+              position="top-center"
+              autoClose={5000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
+            {syncing && (
+              <CommonModal
+                sx={{ maxHeight: "50vh", maxWidth: "80vw", overflow: "scroll" }}
+              >
+                <div
+                  style={{ ...modalStyles.container, justifyContent: "center" }}
+                >
+                  {!syncComplete ? (
+                    <>
+                      <p style={modalStyles.mainText}>
+                        Please wait ✋, Media Sync in progress
+                      </p>
+                      <CircularProgress color="success" size={60} />
+                      <p style={modalStyles.warningText}>
+                        Do not refresh this page
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Lottie
+                        options={defaultOptions}
+                        style={{ marginTop: -40, marginBottom: -20 }}
+                        height={200}
+                        width={200}
+                      />
+                      <p style={modalStyles.mainText}>Media Sync Successful</p>
+                      <Button
+                        color="success"
+                        variant="contained"
+                        fullWidth
+                        onClick={() => {
+                          setSyncComplete(false);
+                          setSyncing(false);
+                          window.location.reload();
+                        }}
+                      >
+                        Done
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CommonModal>
+            )}
+          </Provider>
+        </>
+      )}
+    </>
+  ) : null;
 }
 
 const modalStyles = {
@@ -227,16 +298,21 @@ const modalStyles = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: 'space-evenly',
+    justifyContent: "space-evenly",
     height: "100%",
-    width: "100%"
+    width: "100%",
   },
   mainText: {
     fontSize: "1.4rem",
     color: "#007922",
     textAlign: "center",
     margin: "2rem 0rem",
-    fontWeight: '400'
+    fontWeight: "400",
   },
-  warningText: { color: "red", textAlign: "center", fontWeight: 'bold', marginTop: '2rem' },
+  warningText: {
+    color: "red",
+    textAlign: "center",
+    fontWeight: "bold",
+    marginTop: "2rem",
+  },
 };

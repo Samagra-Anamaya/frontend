@@ -51,6 +51,8 @@ const CitizenSurveyPage = ({ params }) => {
   const [rorImages, setRorImages] = useState([]);
   const [totalSteps, setTotalSteps] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
+  const [formStartTime, setFormStartTime] = useState(moment().valueOf());
+
   const user = useSelector((state) => state?.userData?.user?.user);
   const _currLocation = useSelector(
     (state) => state?.userData?.currentLocation
@@ -83,29 +85,29 @@ const CitizenSurveyPage = ({ params }) => {
     getImagesFromStore();
   }, []);
 
-  // useEffect(() => {
-  //   logEvent(analytics, "form_start", {
-  //     villageId: _currLocation.villageCode,
-  //     villageName: _currLocation.villageName,
-  //     user_id: user?.username,
-  //     app_status: navigator.onLine ? 'online' : 'offline',
-  //     capturedAt: moment().utc(),
-  //     time: new Date().toISOString()
-  //   });
-  // }, []);
+  useEffect(() => {
+    setFormStartTime(moment().valueOf())
+    logEvent(analytics, "form_start", {
+      villageId: _currLocation.villageCode,
+      villageName: _currLocation.villageName,
+      user_id: user?.username,
+      app_status: navigator.onLine ? 'online' : 'offline',
+      capturedAt: moment().utc(),
+      time: new Date().toISOString()
+    });
+  }, []);
 
   /* Util Functions */
   const handleSubmit = async () => {
     if (loading) return;
     try {
-      // logEvent(analytics, "form_end", {
-      //   villageId: _currLocation.villageCode,
-      //   villageName: _currLocation.villageName,
-      //   user_id: user?.username,
-      //   app_status: navigator.onLine ? 'online' : 'offline',
-      //   capturedAt: capturedAt,
-      //   time: new Date().toISOString()
-      // });
+
+      logEvent(analytics,'form-filling_time',{
+        user_id: user?.username,
+        villageId: _currLocation.villageCode,
+        time: (moment().valueOf() - formStartTime) / 1000 / 60
+      });
+    
       setLoading(true);
       showSubmittedModal(true);
       let capturedAt = moment().utc();
