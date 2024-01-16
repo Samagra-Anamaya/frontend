@@ -438,6 +438,16 @@ const CitizenForm = (props) => {
                         disabled={!formEditable ? true : false}
 
                     />
+                    <TextField
+                        variant='standard'
+                        label={"Description of boundaries by prominent landmarks including khasra/compartment No"}
+                        onChange={e => setFormState((prevState) => ({ ...prevState, boundariesDesc: e.target.value }))}
+                        value={formState?.boundariesDesc}
+                        required
+                        sx={{ mb: 4, width: '80%' }}
+                        disabled={!formEditable ? true : false}
+
+                    />
                     <div className={styles.btnContainer}>
                         <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(0)} className={styles.submitBtn}>Back</Button>
                         <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Next</Button>
@@ -453,7 +463,7 @@ const CitizenForm = (props) => {
                             type: 'error'
                         })
                         return;
-                    } else if (formState?.fraPlotsClaimed == 0) {
+                    } else if (formState?.forestLandType == 'revenueForest' && formState?.typeOfBlock == 'revenueBlock' && formState?.fraPlotsClaimed == 0) {
                         toast("Plots claimed cannot be zero!", {
                             type: 'error'
                         })
@@ -462,31 +472,117 @@ const CitizenForm = (props) => {
                     handleSubmit();
                 }}
                 className={styles.userForm}>
-                <TextField
+                {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
+                    <InputLabel id="land-type-label">Type of Forest Land</InputLabel>
+                    <Select
+                        labelId="land-type-label"
+                        id="land-type"
+                        value={formState?.forestLandType}
+                        variant="standard"
+                        label="Type of Forest Land"
+                        required
+                        onChange={e => { setFormState((prevState) => ({ ...prevState, forestLandType: e.target.value })) }}
+                    >
+                        <MenuItem value={'revenueForest'}>Revenue Forest</MenuItem>
+                        <MenuItem value={'reservedForest'}>Reserved Forest</MenuItem>
+                    </Select>
+                </FormControl> : <TextField
                     variant='standard'
-                    label={"No. of Plots Claimed Under FRA"}
-                    onChange={e => {
-                        const newValue = e.target.value;
-                        if (newValue === '' || (parseInt(newValue, 10) >= 0)) {
-                            setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: newValue }))
-                        }
-                    }}
-                    value={formState?.fraPlotsClaimed}
+                    label={"Type of Forest Land"}
+                    onChange={e => setFormState((prevState) => ({ ...prevState, forestLandType: e.target.value }))}
+                    value={formState?.forestLandType == 'revenueForest' ? 'Revenue Forest' : 'Reserved Forest'}
                     required
                     sx={{ mb: 4, width: '80%' }}
                     disabled={!formEditable ? true : false}
-                />
-                {formState.fraPlotsClaimed > 0 && Array.from(Array(Number(formState.fraPlotsClaimed)).keys()).map(el => {
-                    return <TextField
+
+                />}
+                {formState?.forestLandType == 'revenueForest' ? formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
+                    <InputLabel id="block-type-label">Type of Block</InputLabel>
+                    <Select
+                        labelId="block-type-label"
+                        id="block-type"
+                        value={formState?.typeOfBlock}
+                        variant="standard"
+                        label="Type of Block"
+                        required
+                        onChange={e => {
+                            const currForm = { ...formState };
+                            if (e.target.value == 'revenueBlock') {
+                                delete currForm.compartmentNo;
+                            } else {
+                                delete currForm.fraPlotsClaimed;
+                            }
+                            currForm.typeOfBlock = e.target.value;
+                            setFormState(currForm);
+                        }}
+                    >
+                        <MenuItem value={'jungleBlock'}>Jungle Block</MenuItem>
+                        <MenuItem value={'revenueBlock'}>Revenue Block</MenuItem>
+                    </Select>
+                </FormControl> : <TextField
+                    variant='standard'
+                    label={"Type of Block"}
+                    onChange={e => setFormState((prevState) => ({ ...prevState, typeOfBlock: e.target.value }))}
+                    value={formState?.typeOfBlock == 'jungleBlock' ? 'Jungle Block' : 'Revenue Block'}
+                    required
+                    sx={{ mb: 4, width: '80%' }}
+                    disabled={!formEditable ? true : false}
+
+                /> : <></>}
+
+
+                {formState?.forestLandType == 'revenueForest' && formState?.typeOfBlock == 'jungleBlock' ? <TextField
+                    variant='standard'
+                    label={"Compartment No"}
+                    onChange={e => setFormState((prevState) => ({ ...prevState, compartmentNo: e.target.value }))}
+                    value={formState?.compartmentNo}
+                    required
+                    sx={{ mb: 4, width: '80%' }}
+                    disabled={!formEditable ? true : false}
+
+                /> : <></>}
+
+
+                {formState?.forestLandType == 'revenueForest' && formState?.typeOfBlock == 'revenueBlock' ? <>
+                    <TextField
                         variant='standard'
-                        label={`Plot Number ${el + 1}`}
-                        onChange={e => setFormState((prevState) => ({ ...prevState, [`plotNumber${el + 1}`]: e.target.value }))}
-                        value={formState?.[`plotNumber${el + 1}`]}
+                        label={"No. of Plots Claimed Under FRA"}
+                        onChange={e => {
+                            const newValue = e.target.value;
+                            if (newValue === '' || (parseInt(newValue, 10) >= 0)) {
+                                setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: newValue }))
+                            }
+                        }}
+                        value={formState?.fraPlotsClaimed}
                         required
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
                     />
-                })}
+                    {formState.fraPlotsClaimed > 0 && Array.from(Array(Number(formState.fraPlotsClaimed)).keys()).map(el => {
+                        return <TextField
+                            variant='standard'
+                            label={`Plot Number ${el + 1}`}
+                            onChange={e => setFormState((prevState) => ({ ...prevState, [`plotNumber${el + 1}`]: e.target.value }))}
+                            value={formState?.[`plotNumber${el + 1}`]}
+                            required
+                            sx={{ mb: 4, width: '80%' }}
+                            disabled={!formEditable ? true : false}
+                        />
+                    })}
+                </> : <></>
+                }
+
+                {formState?.forestLandType == 'reservedForest' ? <TextField
+                    variant='standard'
+                    label={"Compartment No"}
+                    onChange={e => setFormState((prevState) => ({ ...prevState, compartmentNo: e.target.value }))}
+                    value={formState?.compartmentNo}
+                    required
+                    sx={{ mb: 4, width: '80%' }}
+                    disabled={!formEditable ? true : false}
+
+                /> : <></>}
+
                 {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
                     <InputLabel id="ror-updated-label">Has ROR been updated? *</InputLabel>
                     <Select

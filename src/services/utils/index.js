@@ -307,3 +307,20 @@ export const chunkArray = (arr, size) => {
 
 // Sleep function to introduce a delay
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Sanitize Form before saving in redux store
+export const sanitizeForm = (form) => {
+  if (form.forestLandType == 'revenueForest' && form.typeOfBlock != 'jungleBlock') {
+    delete form.compartmentNo;
+  }
+  if (form.forestLandType == 'reservedForest') {
+    delete form.typeOfBlock;
+    if (form.fraPlotsClaimed) {
+      for (let i = 1; i <= form.fraPlotsClaimed; i++) {
+        delete form[`plotNumber${i}`]
+      }
+    }
+    delete form.fraPlotsClaimed;
+  }
+  return form;
+}
