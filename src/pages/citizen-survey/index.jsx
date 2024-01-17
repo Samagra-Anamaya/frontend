@@ -14,7 +14,7 @@ import { QrScanner } from "@yudiel/react-qr-scanner";
 import { logEvent } from "firebase/analytics";
 import CircularProgress from "@mui/material/CircularProgress";
 import { analytics } from "../../services/firebase/firebase";
-import { compressImage, getCitizenImageRecords, getImages, removeCitizenImageRecord, storeImages } from "../../services/utils";
+import { compressImage, getCitizenImageRecords, getImages, removeCitizenImageRecord, storeImages, sanitizeForm } from "../../services/utils";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
 import moment from "moment";
@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 import { saveCitizenFormData } from "../../redux/actions/saveCitizenFormData";
 import { sendLogs } from "../../services/api";
 import * as Sentry from "@sentry/nextjs";
+
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -50,6 +51,8 @@ const CitizenSurveyPage = ({ params }) => {
   const [rorImages, setRorImages] = useState([]);
   const [totalSteps, setTotalSteps] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
+  const [formStartTime, setFormStartTime] = useState(moment().valueOf());
+
   const user = useSelector((state) => state?.userData?.user?.user);
   const _currLocation = useSelector(
     (state) => state?.userData?.currentLocation
@@ -82,11 +85,28 @@ const CitizenSurveyPage = ({ params }) => {
     getImagesFromStore();
   }, []);
 
+  useEffect(() => {
+    setFormStartTime(moment().valueOf())
+    logEvent(analytics, "form_start", {
+      villageId: _currLocation.villageCode,
+      villageName: _currLocation.villageName,
+      user_id: user?.username,
+      app_status: navigator.onLine ? 'online' : 'offline',
+      capturedAt: moment().utc(),
+      time: new Date().toISOString()
+    });
+  }, []);
+
 
   /* Util Functions */
   const handleSubmit = async () => {
     if (loading) return;
     try {
+      logEvent(analytics,'form-filling_time',{
+        user_id: user?.username,
+        villageId: _currLocation.villageCode,
+        time: (moment().valueOf() - formStartTime) / 1000 / 60
+      });
       setLoading(true);
       showSubmittedModal(true);
       let capturedAt = moment().utc();
@@ -120,7 +140,9 @@ const CitizenSurveyPage = ({ params }) => {
         }
       );
 
-      let newFormState = { ...formState };
+      let newFormState = sanitizeForm({ ...formState });
+
+      console.log("SANITIZED FORM ---->", newFormState)
       // newFormState['landRecords'] = landImages;
       // newFormState['rorRecords'] = rorImages;
       newFormState['imageUploaded'] = false;
