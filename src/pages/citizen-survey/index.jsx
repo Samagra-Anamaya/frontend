@@ -97,17 +97,16 @@ const CitizenSurveyPage = ({ params }) => {
     });
   }, []);
 
+
   /* Util Functions */
   const handleSubmit = async () => {
     if (loading) return;
     try {
-
       logEvent(analytics,'form-filling_time',{
         user_id: user?.username,
         villageId: _currLocation.villageCode,
         time: (moment().valueOf() - formStartTime) / 1000 / 60
       });
-    
       setLoading(true);
       showSubmittedModal(true);
       let capturedAt = moment().utc();
@@ -200,9 +199,8 @@ const CitizenSurveyPage = ({ params }) => {
 
     } catch (err) {
       Sentry.captureException({ err, user });
-      toast.error(`An error occurred while saving, ${err?.message || err?.toString()}`)
+      toast.error("An error occurred while saving", err?.message || err?.toString())
       console.log(err);
-      showSubmittedModal(false)
       setLoading(false);
     }
   };
