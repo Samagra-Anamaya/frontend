@@ -5,6 +5,7 @@ import {
   useOfflineSyncContext,
 } from "offline-sync-handler-test";
 import { Provider, useDispatch } from "react-redux";
+import dynamic from "next/dynamic";
 import {
   clearSubmissionBatch,
   store,
@@ -12,7 +13,7 @@ import {
   updateIsOffline,
   updatePendingSubmissions,
 } from "../redux/store";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useContext } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { analytics } from "../services/firebase/firebase";
@@ -34,6 +35,9 @@ import { CircularProgress } from "@mui/material";
 import Lottie from "react-lottie";
 import * as done from "public/lottie/done.json";
 import { Button } from "@mui/material";
+import { ThemeProvider } from "samagra-ui-test";
+
+// const _ = dynamic(() => import('samagra-ui-test'), {ssr: false});
 
 
 // Lottie Options
@@ -160,8 +164,11 @@ export default function App({ Component, pageProps }) {
     else setIsDesktop(false);
   }, []);
 
+
+ if (typeof window === "undefined") 
+ return <></>
   return hydrated ? (
-    <>
+    <ThemeProvider>
       {isDesktop ? (
         <div className="rootDiv">
           <Provider store={store} data-testid="redux-provider">
@@ -289,7 +296,7 @@ export default function App({ Component, pageProps }) {
           </Provider>
         </>
       )}
-    </>
+    </ThemeProvider>
   ) : null;
 }
 

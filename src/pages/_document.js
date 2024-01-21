@@ -1,4 +1,5 @@
 import { Html, Head, Main, NextScript } from "next/document";
+import { ThemeProvider } from "samagra-ui-test";
 
 export default function Document() {
   return (
@@ -80,8 +81,10 @@ export default function Document() {
         />
       </Head>
       <body>
+        <>
         <Main />
         <NextScript />
+        </>
       </body>
     </Html>
   );
