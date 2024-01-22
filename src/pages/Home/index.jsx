@@ -4,7 +4,7 @@ import ROUTE_MAP from "../../services/routing/routeMap";
 import styles from './index.module.scss';
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import { userLogin } from "../../services/api";
+import { sendLogs, userLogin } from "../../services/api";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { CircularProgress } from "@mui/material";
@@ -71,6 +71,7 @@ const Home = () => {
 
       if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
         Sentry.captureException({ loginRes, username, password });
+        sendLogs({ gpId: username, timestamp: Date.now(), error: loginRes?.params?.errMsg })
         logEvent(analytics, "login_failure", {
           user_id: username
         })
@@ -102,6 +103,7 @@ const Home = () => {
     } catch (err) {
       Sentry.captureException({ err, username, password });
       toast.error(err?.message || err?.toString())
+      sendLogs({ gpId: username, timestamp: Date.now(), error: err?.msg || err?.toString() })
     }
 
   }

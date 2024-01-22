@@ -102,7 +102,7 @@ const CitizenSurveyPage = ({ params }) => {
   const handleSubmit = async () => {
     if (loading) return;
     try {
-      logEvent(analytics,'form-filling_time',{
+      logEvent(analytics, 'form-filling_time', {
         user_id: user?.username,
         villageId: _currLocation.villageCode,
         time: (moment().valueOf() - formStartTime) / 1000 / 60
@@ -156,7 +156,6 @@ const CitizenSurveyPage = ({ params }) => {
       if (!formState?.coClaimantAvailable) {
         delete formState?.coClaimantName;
       }
-
       dispatch(
         saveCitizenFormData({
           submissionData: newFormState,
@@ -177,7 +176,7 @@ const CitizenSurveyPage = ({ params }) => {
           });
         }
         else {
-          await sendLogs(res, user2);
+          sendLogs({ gpId: user2?.user?.username, timestamp: Date.now(), error: res?.error || JSON.stringify(res) });
           toast.warn("Something went wrong while saving form, " + JSON.stringify(res?.error));
           removeCitizenImageRecord(currCitizen.citizenId);
           setLoading(false);
@@ -199,9 +198,11 @@ const CitizenSurveyPage = ({ params }) => {
 
     } catch (err) {
       Sentry.captureException({ err, user });
-      toast.error("An error occurred while saving", err?.message || err?.toString())
+      toast.error(`An error occurred while saving: ${err?.message || err?.toString()}`)
+      sendLogs({ gpId: user2?.user?.username, timestamp: Date.now(), error: err?.message || err?.toString() })
       console.log(err);
       setLoading(false);
+      showSubmittedModal(false);
     }
   };
 
