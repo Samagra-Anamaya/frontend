@@ -17,7 +17,7 @@ const ListItem = (props) => {
     secondaryLoading = false,
     clName
   } = props;
-  console.log({ props });
+  
   return (
     <MDBListGroupItem
       className={`d-flex justify-content-between align-items-center ${clName}`}
