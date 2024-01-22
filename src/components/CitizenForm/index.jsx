@@ -144,6 +144,7 @@ const CitizenForm = (props) => {
                         disabled={true}
                         sx={{ mb: 4, width: "80%" }}
                     />}
+                    {console.log(savedEntries, formEditable)}
                     {formState?.isAadhaarAvailable ?
                         <Tooltip title={!formEditable ? "Aadhaar will be display in hashed format" : ''}>
                             <TextField
@@ -157,7 +158,7 @@ const CitizenForm = (props) => {
                                             aadharNumber: e.target.value,
                                         }));
                                 }}
-                                value={savedEntries ? "**** **** " + formState?.aadharNumber.slice(8) : formEditable ? formState?.aadharNumber : mode == 'qr' ? formState?.aadharNumber : "**** **** " + formState.lastDigits}
+                                value={savedEntries ? `**** **** ${formState?.lastDigits ? formState?.lastDigits : formState?.aadharNumber.slice(8)}` : formEditable ? formState?.aadharNumber : "**** **** " + formState.lastDigits}
                                 required
                                 inputProps={{ maxLength: 12, minLength: 12 }}
                                 disabled={!formEditable ? true : false}
@@ -298,7 +299,8 @@ const CitizenForm = (props) => {
                         label={"No. of Co Claimants"}
                         onChange={e => {
                             const newValue = e.target.value;
-                            if (newValue === '' || (parseInt(newValue, 10) >= 0 && parseInt(newValue, 10) <= 20)) {
+                            if (newValue === '' || ((parseInt(newValue, 10) >= 0 && parseInt(newValue, 10) <= 20)) && /^\d+$/.test(newValue)) {
+                                console.log("inside newvalue", newValue)
                                 setFormState((prevState) => ({ ...prevState, noOfCoClaimants: newValue }))
                             }
                         }}
@@ -326,11 +328,11 @@ const CitizenForm = (props) => {
                         label={"No. of Dependents"}
                         onChange={e => {
                             const newValue = e.target.value;
-                            if (newValue === '' || (parseInt(newValue, 10) >= 0 && parseInt(newValue, 10) <= 20)) {
+                            if (newValue === '' || ((parseInt(newValue, 10) >= 0 && parseInt(newValue, 10) <= 20) && /^\d+$/.test(newValue))) {
                                 setFormState((prevState) => ({ ...prevState, noOfDependents: newValue }))
                             }
                         }}
-                        value={formState?.noOfDependents}
+                        value={formState?.noOfDependents || ''}
                         required
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
@@ -428,11 +430,12 @@ const CitizenForm = (props) => {
                         label={"Area"}
                         onChange={e => {
                             const newValue = e.target.value;
-                            if (newValue === '' || (parseFloat(newValue, 10) >= 0)) {
+                            if (newValue === '' || ((parseFloat(newValue, 10) >= 0))) {
                                 setFormState((prevState) => ({ ...prevState, area: newValue }))
                             }
                         }}
-                        value={formState?.area}
+                        inputProps={{ type: 'number', step: 'any' }}
+                        value={formState?.area || ""}
                         required
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
