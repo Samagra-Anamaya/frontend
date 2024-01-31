@@ -27,7 +27,7 @@ import { toast } from "react-toastify";
 import CommonModal from "../../components/Modal";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "../../services/firebase/firebase";
-import { uploadMedia } from "../../services/api";
+import { sendLogs, uploadMedia } from "../../services/api";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
 import {
@@ -195,6 +195,7 @@ const SurveyPage = ({ params }) => {
               );
             } else {
               Sentry.captureException({ response, userData });
+              sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: JSON.stringify(response) })
               toast.error(
                 `Something went wrong:${response?.response?.data?.message || response?.message
                 }`
@@ -212,6 +213,7 @@ const SurveyPage = ({ params }) => {
         } catch (error) {
           console.error("Error uploading image", error);
           Sentry.captureException({ error, userData });
+          sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: error?.msg || error?.toString() })
         }
       }
 
@@ -283,6 +285,7 @@ const SurveyPage = ({ params }) => {
             `Something went wrong:${response?.response?.data?.message || response?.message
             }`
           );
+          sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: response?.response?.data?.message || response?.message })
 
           if (el == batches.length - 1) {
             setLoading(false);
@@ -303,6 +306,7 @@ const SurveyPage = ({ params }) => {
           } else {
             if (!response || response == undefined) {
               Sentry.captureException({ response, userData });
+              sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: JSON.stringify(response) })
               toast.warn(
                 "Your request has been saved, it'll be submitted once you're back in connection"
               );
@@ -326,6 +330,7 @@ const SurveyPage = ({ params }) => {
       } catch (error) {
         console.error("Error Submitting Submission Data: ", error);
         Sentry.captureException({ error, userData });
+        sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: error?.msg || error?.toString() })
       }
     }
 
