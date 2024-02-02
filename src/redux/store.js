@@ -202,6 +202,9 @@ const userDataSlice = createSlice({
     },
     updatePendingSubmissions: (state, action) => {
       state.pendingSubmissions = action.payload
+    },
+    updateUserToken: (state, action) => {
+      state.user = { ...state.user, token: action.payload.token, refreshToken: action.payload.refreshToken, tokenExpirationInstant: action.payload.tokenExpirationInstant }
     }
   },
   extraReducers: (builder) => {
@@ -383,7 +386,8 @@ export const {
   updateCanSubmit,
   bulkSaveSubmission,
   clearSubmissionBatch,
-  updatePendingSubmissions
+  updatePendingSubmissions,
+  updateUserToken
 } = userDataSlice.actions;
 
 export { store, persistor };
