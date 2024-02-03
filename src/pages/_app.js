@@ -21,8 +21,10 @@ import "animate.css";
 import "bootstrap-css-only/css/bootstrap.min.css";
 import "mdbreact/dist/css/mdb.css";
 import {
+  checkTokenValidity,
   chunkArray,
   getImages,
+  refreshToken,
   removeCitizenImageRecord,
   sleep,
 } from "../services/utils";
@@ -34,6 +36,7 @@ import { CircularProgress } from "@mui/material";
 import Lottie from "react-lottie";
 import * as done from "public/lottie/done.json";
 import { Button } from "@mui/material";
+import AnnouncementBar from '../components/AnnouncementBar'
 
 
 // Lottie Options
@@ -53,6 +56,8 @@ export default function App({ Component, pageProps }) {
   const [syncing, setSyncing] = useState(false);
   const [syncComplete, setSyncComplete] = useState(true);
   const [isDesktop, setIsDesktop] = useState(true);
+  const [showAnnouncementBar, setShowAnnouncementBar] = useState(false);
+  const [announcementText, setAnnouncementText] = useState('');
 
   // const submitData = useCallback(async (data) => {
 
@@ -123,6 +128,8 @@ export default function App({ Component, pageProps }) {
     }
   };
 
+
+
   useEffect(() => {
     window.addEventListener("offline", () => {
       toast.error("Operating now in offline mode!", {
@@ -158,15 +165,28 @@ export default function App({ Component, pageProps }) {
     logEvent(analytics, "page_view");
     if (window.innerWidth > 500) setIsDesktop(true);
     else setIsDesktop(false);
+
+    const daysLeft = checkTokenValidity();
+
+    if (daysLeft <= 3) {
+      setShowAnnouncementBar(true);
+      setAnnouncementText(`Your token will be expired in ${daysLeft} days`)
+    }
+    if (daysLeft <= 1) {
+      refreshToken();
+    }
   }, []);
 
   return hydrated ? (
     <>
       {isDesktop ? (
         <div className="rootDiv">
+          {showAnnouncementBar && <AnnouncementBar text={announcementText} />}
           <Provider store={store} data-testid="redux-provider">
             <OfflineSyncProvider onCallback={onSyncSuccess}>
-              <Component {...pageProps} />
+              <div style={showAnnouncementBar ? { marginTop: '1.5rem' } : {}}>
+                <Component {...pageProps} />
+              </div>
             </OfflineSyncProvider>
             <ToastContainer
               position="top-center"
@@ -227,9 +247,12 @@ export default function App({ Component, pageProps }) {
         </div>
       ) : (
         <>
+          {showAnnouncementBar && <AnnouncementBar text={announcementText} />}
           <Provider store={store} data-testid="redux-provider">
             <OfflineSyncProvider onCallback={onSyncSuccess}>
-              <Component {...pageProps} />
+              <div style={showAnnouncementBar ? { marginTop: '1.5rem' } : {}}>
+                <Component {...pageProps} />
+              </div>
             </OfflineSyncProvider>
             <ToastContainer
               position="top-center"

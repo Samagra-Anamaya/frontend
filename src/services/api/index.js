@@ -438,6 +438,24 @@ export const sendLogs = async (data) => {
     let res = await axios.post(BACKEND_SERVICE_URL + `/utils/logSubmissionError`, data);
     return res?.data;
   } catch (err) {
-    throw err;
+    console.log(err);
+    alert(err.toString())
+  }
+}
+
+export const getNewToken = async (refreshToken, token) => {
+  try {
+    let res = await axios.post(BASE_URL + `refresh-token`, {
+      refreshToken,
+      token
+    }, {
+      headers: {
+        'x-application-id': `${applicationId}`
+      }
+    });
+    return res?.data;
+  } catch (err) {
+    console.log(err);
+    return null;
   }
 }

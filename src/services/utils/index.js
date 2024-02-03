@@ -2,12 +2,13 @@
 import Cookies from "js-cookie";
 // import XMLParser from "react-xml-parser";
 import localforage from "localforage";
-import { getMedicalAssessments, getPrefillXML, getSubmissionXML } from "../api";
+import { getMedicalAssessments, getNewToken, getPrefillXML, getSubmissionXML } from "../api";
 import axios from "axios";
 // import { userData } from "@/app/pages/Default/page";
 // import { useUserData } from "@/app/hooks/useAuth";
 import imageCompression from 'browser-image-compression';
 import localForage from "localforage";
+import { store, updateUserToken } from "../../redux/store";
 
 export const makeHasuraCalls = async (query, userData) => {
   return fetch(process.env.NEXT_PUBLIC_HASURA_URL, {
@@ -323,4 +324,23 @@ export const sanitizeForm = (form) => {
     delete form.fraPlotsClaimed;
   }
   return form;
+}
+
+export const checkTokenValidity = () => {
+  const userData = store.getState()?.userData?.user;
+  if (userData) {
+    var timeleft = userData.tokenExpirationInstant - (new Date()).getTime();
+    var days = Math.ceil((((timeleft / 1000) / 60) / 60) / 24)
+  }
+  return days || 999;
+}
+
+export const refreshToken = async () => {
+  const userData = store.getState()?.userData?.user;
+  if (userData) {
+    let res = await getNewToken(userData.refreshToken, userData.token)
+    if (res?.result?.user) {
+      store.dispatch(updateUserToken({ token: res.result.user.token, refreshToken: res.result.user.refreshToken, tokenExpirationInstant: res.result.user.tokenExpirationInstant }))
+    }
+  }
 }

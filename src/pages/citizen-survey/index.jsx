@@ -197,7 +197,7 @@ const CitizenSurveyPage = ({ params }) => {
       setLoading(false);
 
     } catch (err) {
-      Sentry.captureException({ err, user });
+      Sentry.captureException({ err: err?.message || err?.toString(), user });
       toast.error(`An error occurred while saving: ${err?.message || err?.toString()}`)
       sendLogs({ gpId: user2?.user?.username, timestamp: Date.now(), error: err?.message || err?.toString() })
       console.log(err);
