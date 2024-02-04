@@ -103,7 +103,7 @@ const Home = () => {
     } catch (err) {
       Sentry.captureException({ err, username, password });
       toast.error(err?.message || err?.toString())
-      sendLogs({ gpId: username, timestamp: Date.now(), error: err?.msg || err?.toString() })
+      sendLogs({ gpId: username, timestamp: Date.now(), error: err?.message || err?.toString() })
     }
 
   }
