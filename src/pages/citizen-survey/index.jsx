@@ -189,7 +189,7 @@ const CitizenSurveyPage = ({ params }) => {
             capturedAt: capturedAt,
             res: JSON.stringify(res)
           });
-          Sentry.captureException({ err, user });
+          Sentry.captureException({ err: res?.error || JSON.stringify(res), user });
         }
       })
       // }

@@ -212,7 +212,7 @@ const SurveyPage = ({ params }) => {
           }
         } catch (error) {
           console.error("Error uploading image", error);
-          Sentry.captureException({ error, userData });
+          Sentry.captureException({ error: error?.message || error?.toString(), userData });
           sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: error?.message || error?.toString() })
         }
       }
@@ -329,7 +329,7 @@ const SurveyPage = ({ params }) => {
         }
       } catch (error) {
         console.error("Error Submitting Submission Data: ", error);
-        Sentry.captureException({ error, userData });
+        Sentry.captureException({ error: error?.message || error?.toString(), userData });
         sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: error?.message || error?.toString() })
       }
     }
