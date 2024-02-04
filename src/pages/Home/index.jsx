@@ -101,7 +101,7 @@ const Home = () => {
       }
       setApiCall(false);
     } catch (err) {
-      Sentry.captureException({ err, username, password });
+      Sentry.captureException({ err: err?.message || err.toString(), username, password });
       toast.error(err?.message || err?.toString())
       sendLogs({ gpId: username, timestamp: Date.now(), error: err?.message || err?.toString() })
     }
