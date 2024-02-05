@@ -16,6 +16,8 @@ import { loginUser } from "../../redux/actions/login";
 import Footer from "../../components/Footer";
 import isOnline from "is-online";
 import * as Sentry from "@sentry/nextjs";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { IconButton, InputAdornment } from "@mui/material";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -27,6 +29,11 @@ const Home = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [apiCall, setApiCall] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   // Utility function to check if user is admin
   function userIsAdminForPortal(registrations) {
@@ -47,12 +54,10 @@ const Home = () => {
   const handleSubmit = async (event) => {
     if (apiCall) return;
     event.preventDefault()
-    setApiCall(true);
-
     setUsernameError(false)
     setPasswordError(false)
 
-    if (username == '') {
+    if (username == '' || !/^[a-zA-Z]{2}_\d+$/.test(username)) {
       setUsernameError(true)
       return;
     }
@@ -60,7 +65,7 @@ const Home = () => {
       setPasswordError(true)
       return;
     }
-
+    setApiCall(true);
     const online = await isOnline();
     if (!online) {
       toast.error('Unable to login while being offline, please try again later once back in network')
@@ -70,8 +75,10 @@ const Home = () => {
       const loginRes = await userLogin(username, password);
 
       if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
-        Sentry.captureException({ loginRes, username, password });
-        sendLogs({ gpId: username, timestamp: Date.now(), error: loginRes?.params?.errMsg })
+        if (!loginRes?.params?.errMsg == 'Invalid Username/Password') {
+          Sentry.captureException({ loginRes, username, password });
+          sendLogs({ gpId: username, timestamp: Date.now(), error: loginRes?.params?.errMsg })
+        }
         logEvent(analytics, "login_failure", {
           user_id: username
         })
@@ -128,25 +135,40 @@ const Home = () => {
                 <TextField
                   label="Username"
                   id="username"
-                  onChange={e => setUsername(e.target.value)}
+                  onChange={e => { setUsernameError(false); setUsername(e.target.value.toLowerCase()) }}
                   required
                   variant="filled"
                   sx={{ mb: 3 }}
                   fullWidth
                   value={username}
                   error={usernameError}
+                  helperText={usernameError ? 'Please enter a valid username' : ''}
                 />
                 <TextField
                   label="Password"
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={e => { setPasswordError(false); setPassword(e.target.value) }}
                   required
                   variant="filled"
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   error={passwordError}
+                  helperText={passwordError ? 'Please enter a valid password' : ''}
                   fullWidth
                   sx={{ mb: 3 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end" sx={{ marginRight: '0.5rem' }}>
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={handleClickShowPassword}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
                 <Button id="loginBtn" variant="contained" color="success" type="submit" sx={{ padding: 1, width: '80%', height: '3rem', fontSize: 16, marginTop: 5 }}>{apiCall ? <CircularProgress color="inherit" /> : 'Login'} </Button>
                 {error?.length > 0 && <p style={{ color: 'red' }}>{error}</p>}
