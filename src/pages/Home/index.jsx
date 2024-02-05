@@ -59,16 +59,10 @@ const Home = () => {
 
     if (username == '' || !/^[a-zA-Z]{2}_\d+$/.test(username)) {
       setUsernameError(true)
-      setTimeout(() => {
-        setUsernameError(false);
-      }, 3000)
       return;
     }
     if (password == '') {
       setPasswordError(true)
-      setTimeout(() => {
-        setPasswordError(false);
-      }, 3000)
       return;
     }
     setApiCall(true);
@@ -139,7 +133,7 @@ const Home = () => {
                 <TextField
                   label="Username"
                   id="username"
-                  onChange={e => setUsername(e.target.value)}
+                  onChange={e => { setUsernameError(false); setUsername(e.target.value.toLowerCase()) }}
                   required
                   variant="filled"
                   sx={{ mb: 3 }}
@@ -150,7 +144,7 @@ const Home = () => {
                 />
                 <TextField
                   label="Password"
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={e => { setPasswordError(false); setPassword(e.target.value) }}
                   required
                   variant="filled"
                   id="password"
