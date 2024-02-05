@@ -195,7 +195,7 @@ const SurveyPage = ({ params }) => {
               );
             } else {
               Sentry.captureException({ response, userData });
-              sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: JSON.stringify(response) })
+              sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: JSON.stringify(response), deviceInfo: navigator.userAgent })
               toast.error(
                 `Something went wrong:${response?.response?.data?.message || response?.message
                 }`
@@ -213,7 +213,7 @@ const SurveyPage = ({ params }) => {
         } catch (error) {
           console.error("Error uploading image", error);
           Sentry.captureException({ error: error?.message || error?.toString(), userData });
-          sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: error?.message || error?.toString() })
+          sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: error?.message || error?.toString(), deviceInfo: navigator.userAgent })
         }
       }
 
@@ -285,7 +285,7 @@ const SurveyPage = ({ params }) => {
             `Something went wrong:${response?.response?.data?.message || response?.message
             }`
           );
-          sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: response?.response?.data?.message || response?.message })
+          sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: response?.response?.data?.message || response?.message, deviceInfo: navigator.userAgent })
 
           if (el == batches.length - 1) {
             setLoading(false);
@@ -306,7 +306,7 @@ const SurveyPage = ({ params }) => {
           } else {
             if (!response || response == undefined) {
               Sentry.captureException({ response, userData });
-              sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: JSON.stringify(response) })
+              sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: JSON.stringify(response), deviceInfo: navigator.userAgent })
               toast.warn(
                 "Your request has been saved, it'll be submitted once you're back in connection"
               );
@@ -330,7 +330,7 @@ const SurveyPage = ({ params }) => {
       } catch (error) {
         console.error("Error Submitting Submission Data: ", error);
         Sentry.captureException({ error: error?.message || error?.toString(), userData });
-        sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: error?.message || error?.toString() })
+        sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: error?.message || error?.toString(), deviceInfo: navigator.userAgent })
       }
     }
 
