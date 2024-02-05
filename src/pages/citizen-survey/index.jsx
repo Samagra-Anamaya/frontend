@@ -101,6 +101,7 @@ const CitizenSurveyPage = ({ params }) => {
   /* Util Functions */
   const handleSubmit = async () => {
     if (loading) return;
+    let newFormState;
     try {
       logEvent(analytics, 'form-filling_time', {
         user_id: user?.username,
@@ -140,7 +141,7 @@ const CitizenSurveyPage = ({ params }) => {
         }
       );
 
-      let newFormState = sanitizeForm({ ...formState });
+      newFormState = sanitizeForm({ ...formState });
 
       console.log("SANITIZED FORM ---->", newFormState)
       // newFormState['landRecords'] = landImages;
@@ -156,6 +157,7 @@ const CitizenSurveyPage = ({ params }) => {
       if (!formState?.coClaimantAvailable) {
         delete formState?.coClaimantName;
       }
+
       dispatch(
         saveCitizenFormData({
           submissionData: newFormState,
@@ -176,7 +178,10 @@ const CitizenSurveyPage = ({ params }) => {
           });
         }
         else {
-          sendLogs({ gpId: user2?.user?.username, timestamp: Date.now(), error: res?.error || JSON.stringify(res) });
+          sendLogs({
+            gpId: user2?.user?.username, timestamp: Date.now(), error: res?.error || JSON.stringify(res), deviceInfo: navigator.userAgent,
+            currentForm: newFormState
+          });
           toast.warn("Something went wrong while saving form, " + JSON.stringify(res?.error));
           removeCitizenImageRecord(currCitizen.citizenId);
           setLoading(false);
@@ -199,7 +204,13 @@ const CitizenSurveyPage = ({ params }) => {
     } catch (err) {
       Sentry.captureException({ err: err?.message || err?.toString(), user });
       toast.error(`An error occurred while saving: ${err?.message || err?.toString()}`)
-      sendLogs({ gpId: user2?.user?.username, timestamp: Date.now(), error: err?.message || err?.toString() })
+      sendLogs({
+        gpId: user2?.user?.username,
+        timestamp: Date.now(),
+        error: err?.message || err?.toString(),
+        deviceInfo: navigator.userAgent,
+        currentForm: newFormState
+      })
       console.log(err);
       setLoading(false);
       showSubmittedModal(false);
