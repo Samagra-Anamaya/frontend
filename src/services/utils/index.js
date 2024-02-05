@@ -213,12 +213,13 @@ export const compressImage = async (imageFile) => {
     useWebWorker: true,
     fileType: 'image/webp'
   }
-
-  const compressedFile = await imageCompression(imageFile, options);
-  console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
-  console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
-
-  return compressedFile;
+  try {
+    const compressedFile = await imageCompression(imageFile, options);
+    return compressedFile;
+  } catch (err) {
+    // Returning uncompressed image on error in compression
+    return imageFile;
+  }
 }
 
 export const storeImages = async (data) => {
