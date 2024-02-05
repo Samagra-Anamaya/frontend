@@ -75,8 +75,10 @@ const Home = () => {
       const loginRes = await userLogin(username, password);
 
       if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
-        Sentry.captureException({ loginRes, username, password });
-        sendLogs({ gpId: username, timestamp: Date.now(), error: loginRes?.params?.errMsg })
+        if (!loginRes?.params?.errMsg == 'Invalid Username/Password') {
+          Sentry.captureException({ loginRes, username, password });
+          sendLogs({ gpId: username, timestamp: Date.now(), error: loginRes?.params?.errMsg })
+        }
         logEvent(analytics, "login_failure", {
           user_id: username
         })
