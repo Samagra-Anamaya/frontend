@@ -16,6 +16,8 @@ import { loginUser } from "../../redux/actions/login";
 import Footer from "../../components/Footer";
 import isOnline from "is-online";
 import * as Sentry from "@sentry/nextjs";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { IconButton, InputAdornment } from "@mui/material";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -27,6 +29,11 @@ const Home = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [apiCall, setApiCall] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   // Utility function to check if user is admin
   function userIsAdminForPortal(registrations) {
@@ -47,20 +54,24 @@ const Home = () => {
   const handleSubmit = async (event) => {
     if (apiCall) return;
     event.preventDefault()
-    setApiCall(true);
-
     setUsernameError(false)
     setPasswordError(false)
 
-    if (username == '') {
+    if (username == '' || !/^[a-zA-Z]{2}_\d+$/.test(username)) {
       setUsernameError(true)
+      setTimeout(() => {
+        setUsernameError(false);
+      }, 3000)
       return;
     }
     if (password == '') {
       setPasswordError(true)
+      setTimeout(() => {
+        setPasswordError(false);
+      }, 3000)
       return;
     }
-
+    setApiCall(true);
     const online = await isOnline();
     if (!online) {
       toast.error('Unable to login while being offline, please try again later once back in network')
@@ -135,6 +146,7 @@ const Home = () => {
                   fullWidth
                   value={username}
                   error={usernameError}
+                  helperText={usernameError ? 'Please enter a valid username' : ''}
                 />
                 <TextField
                   label="Password"
@@ -142,11 +154,25 @@ const Home = () => {
                   required
                   variant="filled"
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   error={passwordError}
+                  helperText={passwordError ? 'Please enter a valid password' : ''}
                   fullWidth
                   sx={{ mb: 3 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end" sx={{ marginRight: '0.5rem' }}>
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={handleClickShowPassword}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
                 <Button id="loginBtn" variant="contained" color="success" type="submit" sx={{ padding: 1, width: '80%', height: '3rem', fontSize: 16, marginTop: 5 }}>{apiCall ? <CircularProgress color="inherit" /> : 'Login'} </Button>
                 {error?.length > 0 && <p style={{ color: 'red' }}>{error}</p>}
