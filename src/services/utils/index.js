@@ -218,7 +218,9 @@ export const compressImage = async (imageFile) => {
     return compressedFile;
   } catch (err) {
     // Returning uncompressed image on error in compression
-    return imageFile;
+    if (imageFile instanceof Blob)
+      return imageFile;
+    else throw new Error("Invalid File Type")
   }
 }
 
