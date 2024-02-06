@@ -22,7 +22,7 @@ import { MobileStepper } from "@mui/material";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import { saveCitizenFormData } from "../../redux/actions/saveCitizenFormData";
-import { sendLogs } from "../../services/api";
+import { getStorageQuota, sendLogs } from "../../services/api";
 import * as Sentry from "@sentry/nextjs";
 
 
@@ -103,6 +103,8 @@ const CitizenSurveyPage = ({ params }) => {
     if (loading) return;
     let newFormState;
     try {
+      const indexDbStats = await getStorageQuota();
+
       logEvent(analytics, 'form-filling_time', {
         user_id: user?.username,
         villageId: _currLocation.villageCode,
@@ -122,6 +124,22 @@ const CitizenSurveyPage = ({ params }) => {
         setActiveStep((landImages?.length || 0) + Number(el) + 1);
 
         rorImages[el] = compressedImg;
+      }
+
+
+
+      if (!indexDbStats.isAvailable) {
+        toast.error("Device space full, please make space before continuing");
+        setLoading(false);
+        showSubmittedModal(false);
+        return;
+      }
+
+      if (!landImages?.length) {
+        toast.error("Land images cannot be empty!");
+        setLoading(false);
+        showSubmittedModal(false);
+        return;
       }
 
       if (landImages?.length) await storeImages(

@@ -169,11 +169,19 @@ const SurveyPage = ({ params }) => {
 
       for (const _image of batch) {
         let data = new FormData();
+
+        if (!_image?.images || !_image?.images?.length) {
+          toast.error(
+            `Please check if images are present in your saved entries`
+          );
+          return;
+        }
+
         _image?.images.forEach((file) => {
-          if (file instanceof Blob)
-            data.append("files", file, uuidv4() + ".webp");
-          else if (file?.file)
+          if (file?.file)
             data.append("files", file.file, uuidv4() + ".webp");
+          else if (file instanceof Blob)
+            data.append("files", file, uuidv4() + ".webp");
           else {
             toast.error(
               `Please check your media files`
@@ -181,6 +189,7 @@ const SurveyPage = ({ params }) => {
             return;
           }
         });
+
         let filteredBatch = omit(_image, ['images'])
         data.append("meta", JSON.stringify(filteredBatch));
 
@@ -226,7 +235,6 @@ const SurveyPage = ({ params }) => {
           sendLogs({ gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
         }
       }
-
       // Introduce a delay before processing the next batch
       await sleep(DELAY_TIME);
     }
