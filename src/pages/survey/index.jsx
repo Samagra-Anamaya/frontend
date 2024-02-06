@@ -45,6 +45,7 @@ import { Button } from "@mui/material";
 import Lottie from "react-lottie";
 import isOnline from "is-online";
 import * as Sentry from "@sentry/nextjs";
+import { omit, omitBy } from "lodash";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -169,15 +170,24 @@ const SurveyPage = ({ params }) => {
       for (const _image of batch) {
         let data = new FormData();
         _image?.images.forEach((file) => {
-          data.append("files", file, uuidv4() + ".webp");
+          if (file instanceof Blob)
+            data.append("files", file, uuidv4() + ".webp");
+          else if (file?.file)
+            data.append("files", file.file, uuidv4() + ".webp");
+          else {
+            toast.error(
+              `Please check your media files`
+            );
+            return;
+          }
         });
-
-        data.append("meta", JSON.stringify(_image));
+        let filteredBatch = omit(_image, ['images'])
+        data.append("meta", JSON.stringify(filteredBatch));
 
         const config = {
           method: "POST",
           url: BACKEND_SERVICE_URL + `/upload/multiple`,
-          meta: _image,
+          meta: filteredBatch,
           data,
           isFormdata: true,
           headers: {
