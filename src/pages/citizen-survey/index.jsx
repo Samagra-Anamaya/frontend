@@ -179,8 +179,7 @@ const CitizenSurveyPage = ({ params }) => {
         }
         else {
           sendLogs({
-            gpId: user2?.user?.username, timestamp: Date.now(), error: res?.error || JSON.stringify(res), deviceInfo: navigator.userAgent,
-            currentForm: newFormState
+            gpId: user2?.user?.username, error: res?.error || JSON.stringify(res), currentForm: newFormState
           });
           toast.warn("Something went wrong while saving form, " + JSON.stringify(res?.error));
           removeCitizenImageRecord(currCitizen.citizenId);
@@ -209,9 +208,7 @@ const CitizenSurveyPage = ({ params }) => {
         toast.error(`An error occurred while saving: ${err?.message || err?.toString()}`)
         sendLogs({
           gpId: user2?.user?.username,
-          timestamp: Date.now(),
           error: err?.message || err?.toString(),
-          deviceInfo: navigator.userAgent,
           currentForm: newFormState
         })
       }
