@@ -435,12 +435,29 @@ export const getImageFromMinio = async (filename, user) => {
   }
 }
 
+
+export const getStorageQuota = () => {
+  return new Promise(async (resolve, reject) => {
+    if (navigator.storage && navigator.storage.estimate) {
+      navigator.storage.estimate().then(estimate => {
+        const availableSpace = estimate.quota - estimate.usage;
+        resolve({ quota: estimate.quota, usage: estimate.usage, available: availableSpace, isAvailable: availableSpace > 104857600 })
+      });
+    } else {
+      resolve({ quota: 0, usage: 0, available: 0, isAvailable: 0 })
+    }
+  })
+}
 export const sendLogs = async (data) => {
   try {
+    const indexDbStats = await getStorageQuota();
     let res = await axios.post(BACKEND_SERVICE_URL + `/utils/logSubmissionError`, {
       appVersion: APP_VERSION,
       deviceInfo: navigator.userAgent,
       timestamp: Date.now(),
+      quota: `${(indexDbStats?.quota / 1000000) || 0} MB`,
+      usage: `${(indexDbStats?.usage / 1000000) || 0} MB`,
+      available: `${(indexDbStats?.available / 1000000) || 0} MB`,
       ...data
     });
     return res?.data;
