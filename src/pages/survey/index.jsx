@@ -45,7 +45,6 @@ import { Button } from "@mui/material";
 import Lottie from "react-lottie";
 import isOnline from "is-online";
 import * as Sentry from "@sentry/nextjs";
-import { omit, omitBy } from "lodash";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -170,24 +169,15 @@ const SurveyPage = ({ params }) => {
       for (const _image of batch) {
         let data = new FormData();
         _image?.images.forEach((file) => {
-          if (file instanceof Blob)
-            data.append("files", file, uuidv4() + ".webp");
-          else if (file?.file)
-            data.append("files", file.file, uuidv4() + ".webp");
-          else {
-            toast.error(
-              `Please check your media files`
-            );
-            return;
-          }
+          data.append("files", file, uuidv4() + ".webp");
         });
-        let filteredBatch = omit(_image, ['images'])
-        data.append("meta", JSON.stringify(filteredBatch));
+
+        data.append("meta", JSON.stringify(_image));
 
         const config = {
           method: "POST",
           url: BACKEND_SERVICE_URL + `/upload/multiple`,
-          meta: filteredBatch,
+          meta: _image,
           data,
           isFormdata: true,
           headers: {
@@ -205,7 +195,7 @@ const SurveyPage = ({ params }) => {
               );
             } else {
               Sentry.captureException({ response, userData });
-              sendLogs({ gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
+              sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: JSON.stringify(response), deviceInfo: navigator.userAgent })
               toast.error(
                 `Something went wrong:${response?.response?.data?.message || response?.message
                 }`
@@ -223,7 +213,7 @@ const SurveyPage = ({ params }) => {
         } catch (error) {
           console.error("Error uploading image", error);
           Sentry.captureException({ error: error?.message || error?.toString(), userData });
-          sendLogs({ gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
+          sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: error?.message || error?.toString(), deviceInfo: navigator.userAgent })
         }
       }
 
@@ -295,7 +285,7 @@ const SurveyPage = ({ params }) => {
             `Something went wrong:${response?.response?.data?.message || response?.message
             }`
           );
-          sendLogs({ gpId: userData?.user?.user?.username, error: response?.response?.data?.message || response?.message })
+          sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: response?.response?.data?.message || response?.message, deviceInfo: navigator.userAgent })
 
           if (el == batches.length - 1) {
             setLoading(false);
@@ -316,7 +306,7 @@ const SurveyPage = ({ params }) => {
           } else {
             if (!response || response == undefined) {
               Sentry.captureException({ response, userData });
-              sendLogs({ gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
+              sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: JSON.stringify(response), deviceInfo: navigator.userAgent })
               toast.warn(
                 "Your request has been saved, it'll be submitted once you're back in connection"
               );
@@ -340,7 +330,7 @@ const SurveyPage = ({ params }) => {
       } catch (error) {
         console.error("Error Submitting Submission Data: ", error);
         Sentry.captureException({ error: error?.message || error?.toString(), userData });
-        sendLogs({ gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
+        sendLogs({ gpId: userData?.user?.user?.username, timestamp: Date.now(), error: error?.message || error?.toString(), deviceInfo: navigator.userAgent })
       }
     }
 

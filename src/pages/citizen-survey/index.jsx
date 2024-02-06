@@ -179,7 +179,8 @@ const CitizenSurveyPage = ({ params }) => {
         }
         else {
           sendLogs({
-            gpId: user2?.user?.username, error: res?.error || JSON.stringify(res), currentForm: newFormState
+            gpId: user2?.user?.username, timestamp: Date.now(), error: res?.error || JSON.stringify(res), deviceInfo: navigator.userAgent,
+            currentForm: newFormState
           });
           toast.warn("Something went wrong while saving form, " + JSON.stringify(res?.error));
           removeCitizenImageRecord(currCitizen.citizenId);
@@ -201,17 +202,15 @@ const CitizenSurveyPage = ({ params }) => {
       setLoading(false);
 
     } catch (err) {
-      if (err?.message == 'Invalid File Type' || err == 'Invalid File Type') {
-        toast.error(`Please check your media files, some of the files may be corrupt or invalid.`)
-      } else {
-        Sentry.captureException({ err: err?.message || err?.toString(), user });
-        toast.error(`An error occurred while saving: ${err?.message || err?.toString()}`)
-        sendLogs({
-          gpId: user2?.user?.username,
-          error: err?.message || err?.toString(),
-          currentForm: newFormState
-        })
-      }
+      Sentry.captureException({ err: err?.message || err?.toString(), user });
+      toast.error(`An error occurred while saving: ${err?.message || err?.toString()}`)
+      sendLogs({
+        gpId: user2?.user?.username,
+        timestamp: Date.now(),
+        error: err?.message || err?.toString(),
+        deviceInfo: navigator.userAgent,
+        currentForm: newFormState
+      })
       console.log(err);
       setLoading(false);
       showSubmittedModal(false);

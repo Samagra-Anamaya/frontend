@@ -2,7 +2,6 @@ import axios from "axios";
 import { addFormUri, store } from "../../redux/store";
 import { getFromLocalForage, makeHasuraCalls } from "../utils";
 import { v4 as uuidv4 } from 'uuid';
-import packageJson from '../../../package.json';
 
 const BASE_URL = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 const applicationId = process.env.NEXT_PUBLIC_APPLICATION_ID;
@@ -10,7 +9,6 @@ const applicationId = process.env.NEXT_PUBLIC_APPLICATION_ID;
 // const CENTRO_API = process.env.NEXT_PUBLIC_CENTRO_URL;
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 const USER = store.getState().userData.user;
-const APP_VERSION = packageJson.version;
 
 export const userLogin = async (username, pass) => {
   try {
@@ -437,12 +435,7 @@ export const getImageFromMinio = async (filename, user) => {
 
 export const sendLogs = async (data) => {
   try {
-    let res = await axios.post(BACKEND_SERVICE_URL + `/utils/logSubmissionError`, {
-      appVersion: APP_VERSION,
-      deviceInfo: navigator.userAgent,
-      timestamp: Date.now(),
-      ...data
-    });
+    let res = await axios.post(BACKEND_SERVICE_URL + `/utils/logSubmissionError`, data);
     return res?.data;
   } catch (err) {
     console.log(err);

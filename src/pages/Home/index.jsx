@@ -77,7 +77,7 @@ const Home = () => {
       if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
         if (!loginRes?.params?.errMsg == 'Invalid Username/Password') {
           Sentry.captureException({ loginRes, username, password });
-          sendLogs({ gpId: username, error: loginRes?.params?.errMsg })
+          sendLogs({ gpId: username, timestamp: Date.now(), error: loginRes?.params?.errMsg, deviceInfo: navigator.userAgent })
         }
         logEvent(analytics, "login_failure", {
           user_id: username
@@ -110,7 +110,7 @@ const Home = () => {
     } catch (err) {
       Sentry.captureException({ err: err?.message || err.toString(), username, password });
       toast.error(err?.message || err?.toString())
-      sendLogs({ gpId: username, error: err?.message || err?.toString() })
+      sendLogs({ gpId: username, timestamp: Date.now(), error: err?.message || err?.toString(), deviceInfo: navigator.userAgent })
     }
 
   }
