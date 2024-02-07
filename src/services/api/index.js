@@ -403,7 +403,7 @@ export const getEntriesMade = async (user) => {
   }
 }
 
-export const uploadMedia = async (files) => {
+export const uploadMedia = async (files, user) => {
   try {
     console.log({ files })
     let data = new FormData();
@@ -412,10 +412,10 @@ export const uploadMedia = async (files) => {
     })
     let res = await axios.post(BACKEND_SERVICE_URL + `/upload/multiple`, data, {
       headers: {
-        Authorization: `Bearer ${USER.token}`
+        Authorization: `Bearer ${USER ? USER.token : user?.token}`
       }
     });
-    return res.data.map(images => images?.result?.filename);
+    return res?.data?.result?.map(images => images?.filename);
   } catch (err) {
 
     return { err };
