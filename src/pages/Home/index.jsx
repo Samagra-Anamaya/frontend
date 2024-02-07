@@ -161,7 +161,12 @@ const Home = () => {
                       <InputAdornment position="end" sx={{ marginRight: '0.5rem' }}>
                         <IconButton
                           aria-label="toggle password visibility"
-                          onClick={handleClickShowPassword}
+                          onClick={() => {
+                            logEvent(analytics, "show_password_icon_clicked", {
+                              user_id: username
+                            });
+                            handleClickShowPassword()
+                          }}
                           edge="end"
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -170,6 +175,12 @@ const Home = () => {
                     ),
                   }}
                 />
+                <span onClick={() => {
+                  logEvent(analytics, "show_password_text_clicked", {
+                    user_id: username
+                  });
+                  handleClickShowPassword()
+                }} className={styles.showPasswordText}>{!showPassword ? 'Show Password' : 'Hide Password'}</span>
                 <Button id="loginBtn" variant="contained" color="success" type="submit" sx={{ padding: 1, width: '80%', height: '3rem', fontSize: 16, marginTop: 5 }}>{apiCall ? <CircularProgress color="inherit" /> : 'Login'} </Button>
                 {error?.length > 0 && <p style={{ color: 'red' }}>{error}</p>}
               </form>
