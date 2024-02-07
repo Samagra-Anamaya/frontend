@@ -168,44 +168,45 @@ const SurveyPage = ({ params }) => {
     for (const batch of batches) {
 
       for (const _image of batch) {
-        let data = new FormData();
+        try {
+          let data = new FormData();
 
-        if (!_image?.images || !_image?.images?.length) {
-          toast.error(
-            `Please check if images are present in your saved entries`
-          );
-          return;
-        }
-
-        _image?.images.forEach((file) => {
-          if (file?.file)
-            data.append("files", file.file, uuidv4() + ".webp");
-          else if (file instanceof Blob)
-            data.append("files", file, uuidv4() + ".webp");
-          else {
+          if (!_image?.images || !_image?.images?.length) {
             toast.error(
-              `Please check your media files`
+              `Please check if images are present in your saved entries`
             );
             return;
           }
-        });
 
-        let filteredBatch = omit(_image, ['images'])
-        data.append("meta", JSON.stringify(filteredBatch));
+          _image?.images.forEach((file) => {
+            if (file?.file)
+              data.append("files", file.file, uuidv4() + ".webp");
+            else if (file instanceof Blob)
+              data.append("files", file, uuidv4() + ".webp");
+            else {
+              toast.error(
+                `Please check your media files`
+              );
+              return;
+            }
+          });
 
-        const config = {
-          method: "POST",
-          url: BACKEND_SERVICE_URL + `/upload/multiple`,
-          meta: filteredBatch,
-          data,
-          isFormdata: true,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          timeout: 120000,
-        };
+          let filteredBatch = omit(_image, ['images'])
+          data.append("meta", JSON.stringify(filteredBatch));
 
-        try {
+          const config = {
+            method: "POST",
+            url: BACKEND_SERVICE_URL + `/upload/multiple`,
+            meta: filteredBatch,
+            data,
+            isFormdata: true,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            timeout: 120000,
+          };
+
+
           const response = await offlinePackage?.sendRequest(config);
           if (response?.name == "AxiosError") {
             if (response?.message == 'Network Error') {
@@ -232,7 +233,7 @@ const SurveyPage = ({ params }) => {
         } catch (error) {
           console.error("Error uploading image", error);
           Sentry.captureException({ error: error?.message || error?.toString(), userData });
-          sendLogs({ gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
+          sendLogs({ meta: `at uploadImagesInBatches`, gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
         }
       }
       // Introduce a delay before processing the next batch

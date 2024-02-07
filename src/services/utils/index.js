@@ -2,7 +2,7 @@
 import Cookies from "js-cookie";
 // import XMLParser from "react-xml-parser";
 import localforage from "localforage";
-import { getMedicalAssessments, getNewToken, getPrefillXML, getSubmissionXML } from "../api";
+import { getMedicalAssessments, getNewToken, getPrefillXML, getSubmissionXML, sendLogs, uploadMedia } from "../api";
 import axios from "axios";
 // import { userData } from "@/app/pages/Default/page";
 // import { useUserData } from "@/app/hooks/useAuth";
@@ -218,16 +218,31 @@ export const compressImage = async (imageFile) => {
     return compressedFile;
   } catch (err) {
     // Returning uncompressed image on error in compression
-    if (imageFile instanceof Blob)
+    const user = store?.getState()?.userData?.user;
+    if (imageFile instanceof Blob) {
+      let uploadedFile = await uploadMedia([imageFile], user)
+      sendLogs({ meta: `at compressImage inside if, fileName: ${imageFile.name}, minioName: ${uploadedFile[0]}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() })
       return imageFile;
-    else throw new Error("Invalid File Type")
+    }
+    else {
+      let uploadedFile = await uploadMedia([imageFile], user)
+      sendLogs({ meta: `at compressImage inside else, fileName: ${imageFile.name}, minioName: ${uploadedFile[0]}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() })
+      throw new Error("Invalid File Type")
+    }
   }
 }
 
 export const storeImages = async (data) => {
-  let imageRecords = await localForage.getItem("imageRecords") || [];
-  imageRecords.push(data);
-  return await localForage.setItem("imageRecords", imageRecords);
+  try {
+    let imageRecords = await localForage.getItem("imageRecords") || [];
+    imageRecords.push(data);
+    return await localForage.setItem("imageRecords", imageRecords);
+  } catch (err) {
+    const user = store?.getState()?.userData?.user;
+    let uploadedFiles = await uploadMedia([data.images], user)
+    sendLogs({ meta: `at storeImages, minioNames: ${JSON.stringify(uploadedFiles)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() })
+    throw err;
+  }
 }
 
 export const getImages = async () => {
