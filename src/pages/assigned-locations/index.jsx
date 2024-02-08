@@ -49,12 +49,9 @@ const AssignedLocations = () => {
 
 
   useEffect(() => {
-    
     getAppVersion().then(res => {
       const version = packageJson.version;
-     // setAppVersion(res.data.result.data);
-      localStorage.setItem('appVersion', res.data.result.data.version);
-      console.log("hemo:", { version, app: res.data.result.data.version })
+      localStorage.setItem('appVersion', res.data.result.data.version);   
       if (version.split('.').pop() < res.data.result.data.version.split('.').pop()) {
         if (confirm('New Version Available')) {
           window.location.reload()
@@ -62,10 +59,9 @@ const AssignedLocations = () => {
 
         }
       }
-    }).catch(err => {
-      console.log("hemo:", { err })
     })
-  }, [])
+  }, []);
+  
   return !hydrated ? null : (
     <div className={styles.container + " animate__animated animate__fadeIn"}>
       <Banner />
