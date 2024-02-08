@@ -72,8 +72,7 @@ const AssignedLocations = () => {
 
           <div className={`${styles.assignedLocations} p-3`}>
             <p>Assigned Villages</p>
-            <p>Assigned Villages</p>
-            <p>Assigned Villages</p>
+         
             {locations?.length > 0 &&
               locations?.map((el) => (
                 <SelectionItem

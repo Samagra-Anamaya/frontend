@@ -375,7 +375,7 @@ const SurveyPage = ({ params }) => {
     <div className={styles.container} ref={containerRef}>
       <Banner />
       <Breadcrumb items={breadcrumbItems} />
-<h2>test.....</h2>
+
       <div className="px-3">
         {/* <SelectionItem
           key={_currLocation.id}
