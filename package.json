@@ -1,14 +1,13 @@
 {
   "name": "my-app",
-  "version": "0.1.34",
+  "version": "0.1.35",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build2": "next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "husky install",
-    "build": "next build && node scripts/update-sw.js"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
