@@ -177,6 +177,36 @@ export default function App({ Component, pageProps, flagsmithState }) {
       refreshToken();
     }
   }, []);
+  useEffect(() => {
+    if ('serviceWorker' in navigator ) {
+      window.addEventListener('load', () => {
+        const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
+        navigator.serviceWorker.register(swUrl).then(registration => {
+          registration.addEventListener('updatefound', () => {
+            const installingWorker = registration.installing;
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed') {
+                if (navigator.serviceWorker.controller) {
+                  // New content is available, show an alert or a notification to the user
+                  if (confirm('A newer version of this web app is available, reload to update?')) {
+                    
+                      window.location.reload()
+                  
+                  }
+                  // Optionally, you could use a React state to show an in-app alert
+                } else {
+                  // Content is cached for offline use
+                  console.log('Content is cached for offline use.');
+                }
+              }
+            };
+          });
+        }).catch(error => {
+          console.error('Error during service worker registration:', error);
+        });
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.workbox !== undefined) {
