@@ -6,13 +6,13 @@ import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { currentLocationSelector, currentVillageSubmissions, setCurrentLocation } from "../../redux/store";
 import CommonHeader from "../../components/Commonheader";
-import { getEntriesMade } from "../../services/api";
+import { getAppVersion, getEntriesMade } from "../../services/api";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "../../services/firebase/firebase";
 import Banner from "../../components/Banner";
 import { every } from "lodash";
 import Footer from "../../components/Footer";
-
+import packageJson from "../../../package.json";
 const AssignedLocations = () => {
   const [hydrated, setHydrated] = React.useState(false);
   const assignedLocations = useSelector(
@@ -46,6 +46,22 @@ const AssignedLocations = () => {
   // }, [submissions]);
 
   // console.log({ submissions, currentLocation, showSubmitBtn })
+
+
+  useEffect(() => {
+    getAppVersion().then(res => {
+      const version = packageJson.version;
+      localStorage.setItem('appVersion', res.data.result.data.version);   
+      if (version.split('.').pop() < res.data.result.data.version.split('.').pop()) {
+        if (confirm('New Version Available')) {
+          window.location.reload()
+        } else {
+
+        }
+      }
+    })
+  }, []);
+  
   return !hydrated ? null : (
     <div className={styles.container + " animate__animated animate__fadeIn"}>
       <Banner />
@@ -72,6 +88,7 @@ const AssignedLocations = () => {
 
           <div className={`${styles.assignedLocations} p-3`}>
             <p>Assigned Villages</p>
+         
             {locations?.length > 0 &&
               locations?.map((el) => (
                 <SelectionItem

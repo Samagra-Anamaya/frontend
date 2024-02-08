@@ -35,7 +35,6 @@ const Banner = (props) => {
     <div>
       <MDBCard className="p-0">
         <MDBRow className="g-0 mt-1 m-0">
-
           {userData?.isAuthenticated && <MDBCol size="1" className="text-right p-0">
             <Menu >
               <div>Hi there 👋,</div>

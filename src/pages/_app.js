@@ -39,6 +39,8 @@ import { Button } from "@mui/material";
 import AnnouncementBar from '../components/AnnouncementBar'
 import flagsmith from "flagsmith/isomorphic";
 import { FlagsmithProvider } from 'flagsmith/react';
+import { getAppVersion } from "../services/api";
+import packageJson from "../../package.json";
 
 // Lottie Options
 const defaultOptions = {
@@ -52,8 +54,7 @@ const defaultOptions = {
 
 export default function App({ Component, pageProps, flagsmithState }) {
   const [hydrated, setHydrated] = useState(false);
-  const offlinePackage = useOfflineSyncContext();
-  const userData = omitBy(store.getState()?.userData, isNull);
+  const [appVersion,setAppVersion] =useState();
   const [syncing, setSyncing] = useState(false);
   const [syncComplete, setSyncComplete] = useState(true);
   const [isDesktop, setIsDesktop] = useState(true);
@@ -129,7 +130,24 @@ export default function App({ Component, pageProps, flagsmithState }) {
     }
   };
 
+  // useEffect(() => {
+    
+  //   getAppVersion().then(res => {
+  //     const version = packageJson.version;
+  //     setAppVersion(res.data.result.data);
+  //     localStorage.setItem('appVersion', res.data.result.data.version);
+  //     console.log("hemo:", { version, app: res.data.result.data.version })
+  //     if (version.split('.').pop() < res.data.result.data.version.split('.').pop()) {
+  //       if (confirm('New Version Available')) {
+  //         window.location.reload()
+  //       } else {
 
+  //       }
+  //     }
+  //   }).catch(err => {
+  //     console.log("hemo:", { err })
+  //   })
+  // }, [])
 
   useEffect(() => {
     window.addEventListener("offline", () => {
@@ -177,6 +195,8 @@ export default function App({ Component, pageProps, flagsmithState }) {
       refreshToken();
     }
   }, []);
+
+
 
   return hydrated ? (
     <>
