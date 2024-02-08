@@ -39,6 +39,8 @@ import { Button } from "@mui/material";
 import AnnouncementBar from '../components/AnnouncementBar'
 import flagsmith from "flagsmith/isomorphic";
 import { FlagsmithProvider } from 'flagsmith/react';
+import { getAppVersion } from "../services/api";
+import packageJson from "../../package.json";
 
 // Lottie Options
 const defaultOptions = {
@@ -52,8 +54,7 @@ const defaultOptions = {
 
 export default function App({ Component, pageProps, flagsmithState }) {
   const [hydrated, setHydrated] = useState(false);
-  const offlinePackage = useOfflineSyncContext();
-  const userData = omitBy(store.getState()?.userData, isNull);
+  const [appVersion,setAppVersion] =useState();
   const [syncing, setSyncing] = useState(false);
   const [syncComplete, setSyncComplete] = useState(true);
   const [isDesktop, setIsDesktop] = useState(true);
@@ -129,7 +130,24 @@ export default function App({ Component, pageProps, flagsmithState }) {
     }
   };
 
+  // useEffect(() => {
+    
+  //   getAppVersion().then(res => {
+  //     const version = packageJson.version;
+  //     setAppVersion(res.data.result.data);
+  //     localStorage.setItem('appVersion', res.data.result.data.version);
+  //     console.log("hemo:", { version, app: res.data.result.data.version })
+  //     if (version.split('.').pop() < res.data.result.data.version.split('.').pop()) {
+  //       if (confirm('New Version Available')) {
+  //         window.location.reload()
+  //       } else {
 
+  //       }
+  //     }
+  //   }).catch(err => {
+  //     console.log("hemo:", { err })
+  //   })
+  // }, [])
 
   useEffect(() => {
     window.addEventListener("offline", () => {
@@ -177,82 +195,8 @@ export default function App({ Component, pageProps, flagsmithState }) {
       refreshToken();
     }
   }, []);
-  useEffect(() => {
-    if ('serviceWorker' in navigator ) {
-      window.addEventListener('load', () => {
-        const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
-        navigator.serviceWorker.register(swUrl).then(registration => {
-          registration.addEventListener('updatefound', () => {
-            const installingWorker = registration.installing;
-            installingWorker.onstatechange = () => {
-              if (installingWorker.state === 'installed') {
-                if (navigator.serviceWorker.controller) {
-                  // New content is available, show an alert or a notification to the user
-                  if (confirm('A newer version of this web app is available, reload to update?')) {
-                    
-                      window.location.reload()
-                  
-                  }
-                  // Optionally, you could use a React state to show an in-app alert
-                } else {
-                  // Content is cached for offline use
-                  console.log('Content is cached for offline use.');
-                }
-              }
-            };
-          });
-        }).catch(error => {
-          console.error('Error during service worker registration:', error);
-        });
-      });
-    }
-  }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.workbox !== undefined) {
-    console.log("wb: hello")
-      const wb = window.workbox
-      console.log("wb:",{wb,window})
 
-      wb.addEventListener('installed', event => {
-        console.log(`Event ${event.type} is triggered.`)
-        console.log("wb installed:",event)
-      })
-
-      wb.addEventListener('controlling', event => {
-        console.log(`Event ${event.type} is triggered.`)
-        console.log("wb controling:",{event});
-      })
-
-      wb.addEventListener('activated', event => {
-        console.log(`wb Event ${event.type} is triggered.`)
-        console.log("wb: activated",{event});
-      })
-      const promptNewVersionAvailable = event => {
-        // `event.wasWaitingBeforeRegister` will be false if this is the first time the updated service worker is waiting.
-        // When `event.wasWaitingBeforeRegister` is true, a previously updated service worker is still waiting.
-        // You may want to customize the UI prompt accordingly.
-        console.log("wb:",{event});
-        if (confirm('A newer version of this web app is available, reload to update?')) {
-          wb.addEventListener('controlling', event => {
-            window.location.reload()
-          })
-
-          // Send a message to the waiting service worker, instructing it to activate.
-          wb.messageSkipWaiting()
-        } else {
-          console.log(
-            'User rejected to reload the web app, keep using old version. New version will be automatically load when user open the app next time.'
-          )
-        }
-      }
-
-      wb.addEventListener('waiting', promptNewVersionAvailable)
-
-      // never forget to call register as auto register is turned off in next.config.js
-      wb.register()
-    }
-  }, [])
 
   return hydrated ? (
     <>

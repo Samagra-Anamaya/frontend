@@ -483,3 +483,14 @@ export const getNewToken = async (refreshToken, token) => {
     return null;
   }
 }
+
+export const updateAppVersion = async () => {
+  return axios.post(BACKEND_SERVICE_URL + `/utils/updateAppVersion`, {
+    appVersion: APP_VERSION,
+    createdAt: new Date()
+  });
+}
+
+export const getAppVersion = async () => {
+  return axios.get(BACKEND_SERVICE_URL + `/utils/getAppVersion`);
+}
