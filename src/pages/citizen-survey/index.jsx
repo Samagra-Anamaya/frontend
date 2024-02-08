@@ -198,7 +198,7 @@ const CitizenSurveyPage = ({ params }) => {
         }
         else {
           sendLogs({
-            gpId: user2?.user?.username, error: res?.error || JSON.stringify(res), currentForm: newFormState
+            meta: 'at handleSubmit citizenSurvey inside try', gpId: user2?.user?.username, error: res?.error || JSON.stringify(res), currentForm: newFormState
           });
           toast.warn("Something went wrong while saving form, " + JSON.stringify(res?.error));
           removeCitizenImageRecord(currCitizen.citizenId);
@@ -226,6 +226,7 @@ const CitizenSurveyPage = ({ params }) => {
         Sentry.captureException({ err: err?.message || err?.toString(), user });
         toast.error(`An error occurred while saving: ${err?.message || err?.toString()}`)
         sendLogs({
+          meta: 'at handleSubmit citizenSurveyPage inside catch',
           gpId: user2?.user?.username,
           error: err?.message || err?.toString(),
           currentForm: newFormState
