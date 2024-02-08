@@ -215,7 +215,7 @@ const SurveyPage = ({ params }) => {
               );
             } else {
               Sentry.captureException({ response, userData });
-              sendLogs({ gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
+              sendLogs({ meta: 'at uploadImagesInBatches inside response comparison', gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
               toast.error(
                 `Something went wrong:${response?.response?.data?.message || response?.message
                 }`
@@ -233,7 +233,7 @@ const SurveyPage = ({ params }) => {
         } catch (error) {
           console.error("Error uploading image", error);
           Sentry.captureException({ error: error?.message || error?.toString(), userData });
-          sendLogs({ meta: `at uploadImagesInBatches`, gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
+          sendLogs({ meta: `at uploadImagesInBatches inside catch`, gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
         }
       }
       // Introduce a delay before processing the next batch
@@ -304,7 +304,7 @@ const SurveyPage = ({ params }) => {
             `Something went wrong:${response?.response?.data?.message || response?.message
             }`
           );
-          sendLogs({ gpId: userData?.user?.user?.username, error: response?.response?.data?.message || response?.message })
+          sendLogs({ meta: 'at performBatchSubmission inside try', gpId: userData?.user?.user?.username, error: response?.response?.data?.message || response?.message })
 
           if (el == batches.length - 1) {
             setLoading(false);
@@ -325,7 +325,7 @@ const SurveyPage = ({ params }) => {
           } else {
             if (!response || response == undefined) {
               Sentry.captureException({ response, userData });
-              sendLogs({ gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
+              sendLogs({ meta: 'at performBatchSubmission inside else if', gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
               toast.warn(
                 "Your request has been saved, it'll be submitted once you're back in connection"
               );
@@ -349,7 +349,7 @@ const SurveyPage = ({ params }) => {
       } catch (error) {
         console.error("Error Submitting Submission Data: ", error);
         Sentry.captureException({ error: error?.message || error?.toString(), userData });
-        sendLogs({ gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
+        sendLogs({ meta: 'at performBatchSubmission inside catch', gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
       }
     }
 
