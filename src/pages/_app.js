@@ -180,12 +180,29 @@ export default function App({ Component, pageProps, flagsmithState }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && window.workbox !== undefined) {
+    console.log("wb: hello")
       const wb = window.workbox
+      console.log("wb:",{wb,window})
 
+      wb.addEventListener('installed', event => {
+        console.log(`Event ${event.type} is triggered.`)
+        console.log("wb installed:",event)
+      })
+
+      wb.addEventListener('controlling', event => {
+        console.log(`Event ${event.type} is triggered.`)
+        console.log("wb controling:",{event});
+      })
+
+      wb.addEventListener('activated', event => {
+        console.log(`wb Event ${event.type} is triggered.`)
+        console.log("wb: activated",{event});
+      })
       const promptNewVersionAvailable = event => {
         // `event.wasWaitingBeforeRegister` will be false if this is the first time the updated service worker is waiting.
         // When `event.wasWaitingBeforeRegister` is true, a previously updated service worker is still waiting.
         // You may want to customize the UI prompt accordingly.
+        console.log("wb:",{event});
         if (confirm('A newer version of this web app is available, reload to update?')) {
           wb.addEventListener('controlling', event => {
             window.location.reload()
