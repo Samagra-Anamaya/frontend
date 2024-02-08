@@ -1,32 +1,27 @@
-"use client"
-import React, { useEffect } from "react";
-import AssignedLocations from "../assigned-locations";
+'use client';
+
+import React, { useEffect } from 'react';
 import { useMachine } from '@xstate/react';
-import authMachine from "../../xstate/stateMachine";
-import Home from "../Home";
-import { useSelector } from "react-redux";
+import { useSelector } from 'react-redux';
+import AssignedLocations from '../assigned-locations';
+import authMachine from '../../xstate/stateMachine';
+import Home from '../Home';
+
 const Login = () => {
-  const userData = useSelector((state) => state?.userData)
-  const [current, send] = useMachine(authMachine);
+	const userData = useSelector((state) => state?.userData);
+	const [current, send] = useMachine(authMachine);
 
-  const isAuthenticated = userData?.isAuthenticated;
-  if (isAuthenticated) {
-    send("AUTHENTICATED");
-  } else {
-    send("UNAUTHENTICATED");
-  }
+	const isAuthenticated = userData?.isAuthenticated;
+	if (isAuthenticated) {
+		send('AUTHENTICATED');
+	} else {
+		send('UNAUTHENTICATED');
+	}
 
-  console.log("assadasd--->", current, current.value)
-
-  if (current) {
-    return current.value == "authenticated" ? (
-      <AssignedLocations />
-    ) : (
-      <Home />
-    );
-  }
-  else
-    return <div>hello</div>
+	if (current) {
+		return current.value === 'authenticated' ? <AssignedLocations /> : <Home />;
+	}
+	return <div>hello</div>;
 };
 
 export default Login;
