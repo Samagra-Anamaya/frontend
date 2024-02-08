@@ -37,7 +37,8 @@ import Lottie from "react-lottie";
 import * as done from "public/lottie/done.json";
 import { Button } from "@mui/material";
 import AnnouncementBar from '../components/AnnouncementBar'
-
+import flagsmith from "flagsmith/isomorphic";
+import { FlagsmithProvider } from 'flagsmith/react';
 
 // Lottie Options
 const defaultOptions = {
@@ -49,7 +50,7 @@ const defaultOptions = {
   },
 };
 
-export default function App({ Component, pageProps }) {
+export default function App({ Component, pageProps, flagsmithState }) {
   const [hydrated, setHydrated] = useState(false);
   const offlinePackage = useOfflineSyncContext();
   const userData = omitBy(store.getState()?.userData, isNull);
@@ -184,9 +185,16 @@ export default function App({ Component, pageProps }) {
           {showAnnouncementBar && <AnnouncementBar text={announcementText} />}
           <Provider store={store} data-testid="redux-provider">
             <OfflineSyncProvider onCallback={onSyncSuccess}>
-              <div style={showAnnouncementBar ? { marginTop: '1.5rem' } : {}}>
-                <Component {...pageProps} />
-              </div>
+              <FlagsmithProvider
+                serverState={flagsmithState}
+                options={{
+                  environmentID: process.env.NEXT_PUBLIC_FLAGSMITH_ID,
+                }}
+                flagsmith={flagsmith}>
+                <div style={showAnnouncementBar ? { marginTop: '1.5rem' } : {}}>
+                  <Component {...pageProps} />
+                </div>
+              </FlagsmithProvider>
             </OfflineSyncProvider>
             <ToastContainer
               position="top-center"
@@ -244,15 +252,22 @@ export default function App({ Component, pageProps }) {
               </CommonModal>
             )}
           </Provider>
-        </div>
+        </div >
       ) : (
         <>
           {showAnnouncementBar && <AnnouncementBar text={announcementText} />}
           <Provider store={store} data-testid="redux-provider">
             <OfflineSyncProvider onCallback={onSyncSuccess}>
-              <div style={showAnnouncementBar ? { marginTop: '1.5rem' } : {}}>
-                <Component {...pageProps} />
-              </div>
+              <FlagsmithProvider
+                serverState={flagsmithState}
+                options={{
+                  environmentID: process.env.NEXT_PUBLIC_FLAGSMITH_ID,
+                }}
+                flagsmith={flagsmith}>
+                <div style={showAnnouncementBar ? { marginTop: '1.5rem' } : {}}>
+                  <Component {...pageProps} />
+                </div>
+              </FlagsmithProvider>
             </OfflineSyncProvider>
             <ToastContainer
               position="top-center"
@@ -311,9 +326,17 @@ export default function App({ Component, pageProps }) {
             )}
           </Provider>
         </>
-      )}
+      )
+      }
     </>
   ) : null;
+}
+
+App.getInitialProps = async () => {
+  await flagsmith.init({ // fetches flags on the server and passes them to the App 
+    environmentID: process.env.NEXT_PUBLIC_FLAGSMITH_ID,
+  });
+  return { flagsmithState: flagsmith.getState() }
 }
 
 const modalStyles = {

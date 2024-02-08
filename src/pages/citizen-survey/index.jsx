@@ -24,7 +24,8 @@ import { toast } from "react-toastify";
 import { saveCitizenFormData } from "../../redux/actions/saveCitizenFormData";
 import { getStorageQuota, sendLogs } from "../../services/api";
 import * as Sentry from "@sentry/nextjs";
-
+import flagsmith from 'flagsmith/isomorphic';
+import { useFlags, useFlagsmith } from 'flagsmith/react';
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -65,7 +66,7 @@ const CitizenSurveyPage = ({ params }) => {
   const [showForm, setShowForm] = useState(false);
   const [formEditable, setFormEditable] = useState(false);
   const user2 = useSelector((state) => state?.userData?.user);
-
+  const { usemainworker } = useFlags(['usemainworker']);
   console.log("CURR CITIZEN -->", currCitizen);
 
 
@@ -115,12 +116,12 @@ const CitizenSurveyPage = ({ params }) => {
       let capturedAt = moment().utc();
       setTotalSteps((landImages?.length || 0) + (rorImages?.length || 0))
       for (let el in landImages) {
-        const compressedImg = await compressImage(landImages[el].file);
+        const compressedImg = await compressImage(landImages[el].file, usemainworker);
         setActiveStep(Number(el) + 1);
         landImages[el] = compressedImg;
       }
       for (let el in rorImages) {
-        const compressedImg = await compressImage(rorImages[el].file);
+        const compressedImg = await compressImage(rorImages[el].file, usemainworker);
         setActiveStep((landImages?.length || 0) + Number(el) + 1);
 
         rorImages[el] = compressedImg;
