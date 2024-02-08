@@ -206,27 +206,31 @@ export const getFormData = async ({ loading, scheduleId, formSpec, startingForm,
 //   setToLocalForage(formName, transformedForm.data);
 // }
 
-export const compressImage = async (imageFile) => {
+export const compressImage = async (imageFile, flag) => {
+  const user = store?.getState()?.userData?.user;
   const options = {
     maxSizeMB: 0.1,
     maxWidthOrHeight: 1920,
-    useWebWorker: true,
+    useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true,
     fileType: 'image/webp'
   }
+  const imageFileCopy = new File([imageFile], imageFile.name, { type: imageFile.type });
   try {
     const compressedFile = await imageCompression(imageFile, options);
     return compressedFile;
   } catch (err) {
+    let b64Image = await toBase64(imageFile)
+    let b64ImageCopy = await toBase64(imageFileCopy)
     // Returning uncompressed image on error in compression
-    const user = store?.getState()?.userData?.user;
-    if (imageFile instanceof Blob) {
-      let uploadedFile = await uploadMedia([imageFile], user)
-      sendLogs({ meta: `at compressImage inside if, fileName: ${imageFile.name}, minioName: ${uploadedFile[0]}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() })
-      return imageFile;
+
+    if (imageFileCopy instanceof Blob) {
+      let uploadedFile = await uploadMedia([imageFileCopy], user)
+      sendLogs({ meta: `at compressImage inside if, fileName: ${imageFileCopy?.name}, minioName: ${JSON.stringify(uploadedFile)}, b64Image: ${b64Image}, b64ImageCopy: ${b64ImageCopy}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true })
+      return imageFileCopy;
     }
     else {
-      let uploadedFile = await uploadMedia([imageFile], user)
-      sendLogs({ meta: `at compressImage inside else, fileName: ${imageFile.name}, minioName: ${uploadedFile[0]}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() })
+      let uploadedFile = await uploadMedia([imageFileCopy], user)
+      sendLogs({ meta: `at compressImage inside else, fileName: ${imageFileCopy?.name}, minioName: ${JSON.stringify(uploadedFile)}, b64Image: ${b64Image}, b64ImageCopy: ${b64ImageCopy}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true })
       throw new Error("Invalid File Type")
     }
   }
@@ -362,3 +366,10 @@ export const refreshToken = async () => {
     }
   }
 }
+
+const toBase64 = file => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+});
