@@ -203,7 +203,7 @@ const SurveyPage = ({ params }) => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-            timeout: 1200,
+            timeout: 120000,
           };
 
 
