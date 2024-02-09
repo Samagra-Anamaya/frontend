@@ -203,7 +203,7 @@ const SurveyPage = ({ params }) => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-            timeout: 120000,
+            timeout: 1200,
           };
 
 
@@ -215,7 +215,8 @@ const SurveyPage = ({ params }) => {
               );
             } else {
               Sentry.captureException({ response, userData });
-              sendLogs({ meta: 'at uploadImagesInBatches inside response comparison', gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
+              if (!response?.message.includes('timeout'))
+                sendLogs({ meta: 'at uploadImagesInBatches inside response comparison', gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
               toast.error(
                 `Something went wrong:${response?.response?.data?.message || response?.message
                 }`
@@ -375,7 +376,7 @@ const SurveyPage = ({ params }) => {
     <div className={styles.container} ref={containerRef}>
       <Banner />
       <Breadcrumb items={breadcrumbItems} />
-<h2>test.....</h2>
+      <h2>test.....</h2>
       <div className="px-3">
         {/* <SelectionItem
           key={_currLocation.id}
