@@ -215,7 +215,8 @@ const SurveyPage = ({ params }) => {
               );
             } else {
               Sentry.captureException({ response, userData });
-              sendLogs({ meta: 'at uploadImagesInBatches inside response comparison', gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
+              if (!response?.message?.includes('timeout'))
+                sendLogs({ meta: 'at uploadImagesInBatches inside response comparison', gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
               toast.error(
                 `Something went wrong:${response?.response?.data?.message || response?.message
                 }`
