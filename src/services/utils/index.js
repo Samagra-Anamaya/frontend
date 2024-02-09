@@ -206,7 +206,7 @@ export const getFormData = async ({ loading, scheduleId, formSpec, startingForm,
 //   setToLocalForage(formName, transformedForm.data);
 // }
 
-export const compressImage = async (imageFile, flag) => {
+export const compressImage = async (imageFile, flag, disableLogs) => {
   const user = store?.getState()?.userData?.user;
   const options = {
     maxSizeMB: 0.1,
@@ -225,18 +225,18 @@ export const compressImage = async (imageFile, flag) => {
 
     if (imageFileCopy instanceof Blob) {
       let uploadedFile = await uploadMedia([imageFileCopy], user)
-      sendLogs({ meta: `at compressImage inside if, fileName: ${imageFileCopy?.name}, minioName: ${JSON.stringify(uploadedFile)}, b64Image: ${b64Image}, b64ImageCopy: ${b64ImageCopy}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true })
+      sendLogs({ meta: `at compressImage inside if, fileName: ${imageFileCopy?.name}, minioName: ${JSON.stringify(uploadedFile)}, b64Image: ${b64Image}, b64ImageCopy: ${b64ImageCopy}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableLogs)
       return imageFileCopy;
     }
     else {
       let uploadedFile = await uploadMedia([imageFileCopy], user)
-      sendLogs({ meta: `at compressImage inside else, fileName: ${imageFileCopy?.name}, minioName: ${JSON.stringify(uploadedFile)}, b64Image: ${b64Image}, b64ImageCopy: ${b64ImageCopy}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true })
+      sendLogs({ meta: `at compressImage inside else, fileName: ${imageFileCopy?.name}, minioName: ${JSON.stringify(uploadedFile)}, b64Image: ${b64Image}, b64ImageCopy: ${b64ImageCopy}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableLogs)
       throw new Error("Invalid File Type")
     }
   }
 }
 
-export const storeImages = async (data) => {
+export const storeImages = async (data, disableLogs) => {
   try {
     let imageRecords = await localForage.getItem("imageRecords") || [];
     imageRecords.push(data);
@@ -244,7 +244,7 @@ export const storeImages = async (data) => {
   } catch (err) {
     const user = store?.getState()?.userData?.user;
     let uploadedFiles = await uploadMedia([data.images], user)
-    sendLogs({ meta: `at storeImages, minioNames: ${JSON.stringify(uploadedFiles)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() })
+    sendLogs({ meta: `at storeImages, minioNames: ${JSON.stringify(uploadedFiles)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() }, disableLogs)
     throw err;
   }
 }

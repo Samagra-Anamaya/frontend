@@ -18,6 +18,7 @@ import isOnline from "is-online";
 import * as Sentry from "@sentry/nextjs";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { IconButton, InputAdornment } from "@mui/material";
+import { useFlags, useFlagsmith } from 'flagsmith/react';
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -30,6 +31,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [apiCall, setApiCall] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { disablelogs } = useFlags(['disablelogs']);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -77,7 +79,7 @@ const Home = () => {
       if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
         if (!loginRes?.params?.errMsg == 'Invalid Username/Password') {
           Sentry.captureException({ loginRes, username, password });
-          sendLogs({ meta: 'at login submit inside try', gpId: username, error: loginRes?.params?.errMsg })
+          sendLogs({ meta: 'at login submit inside try', gpId: username, error: loginRes?.params?.errMsg }, disablelogs?.enabled && disablelogs?.value)
         }
         logEvent(analytics, "login_failure", {
           user_id: username
@@ -110,7 +112,7 @@ const Home = () => {
     } catch (err) {
       Sentry.captureException({ err: err?.message || err.toString(), username, password });
       toast.error(err?.message || err?.toString())
-      sendLogs({ meta: 'at login submit inside catch', gpId: username, error: err?.message || err?.toString() })
+      sendLogs({ meta: 'at login submit inside catch', gpId: username, error: err?.message || err?.toString() }, disablelogs?.enabled && disablelogs?.value)
     }
 
   }
