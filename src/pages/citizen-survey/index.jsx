@@ -67,6 +67,7 @@ const CitizenSurveyPage = ({ params }) => {
   const [formEditable, setFormEditable] = useState(false);
   const user2 = useSelector((state) => state?.userData?.user);
   const { usemainworker } = useFlags(['usemainworker']);
+  const { disableuserlogs } = useFlags(['disableuserlogs']);
   console.log("CURR CITIZEN -->", currCitizen);
 
 
@@ -116,12 +117,12 @@ const CitizenSurveyPage = ({ params }) => {
       let capturedAt = moment().utc();
       setTotalSteps((landImages?.length || 0) + (rorImages?.length || 0))
       for (let el in landImages) {
-        const compressedImg = await compressImage(landImages[el].file, usemainworker);
+        const compressedImg = await compressImage(landImages[el].file, usemainworker, disableuserlogs);
         setActiveStep(Number(el) + 1);
         landImages[el] = compressedImg;
       }
       for (let el in rorImages) {
-        const compressedImg = await compressImage(rorImages[el].file, usemainworker);
+        const compressedImg = await compressImage(rorImages[el].file, usemainworker, disableuserlogs);
         setActiveStep((landImages?.length || 0) + Number(el) + 1);
 
         rorImages[el] = compressedImg;
@@ -149,7 +150,8 @@ const CitizenSurveyPage = ({ params }) => {
           images: landImages,
           isLandRecord: true,
           villageId: _currLocation.villageCode
-        }
+        },
+        disableuserlogs
       );
       if (rorImages?.length) await storeImages(
         {
@@ -157,7 +159,8 @@ const CitizenSurveyPage = ({ params }) => {
           images: rorImages,
           isLandRecord: false,
           villageId: _currLocation.villageCode
-        }
+        },
+        disableuserlogs
       );
 
       newFormState = sanitizeForm({ ...formState });
@@ -199,7 +202,7 @@ const CitizenSurveyPage = ({ params }) => {
         else {
           sendLogs({
             meta: 'at handleSubmit citizenSurvey inside try', gpId: user2?.user?.username, error: res?.error || JSON.stringify(res), currentForm: newFormState
-          });
+          }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username) : true);
           toast.warn("Something went wrong while saving form, " + JSON.stringify(res?.error));
           removeCitizenImageRecord(currCitizen.citizenId);
           setLoading(false);
@@ -230,8 +233,15 @@ const CitizenSurveyPage = ({ params }) => {
           gpId: user2?.user?.username,
           error: err?.message || err?.toString(),
           currentForm: newFormState
-        })
+        }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username) : true)
+        return;
       }
+      sendLogs({
+        meta: 'at handleSubmit citizenSurveyPage inside catch after else',
+        gpId: user2?.user?.username,
+        error: err?.message || err?.toString(),
+        currentForm: newFormState
+      }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username) : true)
       console.log(err);
       setLoading(false);
       showSubmittedModal(false);

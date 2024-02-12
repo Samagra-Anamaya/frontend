@@ -39,8 +39,7 @@ import { Button } from "@mui/material";
 import AnnouncementBar from '../components/AnnouncementBar'
 import flagsmith from "flagsmith/isomorphic";
 import { FlagsmithProvider } from 'flagsmith/react';
-import { getAppVersion } from "../services/api";
-import packageJson from "../../package.json";
+
 
 // Lottie Options
 const defaultOptions = {

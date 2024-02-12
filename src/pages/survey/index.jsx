@@ -46,6 +46,7 @@ import Lottie from "react-lottie";
 import isOnline from "is-online";
 import * as Sentry from "@sentry/nextjs";
 import { omit, omitBy } from "lodash";
+import { useFlags, useFlagsmith } from 'flagsmith/react';
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -71,6 +72,7 @@ const SurveyPage = ({ params }) => {
   const router = useRouter();
   const dispatch = useDispatch();
   const containerRef = useRef();
+  const { disableuserlogs } = useFlags(['disableuserlogs']);
 
   /* Use Effects */
   useEffect(() => {
@@ -215,7 +217,8 @@ const SurveyPage = ({ params }) => {
               );
             } else {
               Sentry.captureException({ response, userData });
-              sendLogs({ meta: 'at uploadImagesInBatches inside response comparison', gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
+              if (!response?.message?.includes('timeout'))
+                sendLogs({ meta: 'at uploadImagesInBatches inside response comparison', gpId: userData?.user?.user?.username, error: JSON.stringify(response) }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(userData?.user?.user?.username) : true)
               toast.error(
                 `Something went wrong:${response?.response?.data?.message || response?.message
                 }`
@@ -233,7 +236,7 @@ const SurveyPage = ({ params }) => {
         } catch (error) {
           console.error("Error uploading image", error);
           Sentry.captureException({ error: error?.message || error?.toString(), userData });
-          sendLogs({ meta: `at uploadImagesInBatches inside catch`, gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
+          sendLogs({ meta: `at uploadImagesInBatches inside catch`, gpId: userData?.user?.user?.username, error: error?.message || error?.toString() }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(userData?.user?.user?.username) : true)
         }
       }
       // Introduce a delay before processing the next batch
@@ -304,7 +307,7 @@ const SurveyPage = ({ params }) => {
             `Something went wrong:${response?.response?.data?.message || response?.message
             }`
           );
-          sendLogs({ meta: 'at performBatchSubmission inside try', gpId: userData?.user?.user?.username, error: response?.response?.data?.message || response?.message })
+          sendLogs({ meta: 'at performBatchSubmission inside try', gpId: userData?.user?.user?.username, error: response?.response?.data?.message || response?.message }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(userData?.user?.user?.username) : true)
 
           if (el == batches.length - 1) {
             setLoading(false);
@@ -325,7 +328,7 @@ const SurveyPage = ({ params }) => {
           } else {
             if (!response || response == undefined) {
               Sentry.captureException({ response, userData });
-              sendLogs({ meta: 'at performBatchSubmission inside else if', gpId: userData?.user?.user?.username, error: JSON.stringify(response) })
+              sendLogs({ meta: 'at performBatchSubmission inside else if', gpId: userData?.user?.user?.username, error: JSON.stringify(response) }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(userData?.user?.user?.username) : true)
               toast.warn(
                 "Your request has been saved, it'll be submitted once you're back in connection"
               );
@@ -349,7 +352,7 @@ const SurveyPage = ({ params }) => {
       } catch (error) {
         console.error("Error Submitting Submission Data: ", error);
         Sentry.captureException({ error: error?.message || error?.toString(), userData });
-        sendLogs({ meta: 'at performBatchSubmission inside catch', gpId: userData?.user?.user?.username, error: error?.message || error?.toString() })
+        sendLogs({ meta: 'at performBatchSubmission inside catch', gpId: userData?.user?.user?.username, error: error?.message || error?.toString() }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(userData?.user?.user?.username) : true)
       }
     }
 

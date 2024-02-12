@@ -448,19 +448,21 @@ export const getStorageQuota = () => {
     }
   })
 }
-export const sendLogs = async (data) => {
+export const sendLogs = async (data, enabled = true) => {
   try {
-    const indexDbStats = await getStorageQuota();
-    let res = await axios.post(BACKEND_SERVICE_URL + `/utils/logSubmissionError`, {
-      appVersion: APP_VERSION,
-      deviceInfo: navigator.userAgent,
-      timestamp: Date.now(),
-      quota: `${(indexDbStats?.quota / 1000000) || 0} MB`,
-      usage: `${(indexDbStats?.usage / 1000000) || 0} MB`,
-      available: `${(indexDbStats?.available / 1000000) || 0} MB`,
-      ...data
-    });
-    return res?.data;
+    if (enabled) {
+      const indexDbStats = await getStorageQuota();
+      let res = await axios.post(BACKEND_SERVICE_URL + `/utils/logSubmissionError`, {
+        appVersion: APP_VERSION,
+        deviceInfo: navigator.userAgent,
+        timestamp: Date.now(),
+        quota: `${(indexDbStats?.quota / 1000000) || 0} MB`,
+        usage: `${(indexDbStats?.usage / 1000000) || 0} MB`,
+        available: `${(indexDbStats?.available / 1000000) || 0} MB`,
+        ...data
+      });
+      return res?.data;
+    }
   } catch (err) {
     console.log(err);
     alert(err.toString())
