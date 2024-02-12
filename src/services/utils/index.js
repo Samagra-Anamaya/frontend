@@ -217,8 +217,7 @@ export const compressImage = async (imageFile, flag, disableuserlogs) => {
   try {
     const imageFileCopy = new File([imageFile], imageFile?.name, { type: imageFile?.type });
     try {
-      // const compressedFile = await imageCompression(imageFile, options);
-      const compressedFile = await compressImageToTargetSize(imageFile);
+      const compressedFile = flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) ? await compressImageToTargetSize(imageFile) : await imageCompression(imageFile, options) : await imageCompression(imageFile, options);
       return compressedFile;
     } catch (err) {
       let b64Image = await toBase64(imageFile)
