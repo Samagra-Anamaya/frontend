@@ -31,7 +31,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [apiCall, setApiCall] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { disablelogs } = useFlags(['disablelogs']);
+  const { disableuserlogs } = useFlags(['disableuserlogs']);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -79,7 +79,7 @@ const Home = () => {
       if (loginRes?.params?.errMsg && loginRes.responseCode == "FAILURE") {
         if (!loginRes?.params?.errMsg == 'Invalid Username/Password') {
           Sentry.captureException({ loginRes, username, password });
-          sendLogs({ meta: 'at login submit inside try', gpId: username, error: loginRes?.params?.errMsg }, disablelogs?.enabled && disablelogs?.value)
+          sendLogs({ meta: 'at login submit inside try', gpId: username, error: loginRes?.params?.errMsg }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(username) : true)
         }
         logEvent(analytics, "login_failure", {
           user_id: username
@@ -112,7 +112,7 @@ const Home = () => {
     } catch (err) {
       Sentry.captureException({ err: err?.message || err.toString(), username, password });
       toast.error(err?.message || err?.toString())
-      sendLogs({ meta: 'at login submit inside catch', gpId: username, error: err?.message || err?.toString() }, disablelogs?.enabled && disablelogs?.value)
+      sendLogs({ meta: 'at login submit inside catch', gpId: username, error: err?.message || err?.toString() }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(username) : true)
     }
 
   }

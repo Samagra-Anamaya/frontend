@@ -72,8 +72,7 @@ const SurveyPage = ({ params }) => {
   const router = useRouter();
   const dispatch = useDispatch();
   const containerRef = useRef();
-  const { disablefilelogs } = useFlags(['disablefilelogs']);
-  const { disablelogs } = useFlags(['disablelogs']);
+  const { disableuserlogs } = useFlags(['disableuserlogs']);
 
   /* Use Effects */
   useEffect(() => {
@@ -218,8 +217,8 @@ const SurveyPage = ({ params }) => {
               );
             } else {
               Sentry.captureException({ response, userData });
-              if (!response?.message?.includes('timeout') && !disablefilelogs?.enabled && !disablefilelogs?.value)
-                sendLogs({ meta: 'at uploadImagesInBatches inside response comparison', gpId: userData?.user?.user?.username, error: JSON.stringify(response) }, disablelogs?.enabled && disablelogs?.value)
+              if (!response?.message?.includes('timeout'))
+                sendLogs({ meta: 'at uploadImagesInBatches inside response comparison', gpId: userData?.user?.user?.username, error: JSON.stringify(response) }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(userData?.user?.user?.username) : true)
               toast.error(
                 `Something went wrong:${response?.response?.data?.message || response?.message
                 }`
@@ -237,8 +236,7 @@ const SurveyPage = ({ params }) => {
         } catch (error) {
           console.error("Error uploading image", error);
           Sentry.captureException({ error: error?.message || error?.toString(), userData });
-          if (!disablefilelogs?.enabled && !disablefilelogs?.value)
-            sendLogs({ meta: `at uploadImagesInBatches inside catch`, gpId: userData?.user?.user?.username, error: error?.message || error?.toString() }, disablelogs?.enabled && disablelogs?.value)
+          sendLogs({ meta: `at uploadImagesInBatches inside catch`, gpId: userData?.user?.user?.username, error: error?.message || error?.toString() }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(userData?.user?.user?.username) : true)
         }
       }
       // Introduce a delay before processing the next batch
@@ -309,8 +307,7 @@ const SurveyPage = ({ params }) => {
             `Something went wrong:${response?.response?.data?.message || response?.message
             }`
           );
-          if (!disablefilelogs?.enabled && !disablefilelogs?.value)
-            sendLogs({ meta: 'at performBatchSubmission inside try', gpId: userData?.user?.user?.username, error: response?.response?.data?.message || response?.message }, disablelogs?.enabled && disablelogs?.value)
+          sendLogs({ meta: 'at performBatchSubmission inside try', gpId: userData?.user?.user?.username, error: response?.response?.data?.message || response?.message }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(userData?.user?.user?.username) : true)
 
           if (el == batches.length - 1) {
             setLoading(false);
@@ -331,8 +328,7 @@ const SurveyPage = ({ params }) => {
           } else {
             if (!response || response == undefined) {
               Sentry.captureException({ response, userData });
-              if (!disablefilelogs?.enabled && !disablefilelogs?.value)
-                sendLogs({ meta: 'at performBatchSubmission inside else if', gpId: userData?.user?.user?.username, error: JSON.stringify(response) }, disablelogs?.enabled && disablelogs?.value)
+              sendLogs({ meta: 'at performBatchSubmission inside else if', gpId: userData?.user?.user?.username, error: JSON.stringify(response) }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(userData?.user?.user?.username) : true)
               toast.warn(
                 "Your request has been saved, it'll be submitted once you're back in connection"
               );
@@ -356,8 +352,7 @@ const SurveyPage = ({ params }) => {
       } catch (error) {
         console.error("Error Submitting Submission Data: ", error);
         Sentry.captureException({ error: error?.message || error?.toString(), userData });
-        if (!disablefilelogs?.enabled && !disablefilelogs?.value)
-          sendLogs({ meta: 'at performBatchSubmission inside catch', gpId: userData?.user?.user?.username, error: error?.message || error?.toString() }, disablelogs?.enabled && disablelogs?.value)
+        sendLogs({ meta: 'at performBatchSubmission inside catch', gpId: userData?.user?.user?.username, error: error?.message || error?.toString() }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(userData?.user?.user?.username) : true)
       }
     }
 

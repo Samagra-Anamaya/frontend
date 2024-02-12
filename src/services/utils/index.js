@@ -206,7 +206,7 @@ export const getFormData = async ({ loading, scheduleId, formSpec, startingForm,
 //   setToLocalForage(formName, transformedForm.data);
 // }
 
-export const compressImage = async (imageFile, flag, disableLogs) => {
+export const compressImage = async (imageFile, flag, disableuserlogs) => {
   const user = store?.getState()?.userData?.user;
   const options = {
     maxSizeMB: 0.1,
@@ -214,29 +214,34 @@ export const compressImage = async (imageFile, flag, disableLogs) => {
     useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true,
     fileType: 'image/webp'
   }
-  const imageFileCopy = new File([imageFile], imageFile.name, { type: imageFile.type });
   try {
-    const compressedFile = await imageCompression(imageFile, options);
-    return compressedFile;
-  } catch (err) {
-    let b64Image = await toBase64(imageFile)
-    let b64ImageCopy = await toBase64(imageFileCopy)
-    // Returning uncompressed image on error in compression
+    const imageFileCopy = new File([imageFile], imageFile?.name, { type: imageFile?.type });
+    try {
+      const compressedFile = await imageCompression(imageFile, options);
+      return compressedFile;
+    } catch (err) {
+      let b64Image = await toBase64(imageFile)
+      let b64ImageCopy = await toBase64(imageFileCopy)
+      // Returning uncompressed image on error in compression
 
-    if (imageFileCopy instanceof Blob) {
-      let uploadedFile = await uploadMedia([imageFileCopy], user)
-      sendLogs({ meta: `at compressImage inside if, fileName: ${imageFileCopy?.name}, minioName: ${JSON.stringify(uploadedFile)}, b64Image: ${b64Image}, b64ImageCopy: ${b64ImageCopy}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableLogs)
-      return imageFileCopy;
+      if (imageFileCopy instanceof Blob) {
+        let uploadedFile = await uploadMedia([imageFileCopy], user)
+        sendLogs({ meta: `at compressImage inside if, fileName: ${imageFileCopy?.name}, minioName: ${JSON.stringify(uploadedFile)}, b64Image: ${b64Image}, b64ImageCopy: ${b64ImageCopy}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
+        return imageFileCopy;
+      }
+      else {
+        let uploadedFile = await uploadMedia([imageFileCopy], user)
+        sendLogs({ meta: `at compressImage inside else, fileName: ${imageFileCopy?.name}, minioName: ${JSON.stringify(uploadedFile)}, b64Image: ${b64Image}, b64ImageCopy: ${b64ImageCopy}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
+        throw new Error("Invalid File Type")
+      }
     }
-    else {
-      let uploadedFile = await uploadMedia([imageFileCopy], user)
-      sendLogs({ meta: `at compressImage inside else, fileName: ${imageFileCopy?.name}, minioName: ${JSON.stringify(uploadedFile)}, b64Image: ${b64Image}, b64ImageCopy: ${b64ImageCopy}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableLogs)
-      throw new Error("Invalid File Type")
-    }
+  } catch (error) {
+    sendLogs({ meta: `at compressImage outside inner try catch, failed to make imageFileCopy, Original Image:${imageFile?.name}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
+    throw new Error("Invalid File Type")
   }
 }
 
-export const storeImages = async (data, disableLogs) => {
+export const storeImages = async (data, disableuserlogs) => {
   try {
     let imageRecords = await localForage.getItem("imageRecords") || [];
     imageRecords.push(data);
@@ -244,7 +249,7 @@ export const storeImages = async (data, disableLogs) => {
   } catch (err) {
     const user = store?.getState()?.userData?.user;
     let uploadedFiles = await uploadMedia([data.images], user)
-    sendLogs({ meta: `at storeImages, minioNames: ${JSON.stringify(uploadedFiles)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() }, disableLogs)
+    sendLogs({ meta: `at storeImages, minioNames: ${JSON.stringify(uploadedFiles)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
     throw err;
   }
 }
