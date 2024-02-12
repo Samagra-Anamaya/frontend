@@ -217,7 +217,7 @@ export const compressImage = async (imageFile, flag, disableuserlogs) => {
   try {
     const imageFileCopy = new File([imageFile], imageFile?.name, { type: imageFile?.type });
     try {
-      const compressedFile = await imageCompression(imageFile, options);
+      const compressedFile = flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) ? await compressImageToTargetSize(imageFile) : await imageCompression(imageFile, options) : await imageCompression(imageFile, options);
       return compressedFile;
     } catch (err) {
       let b64Image = await toBase64(imageFile)
@@ -239,6 +239,47 @@ export const compressImage = async (imageFile, flag, disableuserlogs) => {
     sendLogs({ meta: `at compressImage outside inner try catch, failed to make imageFileCopy, Original Image:${imageFile?.name}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
     throw new Error("Invalid File Type")
   }
+}
+
+const compressImageToTargetSize = (file, targetSizeKB = 1000, maxWidth = 1920, maxHeight = 1080, step = 0.05, quality = 0.7) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height *= maxWidth / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width *= maxHeight / height;
+          height = maxHeight;
+        }
+      }
+
+      const attemptCompression = (quality) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => {
+          if (blob.size / 1024 > targetSizeKB && quality > step) { // Check if the size is larger than target
+            attemptCompression(quality - step); // Reduce quality
+          } else {
+            resolve(blob);
+          }
+        }, 'image/jpeg', quality);
+      };
+
+      attemptCompression(quality);
+    };
+    img.onerror = reject;
+  });
 }
 
 export const storeImages = async (data, disableuserlogs) => {
