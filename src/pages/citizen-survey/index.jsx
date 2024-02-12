@@ -234,7 +234,14 @@ const CitizenSurveyPage = ({ params }) => {
           error: err?.message || err?.toString(),
           currentForm: newFormState
         }, disablelogs?.enabled && disablelogs?.value)
+        return;
       }
+      sendLogs({
+        meta: 'at handleSubmit citizenSurveyPage inside catch after else',
+        gpId: user2?.user?.username,
+        error: err?.message || err?.toString(),
+        currentForm: newFormState
+      }, disablelogs?.enabled && disablelogs?.value)
       console.log(err);
       setLoading(false);
       showSubmittedModal(false);
