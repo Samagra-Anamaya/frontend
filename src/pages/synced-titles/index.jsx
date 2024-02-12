@@ -209,7 +209,7 @@ const CompletedEntries = ({ params }) => {
                   leftImage={"/assets/citizen.svg"}
                   rightImage={"/assets/verified.png"}
                   mainText={el?.submissionData?.claimantName}
-                  mainSubtext={moment(el?.updatedAt).format(
+                  mainSubtext={moment(el?.updatedAt).utcOffset('+0530').format(
                     "DD MMM YYYY, hh:mm a"
                   )}
                   sx={{ background: "#fff", marginTop: '1rem', cursor: 'pointer' }}
