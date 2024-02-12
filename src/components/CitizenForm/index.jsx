@@ -552,11 +552,11 @@ const CitizenForm = (props) => {
                         label={"No. of Plots Claimed Under FRA"}
                         onChange={e => {
                             const newValue = e.target.value;
-                            if (newValue === '' || (parseInt(newValue, 10) >= 0)) {
+                            if (newValue === '' || (((parseInt(newValue, 10) >= 0 && parseInt(newValue, 10) <= 50)) && /^\d+$/.test(newValue))) {
                                 setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: newValue }))
                             }
                         }}
-                        value={formState?.fraPlotsClaimed}
+                        value={formState?.fraPlotsClaimed || ''}
                         required
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}

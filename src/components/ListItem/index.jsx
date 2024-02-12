@@ -15,13 +15,15 @@ const ListItem = (props) => {
     onSecondaryAction,
     secondaryImage = null,
     secondaryLoading = false,
-    clName
+    clName,
+    key
   } = props;
   
   return (
     <MDBListGroupItem
       className={`d-flex justify-content-between align-items-center ${clName}`}
       style={{ borderRadius: "10px", marginBottom: "5px", ...props.sx }}
+      key={key}
     >
       <div className="d-flex align-items-center" onClick={onClick ?? null}>
         <img
