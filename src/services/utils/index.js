@@ -218,6 +218,9 @@ export const compressImage = async (imageFile, flag, disableuserlogs) => {
     const imageFileCopy = new File([imageFile], imageFile?.name, { type: imageFile?.type });
     try {
       const compressedFile = flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) ? await compressImageToTargetSize(imageFile) : await imageCompression(imageFile, options) : await imageCompression(imageFile, options);
+     if(flag?.enabled && flag?.value?.split(',')?.includes(user?.user?.username)){
+      sendLogs({ meta: `CANVAS COMPRESSION USED`, gpId: store?.getState().userData?.user?.user?.username  })
+     }
       return compressedFile;
     } catch (err) {
       let b64Image = await toBase64(imageFile)
