@@ -43,206 +43,164 @@ const defaultOptions = {
 const CompletedEntries = ({ params }) => {
   /* Component States and Refs*/
   const userData = useSelector((state) => state?.userData);
-  const _currLocation = useSelector(
-    (state) => state?.userData?.currentLocation
-  );
-  const [hydrated, setHydrated] = React.useState(false);
-  const [citizens, setCitizens] = useState(_currLocation?.citizens || []);
-  const [villageData, setVillageData] = useState({});
-  const [currTab, setCurrTab] = React.useState(0);
-  const [currPage, setCurrPage] = React.useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [prevSubmissions, setPrevSubmissions] = useState([]);
-  const [prevTempSubmissions, setPrevTempSubmissions] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [fetching, setFetching] = useState(false);
-  const router = useRouter();
-  const dispatch = useDispatch();
+	const _currLocation = useSelector((state) => state?.userData?.currentLocation);
+	const [hydrated, setHydrated] = React.useState(false);
 
-  /* Use Effects */
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    setHydrated(true);
-    console.log(_currLocation);
-    setSearchQuery(userData?.searchQuery?.[_currLocation.villageCode] || "");
-    getVillageData();
-  }, []);
+	const [currPage, setCurrPage] = React.useState(1);
+	const [totalPages, setTotalPages] = useState(1);
+	const [prevSubmissions, setPrevSubmissions] = useState([]);
+	const [prevTempSubmissions, setPrevTempSubmissions] = useState([]);
+	const [searchQuery, setSearchQuery] = useState('');
+	const [fetching, setFetching] = useState(false);
+	const router = useRouter();
+	const dispatch = useDispatch();
 
-  useEffect(() => {
-    setCitizens(_currLocation?.citizens || []);
-  }, [_currLocation]);
+	/* Use Effects */
+	useEffect(() => {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+		setHydrated(true);
 
-  useEffect(() => {
-    getVillageSubmissionData();
-  }, [currPage]);
+		setSearchQuery(userData?.searchQuery?.[_currLocation.villageCode] || '');
+		//	getVillageData();
+	}, [_currLocation, userData?.searchQuery]);
 
-  const debouncedSearch = debounce(async (query) => {
-    console.log({ query, prevTempSubmissions })
-    if (query?.length) {
-      setFetching(true);
-      let res = await searchCitizen(_currLocation.villageCode, query, userData.user);
-      setPrevSubmissions(res?.result?.submissions || []);
-      setFetching(false);
-    } else setPrevSubmissions(prevTempSubmissions);
-  }, 500);
+	const debouncedSearch = debounce(async (query) => {
+		if (query?.length) {
+			setFetching(true);
+			const res = await searchCitizen(_currLocation.villageCode, query, userData.user);
+			setPrevSubmissions(res?.result?.submissions || []);
+			setFetching(false);
+		} else setPrevSubmissions(prevTempSubmissions);
+	}, 500);
 
-  // useEffect(() => {
-  //     async function searchCitizens() {
-  //         console.log("search query->", searchQuery)
-  //         if (searchQuery?.length) {
-  //             setFetching(true)
-  //             let res = await searchCitizen(_currLocation.villageCode, searchQuery)
-  //             setPrevSubmissions(res?.result?.submissions || []);
-  //             setFetching(false);
-  //         } else setPrevSubmissions(prevTempSubmissions)
-  //     }
-  //     searchCitizens();
-  // }, [searchQuery])
+	const token = useSelector(tokenSelector);
 
-  const getVillageData = async () => {
-    try {
-      if (_currLocation?.villageCode) {
-        let data = await getVillageDetails(_currLocation.villageCode);
-        if (Object.keys(data?.result)?.length) setVillageData(data?.result);
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-  const token = useSelector(tokenSelector);
-  console.log({ token, userData })
-  const getVillageSubmissionData = async () => {
-    try {
-      if (_currLocation?.villageCode) {
+	const getVillageSubmissionData = useCallback(async () => {
+		try {
+			if (_currLocation?.villageCode) {
+				setFetching(true);
+				const data = await getVillageSubmissions(_currLocation.villageCode, currPage, token);
 
-        setFetching(true);
-        let data = await getVillageSubmissions(
-          _currLocation.villageCode,
-          currPage,
-          token
-        );
-        console.log("PREV SUBMISSIONS -->", data);
-        setFetching(false);
-        if (Object.keys(data)?.length) {
-          setPrevSubmissions(data?.result?.submissions);
-          setPrevTempSubmissions(data?.result?.submissions);
-          setTotalPages(data?.result?.totalPages);
-        }
-      }
-    } catch (err) {
-      console.log(err);
-      setFetching(false);
-    }
-  };
+				setFetching(false);
+				if (Object.keys(data)?.length) {
+					setPrevSubmissions(data?.result?.submissions);
+					setPrevTempSubmissions(data?.result?.submissions);
+					setTotalPages(data?.result?.totalPages);
+				}
+			}
+		} catch (err) {
+			setFetching(false);
+		}
+	}, [_currLocation.villageCode, currPage, token]);
 
-  const searchCitizenSubmission = useCallback(async (e) => {
-    setSearchQuery(e.target.value);
-    dispatch(
-      updateSearchQuery({
-        villageId: _currLocation.villageCode,
-        query: e.target.value,
-      })
-    );
+	useEffect(() => {
+		getVillageSubmissionData();
+	}, [currPage, getVillageSubmissionData]);
 
-    debouncedSearch(e.target.value);
-  }, []);
+	const searchCitizenSubmission = useCallback(
+		async (e) => {
+			setSearchQuery(e.target.value);
+			dispatch(
+				updateSearchQuery({
+					villageId: _currLocation.villageCode,
+					query: e.target.value
+				})
+			);
 
-  function padTwoDigits(num) {
-    return num.toString().padStart(2, "0");
-  }
+			debouncedSearch(e.target.value);
+		},
+		[_currLocation.villageCode, debouncedSearch, dispatch]
+	);
 
-  const breadcrumbItems = useMemo(() => ([{ label: "Home", to: "/" }, { label: _currLocation?.villageName, to: "/survey" }, { label: "Submitted Titles" }]), [_currLocation?.villageName])
-  return !hydrated ? null : (
-    <div className={styles.container}>
-      <Banner />
-      <Breadcrumb items={breadcrumbItems} />
-      {/* <CommonHeader
-        onBack={() => router.back()}
-        text={`${_currLocation.villageName}`}
-        subText={`Completed Entries`}
-        showLogout={false}
-        sx={{
-          justifyContent: "space-between !important",
-          padding: "2rem 1rem",
-        }}
-      /> */}
+	const breadcrumbItems = useMemo(
+		() => [
+			{ label: 'Home', to: '/' },
+			{ label: _currLocation?.villageName, to: '/survey' },
+			{ label: 'Submitted Titles' }
+		],
+		[_currLocation?.villageName]
+	);
+	return !hydrated ? null : (
+		<div className={`${styles.container} `}>
+			<Banner />
+			<Breadcrumb items={breadcrumbItems} />
 
-      <div
-        className={
-          styles.citizenContainer + ` animate__animated animate__fadeIn p-2`
-        }
-      >
-        <div className={styles.submissionContainer}>
-          {!(!fetching && !prevSubmissions?.length && !searchQuery) && <TextField
-            id="search"
-            color="success"
-            type="search"
-            label={searchQuery ? "" : "Search submissions here ..."}
-            value={searchQuery}
-            onChange={searchCitizenSubmission}
-            sx={{
-              marginBottom: ".75rem",
-              border: "none",
-              // border: "2px solid #007922",
-              borderRadius: "1rem",
-            }}
-            fullWidth
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />}
-          {fetching && <CircularProgress color="success" />}
-          <MDBListGroup style={{ minWidth: '22rem' }} light>
-            {!fetching &&
-              prevSubmissions?.length > 0 &&
-              prevSubmissions?.map((el) => (
-                <ListItem
-                  clName="titles"
-                  key={el.id}
-                  onSubBtnClick={() => {
-                    console.log("sub btn clicked")
-                  }}
-                  leftImage={"/assets/citizen.svg"}
-                  rightImage={"/assets/verified.png"}
-                  mainText={el?.submissionData?.claimantName}
-                  mainSubtext={moment(el?.updatedAt).utcOffset('+0530').format(
-                    "DD MMM YYYY, hh:mm a"
-                  )}
-                  sx={{ background: "#fff", marginTop: '1rem', cursor: 'pointer' }}
-                  mode={1}
-                  imgWidth={'70%'}
-                  onClick={() => {
-                    dispatch(setCurrentCitizen(el));
-                    router.push(`/citizen-survey`);
-                  }}
-                />
-              ))}
-          </MDBListGroup>
-          {!fetching && !prevSubmissions?.length && !searchQuery && <div>
-            <p className={styles.noRecordsFound}>No Records Found</p>
-            <p className={styles.noRecordsSubText}>Please submit land titles before you access them</p>
-            <Lottie
-              options={defaultOptions}
-              style={{ marginTop: -40 }}
-              height={300}
-              width={300}
-            /></div>}
-        </div>
-        {!searchQuery && (
-          <Pagination
-            count={totalPages}
-            color="success"
-            onChange={(event, page) => setCurrPage(page)}
-            className={styles.paginationContainer}
-          />
-        )}
-      </div>
-    </div>
-  );
+			<div className={`${styles.citizenContainer} animate__animated animate__fadeIn px-2`}>
+				<div className={styles.submissionContainer}>
+					{!(!fetching && !prevSubmissions?.length && !searchQuery) && (
+						<TextField
+							id="search"
+							color="success"
+							type="search"
+							label={searchQuery ? '' : 'Search submissions here ...'}
+							value={searchQuery}
+							onChange={searchCitizenSubmission}
+							sx={{
+								marginBottom: '2rem',
+								border: 'none',
+								borderRadius: '1rem'
+							}}
+							fullWidth
+							InputProps={{
+								endAdornment: (
+									<InputAdornment position="end">
+										<SearchIcon />
+									</InputAdornment>
+								)
+							}}
+						/>
+					)}
+					{fetching && <CircularProgress color="success" />}
+					<MDBListGroup style={{ minWidth: '22rem' }} light>
+						{!fetching &&
+							prevSubmissions?.length > 0 &&
+							prevSubmissions?.map((el) => (
+								<ListItem
+									clName="titles"
+									key={el.id}
+									onSubBtnClick={() => null}
+									leftImage={'/assets/citizen.svg'}
+									rightImage={'/assets/verified.png'}
+									mainText={el?.submissionData?.claimantName}
+									mainSubtext={moment(el?.updatedAt).format('DD MMM YYYY, hh:mm a')}
+									sx={{ background: '#fff', marginTop: '5x', cursor: 'pointer' }}
+									mode={1}
+									imgWidth={'70%'}
+									onClick={() => {
+										dispatch(setCurrentCitizen(el));
+										router.push(`/citizen-survey`);
+									}}
+								/>
+							))}
+					</MDBListGroup>
+					{!fetching && !prevSubmissions?.length && !searchQuery && (
+						<div>
+							<p className={styles.noRecordsFound}>No Records Found</p>
+							<p className={styles.noRecordsSubText}>
+								Please submit land titles before you access them
+							</p>
+							<Lottie
+								options={defaultOptions}
+								style={{ marginTop: -40 }}
+								height={300}
+								width={300}
+							/>
+						</div>
+					)}
+				</div>
+				{!searchQuery && (
+					<div className="my-2">
+						<Pagination
+							count={totalPages}
+							color="success"
+							onChange={(event, page) => setCurrPage(page)}
+							className={styles.paginationContainer}
+						/>
+					</div>
+				)}
+			</div>
+		</div>
+	);
 };
 
 export default CompletedEntries;
