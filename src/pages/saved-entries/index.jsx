@@ -249,7 +249,7 @@ const SavedEntries = ({ params }) => {
                   leftImage={"/assets/citizen.svg"}
                   //rightImage={"/assets/upload-icon.png"}
                   secondaryLoading={fileUploading}
-                  mainSubtext={moment(el?.capturedAt).format(
+                  mainSubtext={moment(el?.capturedAt).utcOffset('+0530').format(
                     "DD MMM YYYY, hh:mm a"
                   )}
                   mainText={el?.submissionData?.claimantName}

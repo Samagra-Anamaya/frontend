@@ -53,10 +53,10 @@ const AssignedLocations = () => {
       const version = packageJson.version;
       localStorage.setItem('appVersion', res.data.result.data.version);   
       if (version.split('.').pop() < res.data.result.data.version.split('.').pop()) {
-        if (confirm('New Version Available')) {
+        if (confirm(`Update Alert: Version ${res?.data?.result?.data?.version} is out now! Upgrade from ${version} for the latest features`)) {
           window.location.reload()
         } else {
-
+          window.location.reload()
         }
       }
     })
