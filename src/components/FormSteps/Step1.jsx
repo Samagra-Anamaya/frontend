@@ -10,7 +10,14 @@ import {
 } from '@mui/material';
 import styles from './step.module.scss';
 
-const Step1 = ({ onFormSubmit, formEditable, formState, setFormState, savedEntries }) => (
+const Step1 = ({
+	onFormSubmit,
+	formEditable,
+	formState,
+	setFormState,
+	savedEntries,
+	feedbacks
+}) => (
 	<form onSubmit={onFormSubmit} className={styles.userForm}>
 		{formEditable ? (
 			<FormControl sx={{ mb: 4, width: '80%' }}>
@@ -61,6 +68,8 @@ const Step1 = ({ onFormSubmit, formEditable, formState, setFormState, savedEntri
 								aadharNumber: e.target.value
 							}));
 					}}
+					error={!!feedbacks?.aadharNumber}
+					helperText={feedbacks?.aadharNumber || null}
 					value={
 						// eslint-disable-next-line no-nested-ternary
 						savedEntries

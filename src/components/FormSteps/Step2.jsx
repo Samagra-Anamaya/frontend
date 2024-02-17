@@ -15,7 +15,8 @@ const Step2 = ({
 	setFormState,
 	formState,
 	landImages,
-	handleLandImages
+	handleLandImages,
+	feedbacks
 }) => {
 	const [isViewerOpen, setIsViewerOpen] = useState(false);
 	const [currentImage, setCurrentImage] = useState(0);
@@ -31,6 +32,7 @@ const Step2 = ({
 
 	const tribeOptions = useMemo(() => getTbName(), []);
 
+	console.log({ feedbacks });
 	return (
 		<form
 			onSubmit={(e) => {
@@ -56,6 +58,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
+				error={!!feedbacks?.landTitleSerialNumber}
+				helperText={feedbacks?.landTitleSerialNumber || null}
 			/>
 			{landImages.length > 0 && !formEditable && (
 				<div>
@@ -73,6 +77,7 @@ const Step2 = ({
 									/>
 								);
 							}
+
 							const objectURL = URL.createObjectURL(el);
 
 							return (
@@ -200,6 +205,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
+				error={!!feedbacks?.claimantName}
+				helperText={feedbacks?.claimantName || null}
 			/>
 
 			<TextField
@@ -219,6 +226,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
+				error={!!feedbacks?.noOfCoClaimants}
+				helperText={feedbacks?.noOfCoClaimants || null}
 			/>
 			{formState.noOfCoClaimants > 0 &&
 				Array.from(Array(Number(formState.noOfCoClaimants)).keys()).map((el) => (
@@ -256,6 +265,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
+				error={!!feedbacks?.noOfDependents}
+				helperText={feedbacks?.noOfDependents || null}
 			/>
 			{formState.noOfDependents > 0 &&
 				Array.from(Array(Number(formState.noOfDependents)).keys()).map((el) => (
@@ -288,6 +299,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
+				error={!!feedbacks?.parentName}
+				helperText={feedbacks?.parentName || null}
 			/>
 			<TextField
 				variant="standard"
@@ -297,6 +310,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
+				error={!!feedbacks?.address}
+				helperText={feedbacks?.address || null}
 			/>
 			{/* <TextField
                         variant='standard'
@@ -386,6 +401,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
+				error={!!feedbacks?.area}
+				helperText={feedbacks?.area || null}
 			/>
 			<TextField
 				variant="standard"
@@ -397,6 +414,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
+				error={!!feedbacks?.boundariesDesc}
+				helperText={feedbacks?.boundariesDesc || null}
 			/>
 			<div className={styles.btnContainer}>
 				<Button

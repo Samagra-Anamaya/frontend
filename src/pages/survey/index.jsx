@@ -14,7 +14,7 @@ import Lottie from 'react-lottie';
 import isOnline from 'is-online';
 import * as Sentry from '@sentry/nextjs';
 
-import { omit } from 'lodash';
+import { map, omit } from 'lodash';
 import { clearSubmissionBatch, setCurrentCitizen, tokenSelector } from '../../redux/store';
 
 import SelectionItem from '../../components/SelectionItem';
@@ -309,6 +309,95 @@ const SurveyPage = ({ params }) => {
 		showSubmitModal(true);
 	};
 
+	const selectionItems = useMemo(
+		() => [
+			{
+				id: 1,
+				leftImage: '/assets/surveyIcon1.png',
+				rightImage: '/assets/circleArrow.png',
+				onClick: () => {
+					logEvent(analytics, 'add_new_citizen_clicked', {
+						villageId: _currLocation.villageCode,
+						villageName: _currLocation.villageName,
+						user_id: userData?.user?.user?.username
+					});
+					addNewCitizen();
+				},
+				mainText: 'Add New Land Record',
+				href: null,
+				clName: null,
+				htmlId: null
+			},
+			{
+				id: 2,
+				leftImage: '/assets/assessment.png',
+				rightImage: '/assets/circleArrow.png',
+				onClick: () => {
+					logEvent(analytics, 'completed_entries_clicked', {
+						villageId: _currLocation.villageCode,
+						villageName: _currLocation.villageName,
+						user_id: userData?.user?.user?.username
+					});
+				},
+				mainText: 'View Submitted Titles',
+				href: '/synced-titles',
+				clName: 'synced',
+				htmlId: 'syncedTitles'
+			},
+			{
+				id: 3,
+				leftImage: '/assets/surveyIcon3.png',
+				rightImage: '/assets/circleArrow.png',
+				onClick: () => {
+					logEvent(analytics, 'saved_entries_clicked', {
+						villageId: _currLocation.villageCode,
+						villageName: _currLocation.villageName,
+						user_id: userData?.user?.user?.username
+					});
+				},
+				mainText: 'View Saved Titles',
+				href: '/saved-entries',
+				htmlId: 'submittedTitles'
+			},
+			{
+				id: 4,
+				leftImage: '/assets/surveyIcon1.png',
+				rightImage: '/assets/circleArrow.png',
+				onClick: () => {
+					logEvent(analytics, 'view_status_clickde', {
+						villageId: _currLocation.villageCode,
+						villageName: _currLocation.villageName,
+						user_id: userData?.user?.user?.username
+					});
+				},
+				mainText: 'View Request Status',
+				href: '/request-status'
+			},
+			{
+				id: 5,
+				leftImage: '/assets/surveyIcon1.png',
+				rightImage: '/assets/circleArrow.png',
+				onClick: () => {
+					logEvent(analytics, 'view_flagged_title_clicked', {
+						villageId: _currLocation.villageCode,
+						villageName: _currLocation.villageName,
+						user_id: userData?.user?.user?.username
+					});
+				},
+				mainText: 'View Flagged Titles',
+				href: '/flagged-titles',
+				clName: 'synced',
+				htmlId: 'syncedTitles'
+			}
+		],
+		[
+			_currLocation.villageCode,
+			_currLocation.villageName,
+			addNewCitizen,
+			userData?.user?.user?.username
+		]
+	);
+
 	return !hydrated ? null : (
 		<div className={styles.container} ref={containerRef}>
 			<Banner />
@@ -334,64 +423,18 @@ const SurveyPage = ({ params }) => {
 					)
 				)}
 
-				<SelectionItem
-					key={_currLocation.id}
-					leftImage={'/assets/surveyIcon1.png'}
-					rightImage={'/assets/circleArrow.png'}
-					onClick={() => {
-						logEvent(analytics, 'add_new_citizen_clicked', {
-							villageId: _currLocation.villageCode,
-							villageName: _currLocation.villageName,
-							user_id: userData?.user?.user?.username
-						});
-						addNewCitizen();
-					}}
-					mainText={'Add New Land Record'}
-				/>
-				<SelectionItem
-					key={_currLocation.id}
-					onClick={() => {
-						logEvent(analytics, 'completed_entries_clicked', {
-							villageId: _currLocation.villageCode,
-							villageName: _currLocation.villageName,
-							user_id: userData?.user?.user?.username
-						});
-					}}
-					leftImage={'/assets/assessment.png'}
-					rightImage={'/assets/circleArrow.png'}
-					mainText={'View Submitted Titles'}
-					href="/synced-titles"
-					clName="synced"
-					htmlId={'syncedTitles'}
-				/>
-				<SelectionItem
-					key={_currLocation.id}
-					onClick={() => {
-						logEvent(analytics, 'saved_entries_clicked', {
-							villageId: _currLocation.villageCode,
-							villageName: _currLocation.villageName,
-							user_id: userData?.user?.user?.username
-						});
-					}}
-					leftImage={'/assets/surveyIcon3.png'}
-					rightImage={'/assets/circleArrow.png'}
-					mainText={'View Saved Titles'}
-					href="/saved-entries"
-					htmlId="submittedTitles"
-				/>
-				<SelectionItem
-					key={_currLocation.id}
-					onClick={() => {
-						logEvent(analytics, 'view_status_clickde', {
-							villageId: _currLocation.villageCode,
-							villageName: _currLocation.villageName,
-							user_id: userData?.user?.user?.username
-						});
-					}}
-					rightImage={'/assets/circleArrow.png'}
-					mainText={'View Request Status'}
-					href="/request-status"
-				/>
+				{map(selectionItems, (item) => (
+					<SelectionItem
+						key={item.id}
+						leftImage={item.leftImage}
+						rightImage={item.rightImage}
+						onClick={item.onClick}
+						mainText={item.mainText}
+						href={item.href ?? null}
+						clName={item.clName ?? null}
+						htmlId={item?.htmlId ?? null}
+					/>
+				))}
 			</div>
 			{submitModal && (
 				<CommonModal sx={{ maxHeight: '50vh', maxWidth: '80vw', overflow: 'scroll' }}>

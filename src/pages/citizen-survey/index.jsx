@@ -32,10 +32,7 @@ import { saveCitizenFormData } from '../../redux/actions/saveCitizenFormData';
 import { sendLogs } from '../../services/api';
 import CitizenForm from '../../components/CitizenForm';
 import CommonModal from '../../components/Modal';
-import CommonHeader from '../../components/Commonheader';
 import styles from './index.module.scss';
-
-const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
 // Lottie Options
 const defaultOptions = {
@@ -69,11 +66,12 @@ const CitizenSurveyPage = ({ params }) => {
 	const [isMobile, setIsMobile] = useState(true);
 	const [loading, setLoading] = useState(false);
 	const [saveSuccess, setSaveSuccess] = useState(false);
-	const [showForm, setShowForm] = useState(false);
-	const [formEditable, setFormEditable] = useState(false);
+
 	const user2 = useSelector((state) => state?.userData?.user);
 
+	const isFlaggedEntry = useMemo(() => !!currCitizen?.feedback, [currCitizen?.feedback]);
 	console.log('CURR CITIZEN -->', currCitizen);
+
 	const getImagesFromStore = useCallback(async () => {
 		const { landRecords, rorRecords } = await getCitizenImageRecords(currCitizen.citizenId);
 		if (currCitizen?.submissionData && Object.keys(currCitizen?.submissionData)?.length > 0) {
@@ -82,6 +80,12 @@ const CitizenSurveyPage = ({ params }) => {
 		}
 	}, [currCitizen.citizenId, currCitizen?.submissionData]);
 
+	const feedbacks = useMemo(() => {
+		if (!isFlaggedEntry) return null;
+		return currCitizen?.feedback?.feedbackData;
+	}, [currCitizen?.feedback?.feedbackData, isFlaggedEntry]);
+
+	console.log({ feedbacks });
 	/* Use Effects */
 	useEffect(() => {
 		setHydrated(true);
@@ -111,6 +115,10 @@ const CitizenSurveyPage = ({ params }) => {
 	}, [_currLocation.villageCode, _currLocation.villageName, user?.username]);
 
 	/* Util Functions */
+
+	const onUpdate = useCallback(() => {
+		if (loading) return;
+	}, []);
 	const handleSubmit = async () => {
 		if (loading) return;
 		try {
@@ -123,17 +131,6 @@ const CitizenSurveyPage = ({ params }) => {
 			showSubmittedModal(true);
 			const capturedAt = moment().utc();
 			setTotalSteps((landImages?.length || 0) + (rorImages?.length || 0));
-			// for (const el in landImages) {
-			// 	const compressedImg = await compressImage(landImages[el].file);
-			// 	setActiveStep(Number(el) + 1);
-			// 	landImages[el] = compressedImg;
-			// }
-			// for (const el in rorImages) {
-			// 	const compressedImg = await compressImage(rorImages[el].file);
-			// 	setActiveStep((landImages?.length || 0) + Number(el) + 1);
-
-			// 	rorImages[el] = compressedImg;
-			// }
 			Object.values(landImages).forEach(async (image, index) => {
 				const compressedImg = await compressImage(image.file);
 				setActiveStep(index + 1);
@@ -163,9 +160,6 @@ const CitizenSurveyPage = ({ params }) => {
 
 			const newFormState = sanitizeForm({ ...formState });
 
-			console.log('SANITIZED FORM ---->', newFormState);
-			// newFormState['landRecords'] = landImages;
-			// newFormState['rorRecords'] = rorImages;
 			newFormState.imageUploaded = false;
 			if (!formState?.isAadhaarAvailable) {
 				delete formState?.aadharNumber;
@@ -239,11 +233,12 @@ const CitizenSurveyPage = ({ params }) => {
 				<Banner />
 				<Breadcrumb items={breadcrumbItems} />
 				<CitizenForm
+					feedbacks={feedbacks}
 					formEditable={
 						!(
 							currCitizen?.status === 'SUBMITTED' ||
 							(currCitizen?.submissionData && Object?.keys(currCitizen?.submissionData))?.length > 0
-						)
+						) || currCitizen?.status === 'FLAGGED'
 					}
 					handleSubmit={handleSubmit}
 					setFormState={setFormState}
@@ -251,10 +246,11 @@ const CitizenSurveyPage = ({ params }) => {
 					currCitizen={currCitizen}
 					submittedModal={submittedModal}
 					savedEntries={
-						(currCitizen?.submissionData &&
-							Object?.keys(currCitizen?.submissionData)?.length > 0 &&
-							currCitizen?.status !== 'SUBMITTED') ||
-						false
+						(currCitizen?.status === 'FLAGGED'
+							? false
+							: currCitizen?.submissionData &&
+							  Object?.keys(currCitizen?.submissionData)?.length > 0 &&
+							  currCitizen?.status !== 'SUBMITTED') || false
 					}
 					rorImages={rorImages}
 					setRorImages={setRorImages}

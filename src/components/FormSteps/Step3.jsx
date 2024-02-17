@@ -16,7 +16,8 @@ const Step3 = ({
 	rorImages,
 	handleRorImages,
 	handleSubmit,
-	submittedModal
+	submittedModal,
+	feedbacks
 }) => {
 	const [isViewerOpen, setIsViewerOpen] = useState(false);
 	const [currentImage, setCurrentImage] = useState(0);
@@ -151,6 +152,8 @@ const Step3 = ({
 						required
 						sx={{ mb: 4, width: '80%' }}
 						disabled={!formEditable}
+						error={!!feedbacks?.compartmentNo}
+						helperText={feedbacks?.compartmentNo || null}
 					/>
 				)}
 			{formState?.forestLandType === 'revenueForest' &&
@@ -169,6 +172,8 @@ const Step3 = ({
 							required
 							sx={{ mb: 4, width: '80%' }}
 							disabled={!formEditable}
+							error={!!feedbacks?.fraPlotsClaimed}
+							helperText={feedbacks?.fraPlotsClaimed || null}
 						/>
 						{formState.fraPlotsClaimed > 0 &&
 							Array.from(Array(Number(formState.fraPlotsClaimed)).keys()).map((el) => (
@@ -201,6 +206,8 @@ const Step3 = ({
 					required
 					sx={{ mb: 4, width: '80%' }}
 					disabled={!formEditable}
+					error={!!feedbacks?.compartmentNo}
+					helperText={feedbacks?.compartmentNo || null}
 				/>
 			)}
 			{formEditable ? (
@@ -245,6 +252,8 @@ const Step3 = ({
 						required
 						sx={{ mb: 4, width: '80%' }}
 						disabled={!formEditable}
+						error={!!feedbacks?.khataNumber}
+						helperText={feedbacks?.khataNumber || null}
 					/>
 					{formEditable && (
 						<ImageUploading

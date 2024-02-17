@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
+import { isNull, omitBy } from 'lodash';
 import { store } from '../../redux/store';
 
 // const BASE_URL = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
@@ -44,16 +45,22 @@ export const getVillageDetails = async (id) => {
 	}
 };
 
-export const getVillageSubmissions = async (id, page, token) => {
+export const getVillageSubmissions = async (id, page, token, status = 'PFA') => {
 	try {
-		const res = await axios.get(
-			`${getEnvVariables().BACKEND_SERVICE_URL}/submissions/${id}?limit=5&page=${page}`,
+		const params = omitBy(
 			{
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			}
+				page,
+				status,
+				limit: 5
+			},
+			isNull
 		);
+		const res = await axios.get(`${getEnvVariables().BACKEND_SERVICE_URL}/submissions/${id}`, {
+			params,
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		});
 		return res.data;
 	} catch (err) {
 		console.log(err);

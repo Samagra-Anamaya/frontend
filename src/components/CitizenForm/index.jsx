@@ -32,7 +32,8 @@ const CitizenForm = (props) => {
 		setLandImages,
 		setRorImages,
 		rorImages,
-		landImages
+		landImages,
+		feedbacks
 	} = props;
 
 	const [activeStep, setActiveStep] = useState(0);
@@ -105,6 +106,7 @@ const CitizenForm = (props) => {
 					formState={formState}
 					setFormState={setFormState}
 					savedEntries={savedEntries}
+					feedbacks={feedbacks}
 				/>
 			)}
 			{activeStep === 1 && (
@@ -115,6 +117,7 @@ const CitizenForm = (props) => {
 					formState={formState}
 					landImages={landImages}
 					handleLandImages={handleLandImages}
+					feedbacks={feedbacks}
 				/>
 			)}
 			{activeStep === 2 && (
@@ -127,6 +130,7 @@ const CitizenForm = (props) => {
 					handleRorImages={handleRorImages}
 					handleSubmit={handleSubmit}
 					submittedModal={submittedModal}
+					feedbacks={feedbacks}
 				/>
 			)}
 		</>
