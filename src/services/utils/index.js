@@ -209,15 +209,15 @@ export const getFormData = async ({ loading, scheduleId, formSpec, startingForm,
 export const compressImage = async (imageFile, flag, disableuserlogs) => {
 
   const user = store?.getState()?.userData?.user;
-  // const options = {
-  //   maxSizeMB: 0.1,
-  //   maxWidthOrHeight: 1920,
-  //   useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true,
-  //   fileType: 'image/webp'
-  // }
+  const options = {
+    maxSizeMB: 0.1,
+    maxWidthOrHeight: 1920,
+    useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true,
+    fileType: 'image/webp'
+  }
   try {
-  //  const compressedFile = flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) ? await compressImageToTargetSize(imageFile) : await imageCompression(imageFile, options) : await imageCompression(imageFile, options);
-    const compressedFile =  await compressImageToTargetSize(imageFile) ;
+    const compressedFile = flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) ? await compressImageToTargetSize(imageFile) : await imageCompression(imageFile, options) : await imageCompression(imageFile, options);
+    // const compressedFile =  await compressImageToTargetSize(imageFile) ;
     return compressedFile;
   } catch (err) {
     if (imageFile instanceof Blob) {
