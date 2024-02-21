@@ -228,20 +228,20 @@ const CitizenSurveyPage = ({ params }) => {
       } else {
         Sentry.captureException({ err: err?.message || err?.toString(), user });
         toast.error(`An error occurred while saving: ${err?.message || err?.toString()}`)
-        sendLogs({
-          meta: 'at handleSubmit citizenSurveyPage inside catch',
-          gpId: user2?.user?.username,
-          error: err?.message || err?.toString(),
-          currentForm: newFormState
-        }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username) : true)
+        // sendLogs({
+        //   meta: 'at handleSubmit citizenSurveyPage inside catch',
+        //   gpId: user2?.user?.username,
+        //   error: err?.message || err?.toString(),
+        //   currentForm: newFormState
+        // }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username) : true)
         return;
       }
-      sendLogs({
-        meta: 'at handleSubmit citizenSurveyPage inside catch after else',
-        gpId: user2?.user?.username,
-        error: err?.message || err?.toString(),
-        currentForm: newFormState
-      }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username) : true)
+      // sendLogs({
+      //   meta: 'at handleSubmit citizenSurveyPage inside catch after else',
+      //   gpId: user2?.user?.username,
+      //   error: err?.message || err?.toString(),
+      //   currentForm: newFormState
+      // }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username) : true)
       console.log(err);
       setLoading(false);
       showSubmittedModal(false);
