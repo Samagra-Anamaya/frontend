@@ -221,8 +221,8 @@ export const compressImage = async (imageFile, flag, disableuserlogs) => {
     return compressedFile;
   } catch (err) {
     if (imageFile instanceof Blob) {
-      let uploadedFile = await uploadMedia([imageFile], user)
-      sendLogs({ meta: `at compressImage inside if, fileName: ${imageFile?.name}, minioName: ${JSON.stringify(uploadedFile)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
+     // let uploadedFile = await uploadMedia([imageFile], user)
+    //  sendLogs({ meta: `at compressImage inside if, fileName: ${imageFile?.name}, minioName: ${JSON.stringify(uploadedFile)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
       return imageFile;
     }
     else {
