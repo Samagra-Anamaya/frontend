@@ -280,9 +280,9 @@ export const storeImages = async (data, disableuserlogs) => {
     imageRecords.push(data);
     return await localForage.setItem("imageRecords", imageRecords);
   } catch (err) {
-    const user = store?.getState()?.userData?.user;
-    let uploadedFiles = await uploadMedia([data.images], user)
-    sendLogs({ meta: `at storeImages, minioNames: ${JSON.stringify(uploadedFiles)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
+    // const user = store?.getState()?.userData?.user;
+    // let uploadedFiles = await uploadMedia([data.images], user)
+    // sendLogs({ meta: `at storeImages, minioNames: ${JSON.stringify(uploadedFiles)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
     throw err;
   }
 }
