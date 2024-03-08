@@ -1,3 +1,6 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable guard-for-in */
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable no-nested-ternary */
@@ -113,6 +116,7 @@ const CitizenSurveyPage = ({ params, props }) => {
 			setFormState(currCitizen.submissionData);
 		}
 		getImagesFromStore();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currCitizen?.status, currCitizen.submissionData, getImagesFromStore]);
 
 	useEffect(() => {
@@ -169,7 +173,6 @@ const CitizenSurveyPage = ({ params, props }) => {
 				newRorImages[el] = compressedImg;
 			}
 
-			console.log('hola:', { rorImages, newLandImages, landImages });
 			if (!indexDbStats.isAvailable) {
 				toast.error('Device space full, please make space before continuing');
 				setLoading(false);

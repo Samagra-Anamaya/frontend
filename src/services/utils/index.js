@@ -1,21 +1,20 @@
+/* eslint-disable default-param-last */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable consistent-return */
+/* eslint-disable no-return-await */
+/* eslint-disable no-useless-catch */
+/* eslint-disable @typescript-eslint/no-use-before-define */
+/* eslint-disable no-nested-ternary */
+/* eslint-disable no-shadow */
+/* eslint-disable no-param-reassign */
+
 'use client';
 
 import Cookies from 'js-cookie';
-// import XMLParser from "react-xml-parser";
 import localforage from 'localforage';
-import axios from 'axios';
-// import { userData } from "@/app/pages/Default/page";
-// import { useUserData } from "@/app/hooks/useAuth";
 import imageCompression from 'browser-image-compression';
-import localForage from 'localforage';
-import {
-	getMedicalAssessments,
-	getPrefillXML,
-	getSubmissionXML,
-	sendLogs,
-	uploadMedia
-} from '../api';
-import { store } from '../../redux/store';
+import { getNewToken, sendLogs, uploadMedia } from '../api';
+import { store, updateUserToken } from '../../redux/store';
 
 export const makeHasuraCalls = async (query, userData) =>
 	fetch(process.env.NEXT_PUBLIC_HASURA_URL, {
@@ -37,32 +36,6 @@ const validateResponse = async (response) => {
 		responseStatus: false
 	};
 	return jsonResponse;
-};
-
-export const makeDataForPrefill = (prev, xmlDoc, key, finalObj, formName) => {
-	if (Array.isArray(xmlDoc) && xmlDoc.length == 0 && prev.value) {
-		finalObj[key] = prev.value;
-	} else {
-		for (const el in xmlDoc) {
-			makeDataForPrefill(
-				xmlDoc[el],
-				xmlDoc[el].children,
-				`${key}_*_${xmlDoc[el].name}`,
-				finalObj,
-				formName
-			);
-		}
-	}
-};
-
-export const updateFormData = async (startingForm) => {
-	try {
-		const data = await getFromLocalForage(
-			`${startingForm}${new Date().toISOString().split('T')[0]}`
-		);
-		const prefilledForm = await getSubmissionXML(startingForm, data.formData, data.imageUrls);
-		return prefilledForm;
-	} catch (err) {}
 };
 
 export const setCookie = (cname, cvalue) => {
@@ -117,12 +90,11 @@ export const isImage = (key, filename) => {
 
 export const getFromLocalForage = async (key, isLoggedIn = true, userData) => {
 	const user = userData;
-	console.log(user);
+
 	try {
 		if (isLoggedIn) return await localforage.getItem(`${user?.user.id}_${key}`);
 		return await localforage.getItem(key);
 	} catch (err) {
-		console.log(err);
 		return null;
 	}
 };
@@ -133,117 +105,6 @@ export const setToLocalForage = async (key, value, isLoggedIn = true, user) => {
 	if (isLoggedIn) await localforage.setItem(`${user?.user.id}_${key}`, value);
 	else await localforage.setItem(key, value);
 };
-
-export const handleFormEvents = async (startingForm, afterFormSubmit, e, user) => {
-	// const user = getCookie("userData");
-	const appEnvs = await getFromLocalForage('appEnvs', false);
-	const ENKETO_URL = process.env.NEXT_PUBLIC_ENKETO_URL;
-
-	if (e.origin == ENKETO_URL && JSON.parse(e?.data)?.state !== 'ON_FORM_SUCCESS_COMPLETED') {
-		console.log('Form Change Event------->', e);
-		// var formData = new XMLParser().parseFromString(JSON.parse(e.data).formData);
-		const { formData } = JSON.parse(e.data);
-		if (formData) {
-			const images = JSON.parse(e.data).fileURLs;
-			const prevData = await getFromLocalForage(
-				`${startingForm}${new Date().toISOString().split('T')[0]}`
-			);
-			console.log('Local Forage Data ---->', prevData);
-			await setToLocalForage(
-				`${startingForm}${new Date().toISOString().split('T')[0]}`,
-				{
-					formData: JSON.parse(e.data).formData,
-					imageUrls: { ...prevData?.imageUrls, ...images }
-				},
-				true,
-				user
-			);
-		}
-	}
-	afterFormSubmit(e);
-};
-
-export const getFormData = async ({
-	loading,
-	scheduleId,
-	formSpec,
-	startingForm,
-	formId,
-	setData,
-	setEncodedFormSpec,
-	setEncodedFormURI
-}) => {
-	const res = await getMedicalAssessments();
-	if (res?.data?.assessment_schedule?.[0]) {
-		loading.current = true;
-		const ass = res?.data?.assessment_schedule?.[0];
-		scheduleId.current = ass.id;
-		setData({
-			schedule_id: ass.id,
-			id: ass.institute.id,
-			district: ass.institute.district,
-			instituteName: ass.institute.name,
-			specialization: ass.institute?.institute_specializations?.[0]?.specializations,
-			courses: ass.institute?.institute_types?.[0]?.types,
-			type: ass.institute.sector,
-			latitude: ass.institute.latitude,
-			longitude: ass.institute.longitude
-		});
-		const formData = await getFromLocalForage(
-			`${startingForm}${new Date().toISOString().split('T')[0]}`
-		);
-		console.log('Form Data Local Forage --->', formData);
-		if (formData) {
-			setEncodedFormSpec(encodeURI(JSON.stringify(formSpec.forms[formId])));
-			const prefilledForm = await getPrefillXML(
-				startingForm,
-				formSpec.forms[formId].onSuccess,
-				formData.formData,
-				formData.imageUrls
-			);
-			console.log('Prefilled Form:', prefilledForm);
-			setEncodedFormURI(prefilledForm);
-			// setEncodedFormURI(
-			//   getFormURI(
-			//     formId,
-			//     formSpec.forms[formId].onSuccess,
-			//     formData
-			//   )
-			// );
-		} else {
-			const prefilledForm = await getPrefillXML(startingForm, formSpec.forms[formId].onSuccess);
-			console.log('Prefilled Form Empty:', prefilledForm);
-			setEncodedFormURI(prefilledForm);
-		}
-	} else setData(null);
-	loading.current = false;
-};
-
-// export const cacheForms = async (formName) => {
-//   const user = getCookie("userData");
-//   console.log("userData:", user)
-//   console.log("Caching Forms ... ");
-//   let prefilledFormUrl = await getPrefillXML(formName, {});
-//   console.log(prefilledFormUrl)
-//   let transformedForm = await axios.get('http://localhost:8085/transform?xform=' + prefilledFormUrl);
-//   console.log("Trans form:", transformedForm.data)
-//   setToLocalForage(formName, transformedForm.data);
-// }
-
-// export const compressImage = async (imageFile) => {
-// 	const options = {
-// 		maxSizeMB: 0.1,
-// 		maxWidthOrHeight: 1920,
-// 		useWebWorker: true,
-// 		fileType: 'image/webp'
-// 	};
-
-// 	const compressedFile = await imageCompression(imageFile, options);
-// 	console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
-// 	console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
-
-// 	return compressedFile;
-// };
 
 export const compressImage = async (imageFile, flag, disableuserlogs) => {
 	const user = store?.getState()?.userData?.user;
@@ -338,9 +199,9 @@ const compressImageToTargetSize = (
 
 export const storeImages = async (data, disableuserlogs) => {
 	try {
-		const imageRecords = (await localForage.getItem('imageRecords')) || [];
+		const imageRecords = (await localforage.getItem('imageRecords')) || [];
 		imageRecords.push(data);
-		return await localForage.setItem('imageRecords', imageRecords);
+		return await localforage.setItem('imageRecords', imageRecords);
 	} catch (err) {
 		// const user = store?.getState()?.userData?.user;
 		// let uploadedFiles = await uploadMedia([data.images], user)
@@ -355,7 +216,7 @@ export const storeImages = async (data, disableuserlogs) => {
 // 	return await localForage.setItem('imageRecords', imageRecords);
 // };
 
-export const getImages = async () => await localForage.getItem('imageRecords');
+export const getImages = async () => await localforage.getItem('imageRecords');
 
 export const getImagesForVillage = async (villageId) => {
 	const imageRecords = await getImages();
@@ -390,8 +251,8 @@ export const getCitizenImageRecords = async (citizenId) => {
 export const removeCitizenImageRecord = async (citizenId) => {
 	const images = await getImages();
 	if (images?.length > 0) {
-		const imageRecords = images.filter((el) => el.citizenId != citizenId);
-		await localForage.setItem('imageRecords', imageRecords);
+		const imageRecords = images.filter((el) => el.citizenId !== citizenId);
+		await localforage.setItem('imageRecords', imageRecords);
 	}
 };
 
@@ -450,16 +311,18 @@ export const chunkArray = (arr, size) => {
 };
 
 // Sleep function to introduce a delay
+// eslint-disable-next-line no-promise-executor-return
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Sanitize Form before saving in redux store
 export const sanitizeForm = (form) => {
-	if (form.forestLandType == 'revenueForest' && form.typeOfBlock != 'jungleBlock') {
+	if (form.forestLandType === 'revenueForest' && form.typeOfBlock !== 'jungleBlock') {
 		delete form.compartmentNo;
 	}
-	if (form.forestLandType == 'reservedForest') {
+	if (form.forestLandType === 'reservedForest') {
 		delete form.typeOfBlock;
 		if (form.fraPlotsClaimed) {
+			// eslint-disable-next-line no-plusplus
 			for (let i = 1; i <= form.fraPlotsClaimed; i++) {
 				delete form[`plotNumber${i}`];
 			}

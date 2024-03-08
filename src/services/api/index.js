@@ -136,7 +136,7 @@ export const getImageFromMinio = async (filename, user) => {
 };
 
 export const getStorageQuota = () =>
-	new Promise(async (resolve, reject) => {
+	new Promise((resolve, reject) => {
 		if (navigator.storage && navigator.storage.estimate) {
 			navigator.storage.estimate().then((estimate) => {
 				const availableSpace = estimate.quota - estimate.usage;

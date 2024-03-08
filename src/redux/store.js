@@ -1,3 +1,4 @@
+/* eslint-disable no-unsafe-optional-chaining */
 import { configureStore, createSlice, current } from '@reduxjs/toolkit';
 import { cloneDeep, forEach, map } from 'lodash';
 import { persistStore, persistReducer } from 'redux-persist';
@@ -84,10 +85,10 @@ const userDataSlice = createSlice({
 		},
 		addCitizen: (state, action) => {
 			const currLocIndex = state.assignedLocations.findIndex(
+				// eslint-disable-next-line eqeqeq
 				(el) => el.villageCode == state.currentLocation.villageCode
 			);
-			console.log('FIND CURRENT-->', currLocIndex);
-			console.log('Add Citizen --->', current(state.currentLocation), action.payload);
+
 			const newCurrLocation = {
 				...state.currentLocation,
 				citizens: [...(state?.currentLocation?.citizens || []), { citizenId: action.payload.id }]
@@ -187,25 +188,17 @@ const userDataSlice = createSlice({
 		clearSubmissionBatch: (state, action) => {
 			const currSubmission = current(state.submissions[action.payload[0]?.spdpVillageId]);
 			const newSubmissions = currSubmission.filter(
+				// eslint-disable-next-line eqeqeq
 				(el) => el.citizenId != action.payload.find((x) => x.citizenId == el.citizenId)?.citizenId
 			);
 			state.submissions[action.payload[0]?.spdpVillageId] = newSubmissions;
 		},
 		clearSubmission: (state, action) => {
-			console.log('holap here');
-
-			console.log('holap here', cloneDeep(state), cloneDeep(action));
-
 			const currSubmission = state.submissions[action.payload?.spdpVillageId];
 			const newSubmissions = currSubmission.filter(
 				(el) => el.citizenId !== action.payload?.citizenId
 			);
-			console.log('holap:', {
-				currSubmission: cloneDeep(currSubmission),
-				newSubmissions: cloneDeep(newSubmissions),
-				action: cloneDeep(action)
-			});
-			console.log('holap:', { currSubmission, newSubmissions, action });
+
 			state.submissions[action.payload?.spdpVillageId] = newSubmissions;
 		},
 		updatePendingSubmissions: (state, action) => {
