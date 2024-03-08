@@ -13,13 +13,13 @@ import { MDBListGroup } from 'mdbreact';
 import moment from 'moment';
 import Lottie from 'react-lottie';
 import * as emptyState from '../../utils/lottie/emptyState.json';
-import ListItem from '../../components/ListItem';
 import Banner from '../../components/Banner';
 import Breadcrumb from '../../components/Breadcrumb';
 import { getVillageSubmissions, searchCitizen } from '../../services/api';
 import { setCurrentCitizen, tokenSelector, updateSearchQuery } from '../../redux/store';
 
 import styles from './index.module.scss';
+import FlaggedItem from './flagged-item';
 
 // Lottie Options
 const defaultOptions = {
@@ -115,6 +115,13 @@ const FlaggedEntries = ({ params }) => {
 		],
 		[_currLocation?.villageName]
 	);
+
+	const onSubBtnClick = useCallback(
+		(submission) => () => {
+			console.log('hola s:', { submission });
+		},
+		[]
+	);
 	return !hydrated ? null : (
 		<div className={`${styles.container} `}>
 			<Banner />
@@ -150,10 +157,13 @@ const FlaggedEntries = ({ params }) => {
 						{!fetching &&
 							prevSubmissions?.length > 0 &&
 							prevSubmissions?.map((el) => (
-								<ListItem
+								<FlaggedItem
 									clName="titles"
 									key={el.id}
-									onSubBtnClick={() => null}
+									submission={el}
+									fetchRecords={getVillageSubmissionData}
+									onSubBtnClick={onSubBtnClick(el)}
+									onSecondaryAction={onSubBtnClick(el)}
 									leftImage={'/assets/citizen.svg'}
 									rightImage={'/assets/verified.png'}
 									mainText={el?.submissionData?.claimantName}
@@ -163,7 +173,7 @@ const FlaggedEntries = ({ params }) => {
 									imgWidth={'70%'}
 									onClick={() => {
 										dispatch(setCurrentCitizen(el));
-										router.push(`/citizen-survey`);
+										router.push(`/citizen-survey?isFeedback=true`);
 									}}
 								/>
 							))}

@@ -1,8 +1,10 @@
-import axios from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { isNull, omitBy } from 'lodash';
 import { store } from '../../redux/store';
+import packageJson from '../../../package.json';
 
+const APP_VERSION = packageJson.version;
 // const BASE_URL = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 // const applicationId = process.env.NEXT_PUBLIC_APPLICATION_ID;
 // const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
@@ -133,15 +135,76 @@ export const getImageFromMinio = async (filename, user) => {
 		: res?.data;
 };
 
-export const sendLogs = async (data, user) => {
-	const res = await axios.post(
-		`${getEnvVariables().BACKEND_SERVICE_URL}/utils/logSubmissionError`,
-		data,
-		{
-			headers: {
-				Authorization: `Bearer ${user?.token}`
-			}
+export const getStorageQuota = () =>
+	new Promise(async (resolve, reject) => {
+		if (navigator.storage && navigator.storage.estimate) {
+			navigator.storage.estimate().then((estimate) => {
+				const availableSpace = estimate.quota - estimate.usage;
+				resolve({
+					quota: estimate.quota,
+					usage: estimate.usage,
+					available: availableSpace,
+					isAvailable: availableSpace > 104857600
+				});
+			});
+		} else {
+			resolve({ quota: 0, usage: 0, available: 0, isAvailable: 0 });
 		}
-	);
-	return res?.data;
+	});
+
+// export const sendLogs = async (data, user) => {
+// 	const res = await axios.post(
+// 		`${getEnvVariables().BACKEND_SERVICE_URL}/utils/logSubmissionError`,
+// 		data,
+// 		{
+// 			headers: {
+// 				Authorization: `Bearer ${user?.token}`
+// 			}
+// 		}
+// 	);
+// 	return res?.data;
+// };
+// eslint-disable-next-line consistent-return
+export const sendLogs = async (data, enabled = true) => {
+	try {
+		if (enabled) {
+			const indexDbStats = await getStorageQuota();
+			const res = await axios.post(
+				`${getEnvVariables().BACKEND_SERVICE_URL}/utils/logSubmissionError`,
+				{
+					appVersion: APP_VERSION,
+					deviceInfo: navigator.userAgent,
+					timestamp: Date.now(),
+					quota: `${indexDbStats ? indexDbStats.quota / 1000000 : 0} MB`,
+					usage: `${indexDbStats ? indexDbStats.usage / 1000000 : 0} MB`,
+					available: `${indexDbStats ? indexDbStats.available / 1000000 : 0} MB`,
+					...data
+				}
+			);
+			return res?.data;
+		}
+	} catch (err) {
+		console.log({ err });
+	}
+};
+
+export const getNewToken = async (refreshToken, token) => {
+	try {
+		const res = await axios.post(
+			`${getEnvVariables().BASE_URL}refresh-token`,
+			{
+				refreshToken,
+				token
+			},
+			{
+				headers: {
+					'x-application-id': `${getEnvVariables().applicationId}`
+				}
+			}
+		);
+		return res?.data;
+	} catch (err) {
+		console.log(err);
+		return null;
+	}
 };

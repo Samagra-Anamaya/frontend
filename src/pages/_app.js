@@ -18,22 +18,26 @@ import { CircularProgress, Button } from '@mui/material';
 import Lottie from 'react-lottie';
 
 import { ThemeProvider } from 'samagra-ui-test';
+import flagsmith from 'flagsmith/isomorphic';
+import { FlagsmithProvider } from 'flagsmith/react';
 import CommonModal from '../components/Modal';
 import { _updateSubmissionMedia } from '../redux/actions/updateSubmissionMedia';
-import { removeCitizenImageRecord } from '../services/utils';
+import { checkTokenValidity, refreshToken, removeCitizenImageRecord } from '../services/utils';
 import { analytics } from '../services/firebase/firebase';
 import { store, updateCanSubmit, updateIsOffline, updatePendingSubmissions } from '../redux/store';
 import { modalStyles, lotteDefaultOptions as defaultOptions } from '../utils';
 import { OfflineTag } from '../components/Offline';
+import AnnouncementBar from '../components/AnnouncementBar';
 
-export default function App({ Component, pageProps }) {
+export default function App({ Component, pageProps, flagsmithState }) {
 	// const [isFirstLoad, setIsFirstLoad] = useState(true);
 	const [hydrated, setHydrated] = useState(false);
 
 	const [syncing, setSyncing] = useState(false);
 	const [syncComplete, setSyncComplete] = useState(true);
 	const [isDesktop, setIsDesktop] = useState(true);
-
+	const [showAnnouncementBar, setShowAnnouncementBar] = useState(false);
+	const [announcementText, setAnnouncementText] = useState('');
 	const onSyncSuccess = async (response) => {
 		const apiRequests = await localforage.getItem('apiRequests');
 
@@ -72,14 +76,18 @@ export default function App({ Component, pageProps }) {
 		logEvent(analytics, 'page_view');
 		if (window.innerWidth > 500) setIsDesktop(true);
 		else setIsDesktop(false);
+		const daysLeft = checkTokenValidity();
+
+		if (daysLeft <= 3) {
+			setShowAnnouncementBar(true);
+			setAnnouncementText(`Your token will be expired in ${daysLeft} days`);
+		}
+		if (daysLeft <= 1) {
+			refreshToken();
+		}
 	}, []);
 
 	const onStatusChange = useCallback(({ isOnline }) => {
-		// console.log('sexy:', { isFirstLoad, isOnline });
-		// if (isFirstLoad && isOnline) {
-		// 	setIsFirstLoad(false);
-		// 	return;
-		// }
 		if (isOnline) {
 			toast.success('App is back online', {
 				position: 'top-right',
@@ -114,13 +122,24 @@ export default function App({ Component, pageProps }) {
 		// eslint-disable-next-line react/jsx-filename-extension
 		<ThemeProvider>
 			<div className={isDesktop ? 'rootDiv' : null}>
+				{showAnnouncementBar && <AnnouncementBar text={announcementText} />}
 				<Provider store={store} data-testid="redux-provider">
 					<OfflineSyncProvider
 						onCallback={onSyncSuccess}
 						render={OfflineTag}
 						onStatusChange={onStatusChange}
 					>
-						<Component {...pageProps} />
+						<FlagsmithProvider
+							serverState={flagsmithState}
+							options={{
+								environmentID: process.env.NEXT_PUBLIC_FLAGSMITH_ID
+							}}
+							flagsmith={flagsmith}
+						>
+							<div style={showAnnouncementBar ? { marginTop: '1.5rem' } : {}}>
+								<Component {...pageProps} />
+							</div>
+						</FlagsmithProvider>
 					</OfflineSyncProvider>
 					<ToastContainer
 						position="top-center"
@@ -174,3 +193,11 @@ export default function App({ Component, pageProps }) {
 		</ThemeProvider>
 	);
 }
+
+App.getInitialProps = async () => {
+	await flagsmith.init({
+		// fetches flags on the server and passes them to the App
+		environmentID: process.env.NEXT_PUBLIC_FLAGSMITH_ID
+	});
+	return { flagsmithState: flagsmith.getState() };
+};

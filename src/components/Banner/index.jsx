@@ -56,7 +56,10 @@ const Banner = (props) => {
 							/>
 							<Drawer open={isOpen} onClose={() => setIsOpen(false)}>
 								<>
-									<Sidebar name={userData?.user?.user?.username} />
+									<Sidebar
+										name={userData?.user?.user?.username}
+										onLogout={() => showLogoutModal((prev) => !prev)}
+									/>
 									{/* <Box
 										role="presentation"
 										onClick={() => setIsOpen(false)}

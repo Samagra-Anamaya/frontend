@@ -8,7 +8,14 @@ import axios from 'axios';
 // import { useUserData } from "@/app/hooks/useAuth";
 import imageCompression from 'browser-image-compression';
 import localForage from 'localforage';
-import { getMedicalAssessments, getPrefillXML, getSubmissionXML } from '../api';
+import {
+	getMedicalAssessments,
+	getPrefillXML,
+	getSubmissionXML,
+	sendLogs,
+	uploadMedia
+} from '../api';
+import { store } from '../../redux/store';
 
 export const makeHasuraCalls = async (query, userData) =>
 	fetch(process.env.NEXT_PUBLIC_HASURA_URL, {
@@ -223,33 +230,145 @@ export const getFormData = async ({
 //   setToLocalForage(formName, transformedForm.data);
 // }
 
-export const compressImage = async (imageFile) => {
+// export const compressImage = async (imageFile) => {
+// 	const options = {
+// 		maxSizeMB: 0.1,
+// 		maxWidthOrHeight: 1920,
+// 		useWebWorker: true,
+// 		fileType: 'image/webp'
+// 	};
+
+// 	const compressedFile = await imageCompression(imageFile, options);
+// 	console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+// 	console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+
+// 	return compressedFile;
+// };
+
+export const compressImage = async (imageFile, flag, disableuserlogs) => {
+	const user = store?.getState()?.userData?.user;
 	const options = {
 		maxSizeMB: 0.1,
 		maxWidthOrHeight: 1920,
-		useWebWorker: true,
+		useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true,
 		fileType: 'image/webp'
 	};
+	try {
+		const compressedFile = flag?.enabled
+			? flag?.value?.split(',')?.includes(user?.user?.username)
+				? await compressImageToTargetSize(imageFile)
+				: await imageCompression(imageFile, options)
+			: await imageCompression(imageFile, options);
+		// const compressedFile =  await compressImageToTargetSize(imageFile) ;
+		return compressedFile;
+	} catch (err) {
+		if (imageFile instanceof Blob) {
+			// let uploadedFile = await uploadMedia([imageFile], user)
+			//  sendLogs({ meta: `at compressImage inside if, fileName: ${imageFile?.name}, minioName: ${JSON.stringify(uploadedFile)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
+			return imageFile;
+		}
 
-	const compressedFile = await imageCompression(imageFile, options);
-	console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
-	console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
-
-	return compressedFile;
+		const uploadedFile = await uploadMedia([imageFile], user);
+		sendLogs(
+			{
+				meta: `at compressImage inside else, fileName: ${
+					imageFile?.name
+				}, minioName: ${JSON.stringify(uploadedFile)}`,
+				gpId: store?.getState().userData?.user?.user?.username,
+				error: err?.message || err?.toString(),
+				useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true
+			},
+			disableuserlogs?.enabled
+				? disableuserlogs?.value?.split(',')?.includes(user?.user?.username)
+				: true
+		);
+		throw new Error('Invalid File Type');
+	}
 };
 
-export const storeImages = async (data) => {
-	const imageRecords = (await localForage.getItem('imageRecords')) || [];
-	imageRecords.push(data);
-	return await localForage.setItem('imageRecords', imageRecords);
+const compressImageToTargetSize = (
+	file,
+	targetSizeKB = 1000,
+	maxWidth = 1920,
+	maxHeight = 1080,
+	step = 0.05,
+	quality = 0.7
+) =>
+	new Promise((resolve, reject) => {
+		const img = new Image();
+		img.src = URL.createObjectURL(file);
+		img.onload = () => {
+			let { width } = img;
+			let { height } = img;
+
+			if (width > height) {
+				if (width > maxWidth) {
+					height *= maxWidth / width;
+					width = maxWidth;
+				}
+			} else if (height > maxHeight) {
+				width *= maxHeight / height;
+				height = maxHeight;
+			}
+
+			const attemptCompression = (quality) => {
+				const canvas = document.createElement('canvas');
+				canvas.width = width;
+				canvas.height = height;
+				const ctx = canvas.getContext('2d');
+				ctx.drawImage(img, 0, 0, width, height);
+				canvas.toBlob(
+					(blob) => {
+						if (blob.size / 1024 > targetSizeKB && quality > step) {
+							// Check if the size is larger than target
+							attemptCompression(quality - step); // Reduce quality
+						} else {
+							resolve(blob);
+						}
+					},
+					'image/jpeg',
+					quality
+				);
+			};
+
+			attemptCompression(quality);
+		};
+		img.onerror = reject;
+	});
+
+export const storeImages = async (data, disableuserlogs) => {
+	try {
+		const imageRecords = (await localForage.getItem('imageRecords')) || [];
+		imageRecords.push(data);
+		return await localForage.setItem('imageRecords', imageRecords);
+	} catch (err) {
+		// const user = store?.getState()?.userData?.user;
+		// let uploadedFiles = await uploadMedia([data.images], user)
+		// sendLogs({ meta: `at storeImages, minioNames: ${JSON.stringify(uploadedFiles)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString() }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
+		throw err;
+	}
 };
+
+// export const storeImages = async (data) => {
+// 	const imageRecords = (await localForage.getItem('imageRecords')) || [];
+// 	imageRecords.push(data);
+// 	return await localForage.setItem('imageRecords', imageRecords);
+// };
 
 export const getImages = async () => await localForage.getItem('imageRecords');
 
 export const getImagesForVillage = async (villageId) => {
 	const imageRecords = await getImages();
 	if (imageRecords?.length > 0) {
-		return imageRecords.filter((el) => el.villageId == villageId);
+		return imageRecords.filter((el) => el.villageId === villageId);
+	}
+	return [];
+};
+
+export const getImagesForSubmission = async (submissionId) => {
+	const imageRecords = await getImages();
+	if (imageRecords?.length > 0) {
+		return imageRecords.filter((el) => el.citizenId === submissionId);
 	}
 	return [];
 };
@@ -258,10 +377,10 @@ export const getCitizenImageRecords = async (citizenId) => {
 	const imageRecords = await getImages();
 	if (imageRecords?.length > 0) {
 		const landRecords = imageRecords.filter(
-			(el) => el.citizenId == citizenId && el.isLandRecord
+			(el) => el.citizenId === citizenId && el.isLandRecord
 		)?.[0];
 		const rorRecords = imageRecords.filter(
-			(el) => el.citizenId == citizenId && !el.isLandRecord
+			(el) => el.citizenId === citizenId && !el.isLandRecord
 		)?.[0];
 		return { landRecords, rorRecords };
 	}
@@ -302,7 +421,15 @@ const p = [
 ];
 
 // validates Aadhar number received as string
+function isBcryptHash(str) {
+	// Bcrypt hashes typically start with $2a$, $2b$, $2y$, or $2x$
+	const bcryptRegex = /^\$2[aybx]\$[0-9]{2}\$.{53}$/;
+	return bcryptRegex.test(str);
+}
 export function validateAadhaar(aadharNumber) {
+	if (isBcryptHash(aadharNumber)) {
+		return true;
+	}
 	let c = 0;
 	const invertedArray = aadharNumber.split('').map(Number).reverse();
 
@@ -340,4 +467,30 @@ export const sanitizeForm = (form) => {
 		delete form.fraPlotsClaimed;
 	}
 	return form;
+};
+
+export const checkTokenValidity = () => {
+	const userData = store.getState()?.userData?.user;
+	let days = 999;
+	if (userData) {
+		const timeleft = userData.tokenExpirationInstant - new Date().getTime();
+		days = Math.ceil(timeleft / 1000 / 60 / 60 / 24);
+	}
+	return days || 999;
+};
+
+export const refreshToken = async () => {
+	const userData = store.getState()?.userData?.user;
+	if (userData) {
+		const res = await getNewToken(userData.refreshToken, userData.token);
+		if (res?.result?.user) {
+			store.dispatch(
+				updateUserToken({
+					token: res.result.user.token,
+					refreshToken: res.result.user.refreshToken,
+					tokenExpirationInstant: res.result.user.tokenExpirationInstant
+				})
+			);
+		}
+	}
 };

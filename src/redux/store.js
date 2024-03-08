@@ -2,11 +2,11 @@ import { configureStore, createSlice, current } from '@reduxjs/toolkit';
 import { cloneDeep, forEach, map } from 'lodash';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
+import { ptBR } from '@mui/x-date-pickers';
 import { replaceMediaObject } from './actions/replaceMediaObject';
 import { _updateSubmissionMedia } from './actions/updateSubmissionMedia';
 import { saveCitizenFormData } from './actions/saveCitizenFormData';
 import { removeSubmission } from './actions/removeSubmission';
-import { ptBR } from '@mui/x-date-pickers';
 import { loginUser } from './actions/login';
 // import storage from 'redux-persist-indexeddb-storage';
 
@@ -88,7 +88,7 @@ const userDataSlice = createSlice({
 			);
 			console.log('FIND CURRENT-->', currLocIndex);
 			console.log('Add Citizen --->', current(state.currentLocation), action.payload);
-			let newCurrLocation = {
+			const newCurrLocation = {
 				...state.currentLocation,
 				citizens: [...(state?.currentLocation?.citizens || []), { citizenId: action.payload.id }]
 			};
@@ -119,7 +119,7 @@ const userDataSlice = createSlice({
 			state.submissions = action.payload;
 		},
 		updateCitizenFormData: (state, action) => {
-			let submissionArray = state.submissions[action.payload.spdpVillageId];
+			const submissionArray = state.submissions[action.payload.spdpVillageId];
 			const submissionIndex = submissionArray.findIndex(
 				(submission) => submission.citizenId === action.payload.citizenId
 			);
@@ -137,29 +137,29 @@ const userDataSlice = createSlice({
 		},
 		updateSubmissionMedia: (state, action) => {
 			console.log({ state: cloneDeep(state), action });
-			const villageData = map(state?.submissions?.[action?.payload?.villageId], (item, index) => {
-				return item?.citizenId === action?.payload?.citizenId
+			const villageData = map(state?.submissions?.[action?.payload?.villageId], (item, index) =>
+				item?.citizenId === action?.payload?.citizenId
 					? {
 							...item,
 							submissionData: action?.payload?.isLandRecord
 								? {
 										...item.submissionData,
 										landRecords: action?.payload?.images
-									}
+								  }
 								: {
 										...item.submissionData,
 										rorRecords: action?.payload?.images
-									}
-						}
-					: item;
-			});
+								  }
+					  }
+					: item
+			);
 			state.submissions = {
 				...state.submissions,
 				[action.payload.villageId]: villageData
 			};
 		},
 		clearSubmissions: (state, action) => {
-			let tempState = state?.submissions;
+			const tempState = state?.submissions;
 			delete tempState[action.payload];
 			state.submissions = tempState;
 		},
@@ -185,14 +185,39 @@ const userDataSlice = createSlice({
 			state.canSubmit = action.payload;
 		},
 		clearSubmissionBatch: (state, action) => {
-			let currSubmission = current(state.submissions[action.payload[0]?.spdpVillageId]);
-			let newSubmissions = currSubmission.filter(
+			const currSubmission = current(state.submissions[action.payload[0]?.spdpVillageId]);
+			const newSubmissions = currSubmission.filter(
 				(el) => el.citizenId != action.payload.find((x) => x.citizenId == el.citizenId)?.citizenId
 			);
 			state.submissions[action.payload[0]?.spdpVillageId] = newSubmissions;
 		},
+		clearSubmission: (state, action) => {
+			console.log('holap here');
+
+			console.log('holap here', cloneDeep(state), cloneDeep(action));
+
+			const currSubmission = state.submissions[action.payload?.spdpVillageId];
+			const newSubmissions = currSubmission.filter(
+				(el) => el.citizenId !== action.payload?.citizenId
+			);
+			console.log('holap:', {
+				currSubmission: cloneDeep(currSubmission),
+				newSubmissions: cloneDeep(newSubmissions),
+				action: cloneDeep(action)
+			});
+			console.log('holap:', { currSubmission, newSubmissions, action });
+			state.submissions[action.payload?.spdpVillageId] = newSubmissions;
+		},
 		updatePendingSubmissions: (state, action) => {
 			state.pendingSubmissions = action.payload;
+		},
+		updateUserToken: (state, action) => {
+			state.user = {
+				...state.user,
+				token: action.payload.token,
+				refreshToken: action.payload.refreshToken,
+				tokenExpirationInstant: action.payload.tokenExpirationInstant
+			};
 		}
 	},
 	extraReducers: (builder) => {
@@ -215,17 +240,17 @@ const userDataSlice = createSlice({
 												: [fileData.filename]
 										}
 									};
-								else
-									return {
-										...prev,
-										submissionData: {
-											...prev?.submissionData,
-											rorRecords: prev?.submissionData?.rorRecords
-												? [...prev?.submissionData?.rorRecords, fileData.filename]
-												: [fileData.filename]
-										}
-									};
-							} else return prev;
+								return {
+									...prev,
+									submissionData: {
+										...prev?.submissionData,
+										rorRecords: prev?.submissionData?.rorRecords
+											? [...prev?.submissionData?.rorRecords, fileData.filename]
+											: [fileData.filename]
+									}
+								};
+							}
+							return prev;
 						}
 					);
 				});
@@ -244,7 +269,7 @@ const userDataSlice = createSlice({
 						(prev) => {
 							if (prev?.citizenId === fileMeta?.citizenId) {
 								if (fileMeta?.isLandRecord) {
-									let prevLandRecords = prev?.submissionData?.landRecords || [];
+									const prevLandRecords = prev?.submissionData?.landRecords || [];
 									if (prevLandRecords?.length) {
 										return {
 											...prev,
@@ -255,36 +280,36 @@ const userDataSlice = createSlice({
 													: [...prevLandRecords, fileData.filename]
 											}
 										};
-									} else
-										return {
-											...prev,
-											submissionData: {
-												...prev?.submissionData,
-												landRecords: [fileData.filename]
-											}
-										};
-								} else {
-									let prevRorRecords = prev?.submissionData?.rorRecords || [];
-									if (prevRorRecords?.length) {
-										return {
-											...prev,
-											submissionData: {
-												...prev?.submissionData,
-												rorRecords: prevRorRecords.includes(fileData.filename)
-													? prevRorRecords
-													: [...prevRorRecords, fileData.filename]
-											}
-										};
-									} else
-										return {
-											...prev,
-											submissionData: {
-												...prev?.submissionData,
-												rorRecords: [fileData.filename]
-											}
-										};
+									}
+									return {
+										...prev,
+										submissionData: {
+											...prev?.submissionData,
+											landRecords: [fileData.filename]
+										}
+									};
 								}
-							} else return prev;
+								const prevRorRecords = prev?.submissionData?.rorRecords || [];
+								if (prevRorRecords?.length) {
+									return {
+										...prev,
+										submissionData: {
+											...prev?.submissionData,
+											rorRecords: prevRorRecords.includes(fileData.filename)
+												? prevRorRecords
+												: [...prevRorRecords, fileData.filename]
+										}
+									};
+								}
+								return {
+									...prev,
+									submissionData: {
+										...prev?.submissionData,
+										rorRecords: [fileData.filename]
+									}
+								};
+							}
+							return prev;
 						}
 					);
 				});
@@ -314,7 +339,7 @@ const userDataSlice = createSlice({
 				// };
 			})
 			.addCase(removeSubmission.fulfilled, (state, action) => {
-				let tempState = state?.submissions;
+				const tempState = state?.submissions;
 				forEach(Object.keys(action.payload), (key) => {
 					delete tempState[key];
 				});
@@ -326,6 +351,7 @@ const userDataSlice = createSlice({
 				state.assignedLocations = action.payload?.user?.data?.villages;
 			})
 			.addCase(saveCitizenFormData.fulfilled, (state, action) => {
+				console.log('hola:', { action });
 				state.submissions = {
 					...state?.submissions,
 					[action.payload.spdpVillageId]: [
@@ -371,7 +397,9 @@ export const {
 	updateCanSubmit,
 	bulkSaveSubmission,
 	clearSubmissionBatch,
-	updatePendingSubmissions
+	updatePendingSubmissions,
+	updateUserToken,
+	clearSubmission
 } = userDataSlice.actions;
 
 export { store, persistor };

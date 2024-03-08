@@ -12,6 +12,7 @@ import { toast } from 'react-toastify';
 import { MDBListGroup } from 'mdbreact';
 import moment from 'moment';
 import Lottie from 'react-lottie';
+import { filter } from 'lodash';
 import * as emptyState from '../../utils/lottie/emptyState.json';
 
 import Breadcrumb from '../../components/Breadcrumb';
@@ -69,7 +70,11 @@ const SavedEntries = ({ params }) => {
 	}, [_currLocation]);
 
 	useEffect(() => {
-		const newSubmissions = submissions?.[_currLocation.villageCode];
+		const newSubmissions = filter(submissions?.[_currLocation.villageCode], { isUpdate: false });
+		console.log('chola:', {
+			newSubmissions,
+			submissions: submissions?.[_currLocation.villageCode]
+		});
 		if (newSubmissions?.length) {
 			const newIndex = (currPage - 1) * limit;
 			const paginatedSubmissions = newSubmissions.slice(newIndex, newIndex + limit);

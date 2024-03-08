@@ -6,7 +6,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams, usePathname, useSearchParams } from 'next/navigation';
 import Lottie from 'react-lottie';
 import { useOfflineSyncContext } from 'offline-sync-handler-test';
 
@@ -16,6 +16,8 @@ import moment from 'moment';
 import { MobileStepper } from '@mui/material';
 import { toast } from 'react-toastify';
 import * as Sentry from '@sentry/nextjs';
+import { filter } from 'lodash';
+import { useFlags } from 'flagsmith/react';
 import * as submissionLottie from '../../utils/lottie/submission.json';
 import { analytics } from '../../services/firebase/firebase';
 import {
@@ -29,7 +31,7 @@ import {
 import Banner from '../../components/Banner';
 import Breadcrumb from '../../components/Breadcrumb';
 import { saveCitizenFormData } from '../../redux/actions/saveCitizenFormData';
-import { sendLogs } from '../../services/api';
+import { getStorageQuota, sendLogs } from '../../services/api';
 import CitizenForm from '../../components/CitizenForm';
 import CommonModal from '../../components/Modal';
 import styles from './index.module.scss';
@@ -44,12 +46,14 @@ const defaultOptions = {
 	}
 };
 
-const CitizenSurveyPage = ({ params }) => {
+const CitizenSurveyPage = ({ params, props }) => {
 	/* Util Hooks */
 	const { sendRequest } = useOfflineSyncContext();
 	const router = useRouter();
+	const searchParam = useSearchParams();
 	const dispatch = useDispatch();
 
+	const isFeedbackPage = searchParam.get('isFeedback');
 	/* Use States */
 	const [hydrated, setHydrated] = React.useState(false);
 	const [formState, setFormState] = useState({});
@@ -66,9 +70,12 @@ const CitizenSurveyPage = ({ params }) => {
 	const [isMobile, setIsMobile] = useState(true);
 	const [loading, setLoading] = useState(false);
 	const [saveSuccess, setSaveSuccess] = useState(false);
-
+	const { usemainworker } = useFlags(['usemainworker']);
+	const { disableuserlogs } = useFlags(['disableuserlogs']);
 	const user2 = useSelector((state) => state?.userData?.user);
-
+	const submissions = useSelector((state) =>
+		filter(state?.userData?.submissions?.[_currLocation?.villageCode], { isUpdate: true })
+	);
 	const isFlaggedEntry = useMemo(() => !!currCitizen?.feedback, [currCitizen?.feedback]);
 	console.log('CURR CITIZEN -->', currCitizen);
 
@@ -93,10 +100,16 @@ const CitizenSurveyPage = ({ params }) => {
 		else setIsMobile(false);
 		if (currCitizen?.status === 'SUBMITTED') {
 			setFormState(currCitizen.submissionData);
+		} else if (currCitizen?.status === 'FLAGGED') {
+			const updated = filter(submissions, { citizenId: currCitizen?.citizenId })?.[0]
+				?.submissionData;
+			if (updated) setFormState(updated);
+			else setFormState(currCitizen?.submissionData);
 		} else if (
 			currCitizen?.submissionData &&
 			Object.keys(currCitizen?.submissionData)?.length > 0
 		) {
+			console.log('holacd: else2', currCitizen);
 			setFormState(currCitizen.submissionData);
 		}
 		getImagesFromStore();
@@ -116,9 +129,292 @@ const CitizenSurveyPage = ({ params }) => {
 
 	/* Util Functions */
 
-	const onUpdate = useCallback(() => {
+	const handleUpdate = useCallback(async () => {
 		if (loading) return;
-	}, []);
+		let newFormState;
+
+		try {
+			const indexDbStats = await getStorageQuota();
+
+			logEvent(analytics, 'form-filling_time', {
+				user_id: user?.username,
+				villageId: _currLocation.villageCode,
+				time: (moment().valueOf() - formStartTime) / 1000 / 60
+			});
+			setLoading(true);
+			showSubmittedModal(true);
+			const capturedAt = moment().utc();
+			const newLandImages = filter(landImages, (lImg) => typeof lImg !== 'string');
+			const newRorImages = filter(rorImages, (lImg) => typeof lImg !== 'string');
+			setTotalSteps((newLandImages?.length || 0) + (newRorImages?.length || 0));
+
+			for (const el in newLandImages) {
+				const compressedImg = await compressImage(
+					newLandImages[el].file,
+					usemainworker,
+					disableuserlogs
+				);
+				setActiveStep(Number(el) + 1);
+				newLandImages[el] = compressedImg;
+			}
+
+			for (const el in newRorImages) {
+				const compressedImg = await compressImage(
+					newRorImages[el].file,
+					usemainworker,
+					disableuserlogs
+				);
+				setActiveStep((newLandImages?.length || 0) + Number(el) + 1);
+
+				newRorImages[el] = compressedImg;
+			}
+
+			console.log('hola:', { rorImages, newLandImages, landImages });
+			if (!indexDbStats.isAvailable) {
+				toast.error('Device space full, please make space before continuing');
+				setLoading(false);
+				showSubmittedModal(false);
+				return;
+			}
+
+			if (!landImages?.length) {
+				toast.error('Land images cannot be empty!');
+				setLoading(false);
+				showSubmittedModal(false);
+				return;
+			}
+
+			if (newLandImages?.length)
+				await storeImages(
+					{
+						citizenId: currCitizen.citizenId,
+						images: newLandImages,
+						isLandRecord: true,
+						villageId: _currLocation.villageCode
+					},
+					disableuserlogs
+				);
+			if (newRorImages?.length)
+				await storeImages(
+					{
+						citizenId: currCitizen.citizenId,
+						images: newRorImages,
+						isLandRecord: false,
+						villageId: _currLocation.villageCode
+					},
+					disableuserlogs
+				);
+
+			newFormState = sanitizeForm({ ...formState });
+
+			// newFormState['landRecords'] = landImages;
+			// newFormState['rorRecords'] = rorImages;
+			newFormState.imageUploaded = false;
+			if (!formState?.isAadhaarAvailable) {
+				delete formState?.aadharNumber;
+			}
+			if (!formState?.rorUpdated) {
+				delete formState?.khataNumber;
+				delete formState?.landImages;
+			}
+			if (!formState?.coClaimantAvailable) {
+				delete formState?.coClaimantName;
+			}
+			console.log('hola:', { newFormState });
+
+			dispatch(
+				saveCitizenFormData({
+					submissionData: newFormState,
+					spdpVillageId: _currLocation.villageCode,
+					citizenId: currCitizen.citizenId,
+					submitterId: user.username,
+					isUpdate: true,
+					capturedAt
+				})
+			).then(async (res) => {
+				if (res?.type?.includes('fulfilled')) {
+					setSaveSuccess(true);
+					logEvent(analytics, 'form_saved', {
+						villageId: _currLocation.villageCode,
+						villageName: _currLocation.villageName,
+						user_id: user?.username,
+						app_status: navigator.onLine ? 'online' : 'offline',
+						capturedAt
+					});
+				} else {
+					sendLogs(
+						{
+							meta: 'at handleSubmit citizenSurvey inside try',
+							gpId: user2?.user?.username,
+							error: res?.error || JSON.stringify(res),
+							currentForm: newFormState
+						},
+						disableuserlogs?.enabled
+							? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username)
+							: true
+					);
+					toast.warn(`Something went wrong while saving form, ${JSON.stringify(res?.error)}`);
+					removeCitizenImageRecord(currCitizen.citizenId);
+					setLoading(false);
+					showSubmittedModal(false);
+					logEvent(analytics, 'unable_to_save_form', {
+						villageId: _currLocation.villageCode,
+						villageName: _currLocation.villageName,
+						user_id: user?.username,
+						app_status: navigator.onLine ? 'online' : 'offline',
+						capturedAt,
+						res: JSON.stringify(res)
+					});
+					Sentry.captureException({ err: res?.error || JSON.stringify(res), user });
+				}
+			});
+
+			setLoading(false);
+		} catch (err) {
+			if (err?.message === 'Invalid File Type' || err === 'Invalid File Type') {
+				toast.error(`Please check your media files, some of the files may be corrupt or invalid.`);
+			} else {
+				Sentry.captureException({ err: err?.message || err?.toString(), user });
+				toast.error(`An error occurred while saving: ${err?.message || err?.toString()}`);
+				return;
+			}
+			setLoading(false);
+			showSubmittedModal(false);
+		}
+	}, [
+		_currLocation.villageCode,
+		_currLocation.villageName,
+		currCitizen.citizenId,
+		dispatch,
+		formStartTime,
+		formState,
+		landImages,
+		loading,
+		rorImages,
+		user,
+		user2?.user?.username,
+		disableuserlogs,
+		usemainworker
+	]);
+	// const handleUpdate = useCallback(async () => {
+	// 	if (loading) return;
+	// 	try {
+	// 		logEvent(analytics, 'form-filling_time', {
+	// 			user_id: user?.username,
+	// 			villageId: _currLocation.villageCode,
+	// 			time: (moment().valueOf() - formStartTime) / 1000 / 60
+	// 		});
+	// 		setLoading(true);
+	// 		showSubmittedModal(true);
+	// 		const capturedAt = moment().utc();
+	// 		setTotalSteps((landImages?.length || 0) + (rorImages?.length || 0));
+	// 		console.log('checks', { landImages, formState });
+	// 		const newLandImages = filter(landImages, (lImg) => typeof lImg !== 'string');
+	// 		Object.values(newLandImages).forEach(async (image, index) => {
+	// 			const compressedImg = await compressImage(image.file);
+	// 			setActiveStep(index + 1);
+	// 			newLandImages[index] = compressedImg;
+	// 		});
+
+	// 		const newRorImages = filter(rorImages, (rImg) => typeof rImg !== 'string');
+	// 		Object.values(newRorImages).forEach(async (image, index) => {
+	// 			const compressedImg = await compressImage(image.file);
+	// 			setActiveStep(index + 1);
+	// 			newRorImages[index] = compressedImg;
+	// 		});
+	// 		console.log('checks:', { newRorImages, newLandImages });
+	// 		// Object.values(rorImages).forEach(async (image, index) => {
+	// 		// 	const compressedImg = await compressImage(image.file);
+	// 		// 	setActiveStep((landImages?.length || 0) + index + 1);
+	// 		// 	rorImages[index] = compressedImg;
+	// 		// });
+
+	// 		if (newLandImages?.length)
+	// 			await storeImages({
+	// 				citizenId: currCitizen.citizenId,
+	// 				images: newLandImages,
+	// 				isLandRecord: true,
+	// 				villageId: _currLocation.villageCode
+	// 			});
+	// 		if (newRorImages?.length)
+	// 			await storeImages({
+	// 				citizenId: currCitizen.citizenId,
+	// 				images: newRorImages,
+	// 				isLandRecord: false,
+	// 				villageId: _currLocation.villageCode
+	// 			});
+
+	// 		const newFormState = sanitizeForm({ ...formState });
+
+	// 		newFormState.imageUploaded = false;
+	// 		if (!formState?.isAadhaarAvailable) {
+	// 			delete formState?.aadharNumber;
+	// 		}
+	// 		if (!formState?.rorUpdated) {
+	// 			delete formState?.khataNumber;
+	// 			delete formState?.landImages;
+	// 		}
+	// 		if (!formState?.coClaimantAvailable) {
+	// 			delete formState?.coClaimantName;
+	// 		}
+	// 		console.log('checks:', { newFormState });
+	// 		dispatch(
+	// 			saveCitizenFormData({
+	// 				submissionData: newFormState,
+	// 				spdpVillageId: _currLocation.villageCode,
+	// 				citizenId: currCitizen.citizenId,
+	// 				submitterId: user.username,
+	// 				capturedAt
+	// 			})
+	// 		).then(async (res) => {
+	// 			if (res?.type?.includes('fulfilled')) {
+	// 				setSaveSuccess(true);
+	// 				logEvent(analytics, 'form_saved', {
+	// 					villageId: _currLocation.villageCode,
+	// 					villageName: _currLocation.villageName,
+	// 					user_id: user?.username,
+	// 					app_status: navigator.onLine ? 'online' : 'offline',
+	// 					capturedAt
+	// 				});
+	// 			} else {
+	// 				await sendLogs(res, user2);
+	// 				toast.warn(`Something went wrong while saving form, ${JSON.stringify(res?.error)}`);
+	// 				removeCitizenImageRecord(currCitizen.citizenId);
+	// 				setLoading(false);
+	// 				showSubmittedModal(false);
+	// 				logEvent(analytics, 'unable_to_save_form', {
+	// 					villageId: _currLocation.villageCode,
+	// 					villageName: _currLocation.villageName,
+	// 					user_id: user?.username,
+	// 					app_status: navigator.onLine ? 'online' : 'offline',
+	// 					capturedAt,
+	// 					res: JSON.stringify(res)
+	// 				});
+	// 				Sentry.captureException({ err: res?.error, user });
+	// 			}
+	// 		});
+	// 		// }
+
+	// 		setLoading(false);
+	// 	} catch (err) {
+	// 		Sentry.captureException({ err, user });
+	// 		toast.error('An error occurred while saving', err?.message || err?.toString());
+	// 		console.log(err);
+	// 		setLoading(false);
+	// 	}
+	// }, [
+	// 	_currLocation.villageCode,
+	// 	_currLocation.villageName,
+	// 	currCitizen.citizenId,
+	// 	dispatch,
+	// 	formStartTime,
+	// 	formState,
+	// 	landImages,
+	// 	loading,
+	// 	rorImages,
+	// 	user,
+	// 	user2
+	// ]);
 	const handleSubmit = async () => {
 		if (loading) return;
 		try {
@@ -172,12 +468,14 @@ const CitizenSurveyPage = ({ params }) => {
 				delete formState?.coClaimantName;
 			}
 
+			console.log('hola:', { formState, landImages, rorImages });
 			dispatch(
 				saveCitizenFormData({
 					submissionData: newFormState,
 					spdpVillageId: _currLocation.villageCode,
 					citizenId: currCitizen.citizenId,
 					submitterId: user.username,
+					isUpdate: false,
 					capturedAt
 				})
 			).then(async (res) => {
@@ -226,13 +524,14 @@ const CitizenSurveyPage = ({ params }) => {
 		],
 		[_currLocation.villageName]
 	);
-
+	console.log('holacd:', { formState });
 	return !hydrated ? null : (
 		<>
 			<div className={styles.root}>
 				<Banner />
 				<Breadcrumb items={breadcrumbItems} />
 				<CitizenForm
+					isFeedbackPage={!!isFeedbackPage}
 					feedbacks={feedbacks}
 					formEditable={
 						!(
@@ -241,6 +540,7 @@ const CitizenSurveyPage = ({ params }) => {
 						) || currCitizen?.status === 'FLAGGED'
 					}
 					handleSubmit={handleSubmit}
+					handleUpdate={handleUpdate}
 					setFormState={setFormState}
 					formState={formState}
 					currCitizen={currCitizen}

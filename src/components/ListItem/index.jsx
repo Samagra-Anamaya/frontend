@@ -13,7 +13,7 @@ const ListItem = (props) => {
 		mainText,
 		mainSubtext,
 		onClick,
-
+		onSubBtnClick,
 		onSecondaryAction,
 		secondaryImage = null,
 		secondaryLoading = false,
@@ -39,7 +39,14 @@ const ListItem = (props) => {
 					</p>
 				</div>
 			</div>
-			{rightImage && <img src={rightImage} alt="" style={{ width: '40px', height: '40px' }} />}
+			{rightImage && (
+				<img
+					src={rightImage}
+					alt=""
+					style={{ width: '40px', height: '40px' }}
+					onClick={onSubBtnClick ?? null}
+				/>
+			)}
 
 			{secondaryImage && (
 				<>

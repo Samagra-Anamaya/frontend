@@ -2,10 +2,19 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { Button, FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import {
+	Button,
+	FormControl,
+	IconButton,
+	InputLabel,
+	MenuItem,
+	Select,
+	TextField
+} from '@mui/material';
 import ImageViewer from 'react-simple-image-viewer';
 import ImageUploading from 'react-images-uploading';
 import Autocomplete from '@mui/material/Autocomplete';
+import CloseIcon from '@mui/icons-material/Close';
 import { getTbName } from '../CitizenForm/tribe-names';
 import styles from './step.module.scss';
 
@@ -16,13 +25,16 @@ const Step2 = ({
 	formState,
 	landImages,
 	handleLandImages,
-	feedbacks
+	feedbacks,
+	isFeedbackPage
 }) => {
 	const [isViewerOpen, setIsViewerOpen] = useState(false);
 	const [currentImage, setCurrentImage] = useState(0);
-	const openImageViewer = useCallback((index) => {
+	const [viewerSource, setViewerSource] = useState(null);
+	const openImageViewer = useCallback((index, source) => {
+		setViewerSource(source);
 		setCurrentImage(index);
-		setIsViewerOpen(true);
+		setTimeout(() => setIsViewerOpen(true), 10);
 	}, []);
 
 	const closeImageViewer = useCallback(() => {
@@ -32,7 +44,12 @@ const Step2 = ({
 
 	const tribeOptions = useMemo(() => getTbName(), []);
 
-	console.log({ feedbacks });
+	const activeImageViewer = useMemo(() => {
+		if (isFeedbackPage) return 'feedbackViewer';
+		if (landImages.length > 0 && !formEditable) return 'savedViewer';
+		return 'editableViewer';
+	}, [formEditable, isFeedbackPage, landImages.length]);
+
 	return (
 		<form
 			onSubmit={(e) => {
@@ -58,138 +75,156 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
-				error={!!feedbacks?.landTitleSerialNumber}
-				helperText={feedbacks?.landTitleSerialNumber || null}
+				error={isFeedbackPage ? !!feedbacks?.landTitleSerialNumber : false}
+				helperText={isFeedbackPage ? feedbacks?.landTitleSerialNumber || null : null}
 			/>
-			{landImages.length > 0 && !formEditable && (
+
+			{activeImageViewer === 'feedbackViewer' && (
+				<ImageUploading
+					multiple
+					value={landImages}
+					onChange={handleLandImages}
+					maxNumber={69}
+					dataURLKey="land_records"
+				>
+					{({ imageList, onImageUpload, onImageRemove, isDragging, dragProps }) => (
+						<div className={styles.uploadImageWrapper}>
+							<Button onClick={onImageUpload} {...dragProps} variant="outlined">
+								Upload New Land Records
+							</Button>
+							<div className={styles.imagePreviewContainer}>
+								{imageList.map((image, index) => {
+									const imageSrc = imageList.map((el) => el?.land_records || el);
+									return (
+										<div key={index} className={styles.imageItem}>
+											<img
+												src={image.land_records || image}
+												alt=""
+												width="100"
+												style={{ height: '100px', width: '140px', borderRadius: '10px' }}
+												onClick={() => openImageViewer(index, imageSrc)}
+											/>
+											<div className={styles.removeBtn}>
+												<IconButton aria-label="delete" onClick={() => onImageRemove(index)}>
+													<CloseIcon style={{ color: 'white' }} />
+												</IconButton>
+											</div>
+										</div>
+									);
+								})}
+							</div>
+						</div>
+					)}
+				</ImageUploading>
+			)}
+			{activeImageViewer === 'editableViewer' && (
+				<ImageUploading
+					multiple
+					value={landImages}
+					onChange={handleLandImages}
+					maxNumber={69}
+					dataURLKey="land_records"
+				>
+					{({ imageList, onImageUpload, onImageRemove, dragProps }) => (
+						<div className={styles.uploadImageWrapper}>
+							<Button onClick={onImageUpload} {...dragProps} variant="outlined">
+								Upload ROR Records
+							</Button>
+							<div className={styles.imagePreviewContainer}>
+								{imageList.map((image, index) => {
+									const imageSrc = landImages?.map((_el) => {
+										if (typeof _el === 'string') return _el;
+										if (_el?.file) return URL.createObjectURL(_el?.file);
+										return URL.createObjectURL(_el);
+									});
+									return (
+										<div key={index} className={styles.imageItem}>
+											<img
+												src={image.land_records}
+												alt=""
+												width="100"
+												style={{ height: '100px', width: '140px', borderRadius: '10px' }}
+												onClick={() => openImageViewer(index, imageSrc)}
+											/>
+
+											<div className={styles.removeBtn}>
+												<IconButton aria-label="delete" onClick={() => onImageRemove(index)}>
+													<CloseIcon style={{ color: 'white' }} />
+												</IconButton>
+											</div>
+										</div>
+									);
+								})}
+							</div>
+						</div>
+					)}
+				</ImageUploading>
+			)}
+			{activeImageViewer === 'savedViewer' && (
 				<div>
-					<p style={{ textAlign: 'center' }}>Land Record Images</p>
+					<p style={{ textAlign: 'center' }}>ROR Record Images</p>
 					<div className={styles.imageRecordContainer}>
 						{landImages?.map((el, index) => {
+							const imageSrc = landImages?.map((_el) => {
+								if (typeof _el === 'string') return _el;
+								if (_el?.file) return URL.createObjectURL(_el?.file);
+								return URL.createObjectURL(_el);
+							});
 							if (typeof el === 'string') {
 								return (
 									<img
 										key={el}
 										src={el}
-										alt="icon"
-										onClick={() => openImageViewer(index)}
-										style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }}
+										alt="logo"
+										style={{
+											height: '100px',
+											width: '140px',
+											borderRadius: '10px',
+											margin: '0.5rem',
+											cursor: 'pointer'
+										}}
+										onClick={() => openImageViewer(index, imageSrc)}
 									/>
 								);
 							}
 
-							const objectURL = URL.createObjectURL(el);
-
+							const objectURL = URL.createObjectURL(el?.file);
 							return (
 								<img
 									key={el}
-									alt="icon"
+									alt="logo"
 									src={objectURL}
-									onClick={() => openImageViewer(index)}
-									style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }}
+									onClick={() => openImageViewer(index, imageSrc)}
+									style={{
+										height: '100px',
+										width: '140px',
+										borderRadius: '10px',
+										margin: '0.5rem',
+										cursor: 'pointer'
+									}}
 								/>
 							);
 						})}
 					</div>
-					{isViewerOpen && (
-						<ImageViewer
-							src={landImages}
-							currentIndex={currentImage}
-							disableScroll={false}
-							closeOnClickOutside
-							onClose={closeImageViewer}
-							backgroundStyle={{ background: '#fff', zIndex: 10, border: '5px solid #017922' }}
-							closeComponent={
-								<p style={{ fontSize: '3rem', color: '#000', opacity: 1, paddingRight: '1rem' }}>
-									X
-								</p>
-							}
-						/>
-					)}
 				</div>
 			)}
-			{formState?.landTitleSerialNumber && formEditable && (
-				<>
-					<ImageUploading
-						multiple
-						value={landImages}
-						onChange={handleLandImages}
-						maxNumber={69}
-						dataURLKey="land_records"
-					>
-						{({
-							imageList,
-							onImageUpload,
-							onImageUpdate,
-							onImageRemove,
-							isDragging,
-							dragProps
-						}) => (
-							<div className={styles.uploadImageWrapper}>
-								<Button onClick={onImageUpload} {...dragProps} variant="outlined">
-									Upload Land Records
-								</Button>
-								{/* <Carousel>
-                                    {imageList.map((image, index) => (
-                                        <div key={index} className="image-item">
-                                            <div className="image-item__btn-wrapper">
-                                                <Button color="error" variant="outlined" onClick={() => onImageRemove(index)}>Remove</Button>
-                                            </div>
-                                            <img src={image['land_records']} alt="" width="100" />
-                                        </div>
-                                    ))}
-                                </Carousel> */}
-								<div className={styles.imagePreviewContainer}>
-									{imageList.map((image, index) => (
-										<div key={index} className="image-item">
-											<img
-												src={image.land_records}
-												alt=""
-												width="100"
-												onClick={() => openImageViewer(index)}
-											/>
-											<div className="image-item__btn-wrapper">
-												<Button
-													color="error"
-													variant="outlined"
-													onClick={() => onImageRemove(index)}
-												>
-													Remove
-												</Button>
-											</div>
-										</div>
-									))}
-									{isViewerOpen && (
-										<ImageViewer
-											src={imageList.map((el) => el.land_records)}
-											currentIndex={currentImage}
-											disableScroll={false}
-											closeOnClickOutside
-											onClose={closeImageViewer}
-											backgroundStyle={{
-												background: '#fff',
-												zIndex: 10,
-												border: '5px solid #017922'
-											}}
-											closeComponent={
-												<p
-													style={{
-														fontSize: '3rem',
-														color: '#000',
-														opacity: 1,
-														paddingRight: '1rem'
-													}}
-												>
-													X
-												</p>
-											}
-										/>
-									)}
-								</div>
-							</div>
-						)}
-					</ImageUploading>
-				</>
+
+			{isViewerOpen && (
+				<ImageViewer
+					src={viewerSource}
+					currentIndex={currentImage}
+					disableScroll={false}
+					closeOnClickOutside
+					onClose={closeImageViewer}
+					backgroundStyle={{ background: '#fff', zIndex: 10, border: '5px solid #017922' }}
+					closeComponent={
+						<div>
+							<IconButton aria-label="delete" style={{ background: 'black' }}>
+								<CloseIcon style={{ color: 'white' }} />
+							</IconButton>
+						</div>
+					}
+				/>
 			)}
 			<TextField
 				variant="standard"
@@ -205,8 +240,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
-				error={!!feedbacks?.claimantName}
-				helperText={feedbacks?.claimantName || null}
+				error={isFeedbackPage ? !!feedbacks?.claimantName : false}
+				helperText={isFeedbackPage ? feedbacks?.claimantName || null : null}
 			/>
 
 			<TextField
@@ -218,7 +253,6 @@ const Step2 = ({
 						newValue === '' ||
 						(parseInt(newValue, 10) >= 0 && parseInt(newValue, 10) <= 20 && /^\d+$/.test(newValue))
 					) {
-						console.log('inside newvalue', newValue);
 						setFormState((prevState) => ({ ...prevState, noOfCoClaimants: newValue }));
 					}
 				}}
@@ -226,8 +260,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
-				error={!!feedbacks?.noOfCoClaimants}
-				helperText={feedbacks?.noOfCoClaimants || null}
+				error={isFeedbackPage ? !!feedbacks?.noOfCoClaimants : false}
+				helperText={isFeedbackPage ? feedbacks?.noOfCoClaimants || null : null}
 			/>
 			{formState.noOfCoClaimants > 0 &&
 				Array.from(Array(Number(formState.noOfCoClaimants)).keys()).map((el) => (
@@ -265,8 +299,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
-				error={!!feedbacks?.noOfDependents}
-				helperText={feedbacks?.noOfDependents || null}
+				error={isFeedbackPage ? !!feedbacks?.noOfDependents : false}
+				helperText={isFeedbackPage ? feedbacks?.noOfDependents || null : null}
 			/>
 			{formState.noOfDependents > 0 &&
 				Array.from(Array(Number(formState.noOfDependents)).keys()).map((el) => (
@@ -299,8 +333,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
-				error={!!feedbacks?.parentName}
-				helperText={feedbacks?.parentName || null}
+				error={isFeedbackPage ? !!feedbacks?.parentName : false}
+				helperText={isFeedbackPage ? feedbacks?.parentName || null : null}
 			/>
 			<TextField
 				variant="standard"
@@ -310,8 +344,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
-				error={!!feedbacks?.address}
-				helperText={feedbacks?.address || null}
+				error={isFeedbackPage ? !!feedbacks?.address : null}
+				helperText={isFeedbackPage ? feedbacks?.address || null : null}
 			/>
 			{/* <TextField
                         variant='standard'
@@ -401,8 +435,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
-				error={!!feedbacks?.area}
-				helperText={feedbacks?.area || null}
+				error={isFeedbackPage ? !!feedbacks?.area : false}
+				helperText={isFeedbackPage ? feedbacks?.area || null : null}
 			/>
 			<TextField
 				variant="standard"
@@ -414,8 +448,8 @@ const Step2 = ({
 				required
 				sx={{ mb: 4, width: '80%' }}
 				disabled={!formEditable}
-				error={!!feedbacks?.boundariesDesc}
-				helperText={feedbacks?.boundariesDesc || null}
+				error={isFeedbackPage ? !!feedbacks?.boundariesDesc : false}
+				helperText={isFeedbackPage ? feedbacks?.boundariesDesc || null : null}
 			/>
 			<div className={styles.btnContainer}>
 				<Button

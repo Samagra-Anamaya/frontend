@@ -33,7 +33,9 @@ const CitizenForm = (props) => {
 		setRorImages,
 		rorImages,
 		landImages,
-		feedbacks
+		feedbacks,
+		isFeedbackPage,
+		handleUpdate
 	} = props;
 
 	const [activeStep, setActiveStep] = useState(0);
@@ -101,6 +103,7 @@ const CitizenForm = (props) => {
 			</Stepper>
 			{activeStep === 0 && (
 				<Step1
+					isFeedbackPage={isFeedbackPage}
 					onFormSubmit={onFormSubmit}
 					formEditable={formEditable}
 					formState={formState}
@@ -111,17 +114,19 @@ const CitizenForm = (props) => {
 			)}
 			{activeStep === 1 && (
 				<Step2
+					isFeedbackPage={isFeedbackPage}
+					feedbacks={feedbacks}
 					setActiveStep={setActiveStep}
 					formEditable={formEditable}
 					setFormState={setFormState}
 					formState={formState}
 					landImages={landImages}
 					handleLandImages={handleLandImages}
-					feedbacks={feedbacks}
 				/>
 			)}
 			{activeStep === 2 && (
 				<Step3
+					isFeedbackPage={isFeedbackPage}
 					setActiveStep={setActiveStep}
 					formEditable={formEditable}
 					setFormState={setFormState}
@@ -131,6 +136,7 @@ const CitizenForm = (props) => {
 					handleSubmit={handleSubmit}
 					submittedModal={submittedModal}
 					feedbacks={feedbacks}
+					handleUpdate={handleUpdate}
 				/>
 			)}
 		</>

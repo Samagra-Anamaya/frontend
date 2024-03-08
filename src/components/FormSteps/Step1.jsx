@@ -16,6 +16,7 @@ const Step1 = ({
 	formState,
 	setFormState,
 	savedEntries,
+	isFeedbackPage,
 	feedbacks
 }) => (
 	<form onSubmit={onFormSubmit} className={styles.userForm}>
@@ -68,21 +69,24 @@ const Step1 = ({
 								aadharNumber: e.target.value
 							}));
 					}}
-					error={!!feedbacks?.aadharNumber}
-					helperText={feedbacks?.aadharNumber || null}
+					error={isFeedbackPage ? !!feedbacks?.aadharNumber : false}
+					helperText={isFeedbackPage ? feedbacks?.aadharNumber || null : null}
 					value={
 						// eslint-disable-next-line no-nested-ternary
-						savedEntries
-							? `**** **** ${
-									formState?.lastDigits ? formState?.lastDigits : formState?.aadharNumber.slice(8)
-							  }`
-							: formEditable
-							? formState?.aadharNumber
-							: `**** **** ${formState.lastDigits}`
+						// savedEntries
+						// 	? `**** **** ${
+						// 			formState?.lastDigits ? formState?.lastDigits : formState?.aadharNumber.slice(8)
+						// 	  }`
+						// 	: formEditable
+						// 	? formState?.aadharNumber
+						// 	: `**** **** ${formState.lastDigits}`
+						formState?.lastDigits
+							? `**** **** ${formState?.lastDigits || formState?.aadharNumber.slice(8)}`
+							: formState?.aadharNumber
 					}
 					required
 					inputProps={{ maxLength: 12, minLength: 12 }}
-					disabled={!formEditable}
+					disabled={!formEditable || formState?.lastDigits}
 					sx={{ mb: 4, width: '80%' }}
 				/>
 			</Tooltip>

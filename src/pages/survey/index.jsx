@@ -107,7 +107,7 @@ const SurveyPage = ({ params }) => {
 	}, [checkSavedRequests]);
 
 	/* Utility Functions */
-	const addNewCitizen = () => {
+	const addNewCitizen = useCallback(() => {
 		if (disableSubmitEntries) {
 			showWarningModal(true);
 			return;
@@ -115,7 +115,7 @@ const SurveyPage = ({ params }) => {
 		const newCitId = uuidv4();
 		dispatch(setCurrentCitizen({ citizenId: newCitId }));
 		router.push(`/citizen-survey`);
-	};
+	}, [disableSubmitEntries, dispatch, router]);
 
 	const clearEntriesAndProceed = () => {
 		offlinePackage.clearStoredRequests();
@@ -132,7 +132,7 @@ const SurveyPage = ({ params }) => {
 
 	async function uploadImagesInBatches() {
 		const images = await getImagesForVillage(_currLocation?.villageCode);
-		console.log('Images for ', _currLocation.villageCode, images);
+		console.log('hola Images for ', _currLocation.villageCode, images);
 		const BATCH_SIZE = 10;
 		const DELAY_TIME = 3000; // Delay time in milliseconds (5 seconds)
 		const _BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
@@ -140,17 +140,20 @@ const SurveyPage = ({ params }) => {
 		setLoading(true);
 		// Splitting the images array into batches of 20
 		const batches = chunkArray(images, BATCH_SIZE);
-		console.log('Batches ->', batches);
 
 		const promises = [];
 
+		// eslint-disable-next-line no-restricted-syntax
 		for (const batch of batches) {
+			// eslint-disable-next-line no-restricted-syntax
 			for (const _image of batch) {
 				const data = new FormData();
 				_image?.images.forEach((file) => {
-					data.append('files', file.file, `${uuidv4()}.webp`);
+					console.log('holacd:', { file, _image });
+					data.append('files', file.file ?? file, `${uuidv4()}.webp`);
 				});
 
+				// eslint-disable-next-line no-await-in-loop
 				const modifiedMeta = await omit(_image, ['images']);
 				data.append('meta', JSON.stringify(modifiedMeta));
 
@@ -167,9 +170,10 @@ const SurveyPage = ({ params }) => {
 				};
 
 				try {
+					// eslint-disable-next-line no-await-in-loop
 					const response = await offlinePackage?.sendRequest(config);
-					if (response?.name == 'AxiosError') {
-						if (response?.message == 'Network Error') {
+					if (response?.name === 'AxiosError') {
+						if (response?.message === 'Network Error') {
 							toast.warn(
 								"Your request has been saved, it'll be submitted once you're back in connection"
 							);
@@ -193,6 +197,7 @@ const SurveyPage = ({ params }) => {
 			}
 
 			// Introduce a delay before processing the next batch
+			// eslint-disable-next-line no-await-in-loop
 			await sleep(DELAY_TIME);
 		}
 
@@ -226,6 +231,7 @@ const SurveyPage = ({ params }) => {
 		const batches = chunkArray(submissions, BATCH_SIZE);
 		const responses = [];
 
+		// eslint-disable-next-line no-restricted-syntax, guard-for-in
 		for (const el in batches) {
 			const batch = batches[el];
 
@@ -245,16 +251,18 @@ const SurveyPage = ({ params }) => {
 
 			try {
 				// Introduce a delay before processing the next batch
+				// eslint-disable-next-line no-await-in-loop
 				await sleep(DELAY_TIME);
+				// eslint-disable-next-line no-await-in-loop
 				const response = await offlinePackage?.sendRequest(config);
 				console.log('Batch Submission Response', { response }, response.name);
-				if (response?.name == 'AxiosError') {
+				if (response?.name === 'AxiosError') {
 					Sentry.captureException({ response, userData });
 					toast.error(
 						`Something went wrong:${response?.response?.data?.message || response?.message}`
 					);
 
-					if (el == batches.length - 1) {
+					if (el === batches.length - 1) {
 						setLoading(false);
 						showSubmitModal(false);
 						return;
@@ -268,7 +276,7 @@ const SurveyPage = ({ params }) => {
 					});
 					responses.push(response);
 					dispatch(clearSubmissionBatch(batch));
-				} else if (!response || response == undefined) {
+				} else if (!response || response === undefined) {
 					Sentry.captureException({ response, userData });
 					toast.warn(
 						"Your request has been saved, it'll be submitted once you're back in connection"

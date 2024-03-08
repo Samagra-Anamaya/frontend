@@ -1,7 +1,11 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import React from 'react';
-import styles from './Sidebar.module.css'; // Import the CSS module
-
-const Sidebar = ({ name }) => (
+import LogoutIcon from '@mui/icons-material/Logout';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import HomeIcon from '@mui/icons-material/Home';
+import styles from './Sidebar.module.css';
+// Import the CSS module
+const Sidebar = ({ name, onLogout }) => (
 	<aside className={styles.sidebar}>
 		<div className={styles.header}>
 			<div className={styles.profileSection}>
@@ -11,17 +15,21 @@ const Sidebar = ({ name }) => (
 					className={styles.profileImage}
 				/>
 				<h2 className={styles.username}>
-					Hello, <br /> {name}
+					Welcome GP-
+					<span style={{ color: '#367f2c', fontWeight: '900' }}> {name.split('_')[1]} </span>
 				</h2>
 			</div>
-			<div className={styles.themeToggle}>
+			{/* <div className={styles.themeToggle}>
 				<button className={`${styles.themeButton} ${styles.light}`}>English</button>
 				<button className={`${styles.themeButton} ${styles.dark}`}>Odia</button>
-			</div>
+			</div> */}
 		</div>
 		<nav className={styles.navigation}>
 			<a href="#" className={styles.navItem}>
-				<span className={styles.icon}>🏠</span>Home
+				<span className={styles.icon}>
+					<HomeIcon />
+				</span>
+				Home
 			</a>
 			<a
 				href="#"
@@ -30,10 +38,16 @@ const Sidebar = ({ name }) => (
 					window.location.reload();
 				}}
 			>
-				<span className={styles.icon}>⚙️</span>Refresh
+				<span className={styles.icon}>
+					<RefreshIcon />
+				</span>
+				Refresh
 			</a>
-			<a href="#" className={styles.navItem}>
-				<span className={styles.icon}>🚪</span>Logout
+			<a href="#" className={styles.navItem} onClick={onLogout}>
+				<span className={styles.icon}>
+					<LogoutIcon />
+				</span>
+				Logout
 			</a>
 		</nav>
 	</aside>

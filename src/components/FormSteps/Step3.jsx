@@ -1,11 +1,21 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { Button, FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import {
+	Button,
+	FormControl,
+	IconButton,
+	InputLabel,
+	MenuItem,
+	Select,
+	TextField
+} from '@mui/material';
 import ImageViewer from 'react-simple-image-viewer';
 import ImageUploading from 'react-images-uploading';
+import CloseIcon from '@mui/icons-material/Close';
+import { map } from 'lodash';
 import styles from './step.module.scss';
 
 const Step3 = ({
@@ -17,13 +27,18 @@ const Step3 = ({
 	handleRorImages,
 	handleSubmit,
 	submittedModal,
-	feedbacks
+	feedbacks,
+	isFeedbackPage,
+	handleUpdate
 }) => {
 	const [isViewerOpen, setIsViewerOpen] = useState(false);
 	const [currentImage, setCurrentImage] = useState(0);
-	const openImageViewer = useCallback((index) => {
+	const [viewerSource, setViewerSource] = useState(null);
+
+	const openImageViewer = useCallback((index, source) => {
+		setViewerSource(source);
 		setCurrentImage(index);
-		setIsViewerOpen(true);
+		setTimeout(() => setIsViewerOpen(true), 10);
 	}, []);
 
 	const closeImageViewer = useCallback(() => {
@@ -50,7 +65,7 @@ const Step3 = ({
 				});
 				return;
 			}
-			handleSubmit();
+			isFeedbackPage ? handleUpdate() : handleSubmit();
 		},
 		[
 			formState?.forestLandType,
@@ -58,9 +73,17 @@ const Step3 = ({
 			formState?.rorUpdated,
 			formState?.typeOfBlock,
 			handleSubmit,
+			handleUpdate,
+			isFeedbackPage,
 			rorImages.length
 		]
 	);
+
+	const activeImageViewer = useMemo(() => {
+		if (isFeedbackPage) return 'feedbackViewer';
+		if (rorImages.length > 0 && !formEditable) return 'savedViewer';
+		return 'editableViewer';
+	}, [formEditable, isFeedbackPage, rorImages.length]);
 
 	return (
 		<form onSubmit={onFormSubmit} className={styles.userForm}>
@@ -152,8 +175,8 @@ const Step3 = ({
 						required
 						sx={{ mb: 4, width: '80%' }}
 						disabled={!formEditable}
-						error={!!feedbacks?.compartmentNo}
-						helperText={feedbacks?.compartmentNo || null}
+						error={isFeedbackPage ? !!feedbacks?.compartmentNo : false}
+						helperText={isFeedbackPage ? feedbacks?.compartmentNo || null : null}
 					/>
 				)}
 			{formState?.forestLandType === 'revenueForest' &&
@@ -172,8 +195,8 @@ const Step3 = ({
 							required
 							sx={{ mb: 4, width: '80%' }}
 							disabled={!formEditable}
-							error={!!feedbacks?.fraPlotsClaimed}
-							helperText={feedbacks?.fraPlotsClaimed || null}
+							error={isFeedbackPage ? !!feedbacks?.fraPlotsClaimed : false}
+							helperText={isFeedbackPage ? feedbacks?.fraPlotsClaimed || null : null}
 						/>
 						{formState.fraPlotsClaimed > 0 &&
 							Array.from(Array(Number(formState.fraPlotsClaimed)).keys()).map((el) => (
@@ -206,8 +229,8 @@ const Step3 = ({
 					required
 					sx={{ mb: 4, width: '80%' }}
 					disabled={!formEditable}
-					error={!!feedbacks?.compartmentNo}
-					helperText={feedbacks?.compartmentNo || null}
+					error={isFeedbackPage ? !!feedbacks?.compartmentNo : false}
+					helperText={isFeedbackPage ? feedbacks?.compartmentNo || null : null}
 				/>
 			)}
 			{formEditable ? (
@@ -240,7 +263,7 @@ const Step3 = ({
 				/>
 			)}
 
-			{formState?.rorUpdated ? (
+			{formState?.rorUpdated && (
 				<>
 					<TextField
 						variant="standard"
@@ -252,10 +275,11 @@ const Step3 = ({
 						required
 						sx={{ mb: 4, width: '80%' }}
 						disabled={!formEditable}
-						error={!!feedbacks?.khataNumber}
-						helperText={feedbacks?.khataNumber || null}
+						error={isFeedbackPage ? !!feedbacks?.khataNumber : false}
+						helperText={isFeedbackPage ? feedbacks?.khataNumber || null : null}
 					/>
-					{formEditable && (
+
+					{activeImageViewer === 'feedbackViewer' && (
 						<ImageUploading
 							multiple
 							value={rorImages}
@@ -269,118 +293,143 @@ const Step3 = ({
 										Upload ROR Records
 									</Button>
 									<div className={styles.imagePreviewContainer}>
-										{imageList.map((image, index) => (
-											<div key={index} className="image-item">
-												<img
-													src={image.ror_records}
-													alt=""
-													width="100"
-													onClick={() => openImageViewer(index)}
-												/>
-												<div className="image-item__btn-wrapper">
-													<Button
-														variant="outlined"
-														color="error"
-														onClick={() => onImageRemove(index)}
-													>
-														Remove
-													</Button>
+										{imageList.map((image, index) => {
+											const imageSrc = imageList.map((el) => el?.ror_records || el);
+											return (
+												<div key={index} className={styles.imageItem}>
+													<img
+														src={image.ror_records || image}
+														alt=""
+														width="100"
+														style={{ height: '100px', width: '140px', borderRadius: '10px' }}
+														onClick={() => openImageViewer(index, imageSrc)}
+													/>
+													<div className={styles.removeBtn}>
+														<IconButton aria-label="delete" onClick={() => onImageRemove(index)}>
+															<CloseIcon style={{ color: 'white' }} />
+														</IconButton>
+													</div>
 												</div>
-											</div>
-										))}
-										{isViewerOpen && (
-											<ImageViewer
-												src={imageList.map((el) => el.ror_records)}
-												currentIndex={currentImage}
-												disableScroll={false}
-												closeOnClickOutside
-												onClose={closeImageViewer}
-												backgroundStyle={{
-													background: '#fff',
-													zIndex: 10,
-													border: '5px solid #017922'
-												}}
-												closeComponent={
-													<p
-														style={{
-															fontSize: '2rem',
-															color: '#000',
-															opacity: 1,
-															paddingRight: '1rem'
-														}}
-													>
-														x
-													</p>
-												}
-											/>
-										)}
+											);
+										})}
 									</div>
 								</div>
 							)}
 						</ImageUploading>
 					)}
-					{rorImages.length > 0 && !formEditable && (
+					{activeImageViewer === 'editableViewer' && (
+						<ImageUploading
+							multiple
+							value={rorImages}
+							onChange={handleRorImages}
+							maxNumber={69}
+							dataURLKey="ror_records"
+						>
+							{({ imageList, onImageUpload, onImageRemove, dragProps }) => (
+								<div className={styles.uploadImageWrapper}>
+									<Button onClick={onImageUpload} {...dragProps} variant="outlined">
+										Upload ROR Records
+									</Button>
+									<div className={styles.imagePreviewContainer}>
+										{imageList.map((image, index) => {
+											const imageSrc = rorImages?.map((_el) => {
+												if (typeof _el === 'string') return _el;
+												if (_el?.file) return URL.createObjectURL(_el?.file);
+												return URL.createObjectURL(_el);
+											});
+											return (
+												<div key={index} className={styles.imageItem}>
+													<img
+														src={image.ror_records}
+														alt=""
+														width="100"
+														style={{ height: '100px', width: '140px', borderRadius: '10px' }}
+														onClick={() => openImageViewer(index, imageSrc)}
+													/>
+
+													<div className={styles.removeBtn}>
+														<IconButton aria-label="delete" onClick={() => onImageRemove(index)}>
+															<CloseIcon style={{ color: 'white' }} />
+														</IconButton>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								</div>
+							)}
+						</ImageUploading>
+					)}
+					{activeImageViewer === 'savedViewer' && (
 						<div>
 							<p style={{ textAlign: 'center' }}>ROR Record Images</p>
 							<div className={styles.imageRecordContainer}>
 								{rorImages?.map((el, index) => {
+									const imageSrc = rorImages?.map((_el) => {
+										if (typeof _el === 'string') return _el;
+										if (_el?.file) return URL.createObjectURL(_el?.file);
+										return URL.createObjectURL(_el);
+									});
 									if (typeof el === 'string') {
 										return (
 											<img
 												key={el}
 												src={el}
 												alt="logo"
-												onClick={() => openImageViewer(index)}
-												style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }}
+												style={{
+													height: '100px',
+													width: '140px',
+													borderRadius: '10px',
+													margin: '0.5rem',
+													cursor: 'pointer'
+												}}
+												onClick={() => openImageViewer(index, imageSrc)}
 											/>
 										);
 									}
 
-									const objectURL = URL.createObjectURL(el);
+									const objectURL = URL.createObjectURL(el?.file);
 									return (
 										<img
 											key={el}
 											alt="logo"
 											src={objectURL}
-											onClick={() => openImageViewer(index)}
-											style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }}
+											onClick={() => openImageViewer(index, imageSrc)}
+											style={{
+												height: '100px',
+												width: '140px',
+												borderRadius: '10px',
+												margin: '0.5rem',
+												cursor: 'pointer'
+											}}
 										/>
 									);
 								})}
 							</div>
-							{isViewerOpen && (
-								<ImageViewer
-									src={rorImages.map((el) =>
-										typeof el === 'string' ? el : URL.createObjectURL(el)
-									)}
-									currentIndex={currentImage}
-									disableScroll={false}
-									closeOnClickOutside
-									onClose={closeImageViewer}
-									backgroundStyle={{
-										background: '#fff',
-										zIndex: 10,
-										border: '5px solid #017922'
-									}}
-									closeComponent={
-										<p
-											style={{
-												fontSize: '3rem',
-												color: '#000',
-												opacity: 1,
-												paddingRight: '1rem'
-											}}
-										>
-											X
-										</p>
-									}
-								/>
-							)}
 						</div>
 					)}
 				</>
-			) : (
-				<></>
+			)}
+
+			{isViewerOpen && (
+				<ImageViewer
+					src={viewerSource}
+					currentIndex={currentImage}
+					disableScroll={false}
+					closeOnClickOutside
+					onClose={closeImageViewer}
+					backgroundStyle={{
+						background: '#fff',
+						zIndex: 10
+					}}
+					closeComponent={
+						<div>
+							<IconButton aria-label="delete" style={{ background: 'black' }}>
+								<CloseIcon style={{ color: 'white' }} />
+							</IconButton>
+						</div>
+					}
+				/>
 			)}
 			{!submittedModal && formEditable && (
 				<div className={styles.btnContainer}>
@@ -402,7 +451,7 @@ const Step3 = ({
 						type="submit"
 						className={styles.submitBtn}
 					>
-						Save
+						{isFeedbackPage ? 'Update' : 'Save'}
 					</Button>
 				</div>
 			)}

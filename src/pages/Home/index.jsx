@@ -1,21 +1,26 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+
 'use client';
 
-import React, { useContext, useEffect, useState } from 'react';
-// import Button from "@mui/material/Button";
+import React, { useEffect, useState } from 'react';
+import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { CircularProgress } from '@mui/material';
+import { CircularProgress, IconButton, InputAdornment } from '@mui/material';
 import { toast } from 'react-toastify';
 import { logEvent } from 'firebase/analytics';
 import isOnline from 'is-online';
 import * as Sentry from '@sentry/nextjs';
-import { PasswordInput, Input, Button, Padding, Container, Text } from 'samagra-ui-test';
-import Footer from '../../components/Footer';
-import { loginUser } from '../../redux/actions/login';
-import Banner from '../../components/Banner';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useFlags, useFlagsmith } from 'flagsmith/react';
 import { analytics } from '../../services/firebase/firebase';
-import { userLogin } from '../../services/api';
+import Banner from '../../components/Banner';
+import { loginUser } from '../../redux/actions/login';
+import Footer from '../../components/Footer';
+import { sendLogs, userLogin } from '../../services/api';
 import styles from './index.module.scss';
 import ROUTE_MAP from '../../services/routing/routeMap';
 
@@ -29,6 +34,12 @@ const Home = () => {
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(true);
 	const [apiCall, setApiCall] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
+	const { disableuserlogs } = useFlags(['disableuserlogs']);
+
+	const handleClickShowPassword = () => {
+		setShowPassword(!showPassword);
+	};
 
 	// Utility function to check if user is admin
 	function userIsAdminForPortal(registrations) {
@@ -46,12 +57,10 @@ const Home = () => {
 	const handleSubmit = async (event) => {
 		if (apiCall) return;
 		event.preventDefault();
-		setApiCall(true);
-
 		setUsernameError(false);
 		setPasswordError(false);
 
-		if (username === '') {
+		if (username === '' || !/^[a-zA-Z]{2}_\d+$/.test(username)) {
 			setUsernameError(true);
 			return;
 		}
@@ -59,7 +68,7 @@ const Home = () => {
 			setPasswordError(true);
 			return;
 		}
-
+		setApiCall(true);
 		const online = await isOnline();
 		if (!online) {
 			toast.error(
@@ -71,7 +80,13 @@ const Home = () => {
 			const loginRes = await userLogin(username, password);
 
 			if (loginRes?.params?.errMsg && loginRes.responseCode === 'FAILURE') {
-				Sentry.captureException({ loginRes, username, password });
+				if (!loginRes?.params?.errMsg === 'Invalid Username/Password') {
+					Sentry.captureException({ loginRes, username, password });
+					sendLogs(
+						{ meta: 'at login submit inside try', gpId: username, error: loginRes?.params?.errMsg },
+						disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(username) : true
+					);
+				}
 				logEvent(analytics, 'login_failure', {
 					user_id: username
 				});
@@ -100,8 +115,16 @@ const Home = () => {
 			}
 			setApiCall(false);
 		} catch (err) {
-			Sentry.captureException({ err, username, password });
+			Sentry.captureException({ err: err?.message || err.toString(), username, password });
 			toast.error(err?.message || err?.toString());
+			sendLogs(
+				{
+					meta: 'at login submit inside catch',
+					gpId: username,
+					error: err?.message || err?.toString()
+				},
+				disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(username) : true
+			);
 		}
 	};
 
@@ -120,53 +143,86 @@ const Home = () => {
 						<Banner />
 
 						<div className={`${styles.loginFormContainer} my-auto text-left`}>
-							<Text size="extralarge">Data Collection App</Text>
-							<Text size="medium" color="success" weight={'bold'} className={styles.loginText}>
-								Login to your account
-							</Text>
+							<h3 className="">Data Collection App</h3>
+							<p className={styles.loginText}>
+								<strong>Login to your account</strong>
+							</p>
 							<form
 								autoComplete="off"
 								onSubmit={handleSubmit}
 								className={`${styles.loginForm} animate__animated animate__fadeIn`}
 							>
-								<Container>
-									<Padding bottom="small" width="100%">
-										<Input
-											label="Username"
-											id="username"
-											onChange={(e) => setUsername(e.target.value)}
-											required
-											variant="filled"
-											fullWidth
-											value={username}
-											error={usernameError}
-										/>
-									</Padding>
+								<TextField
+									label="Username"
+									id="username"
+									onChange={(e) => {
+										setUsernameError(false);
+										setUsername(e.target.value.toLowerCase());
+									}}
+									required
+									variant="filled"
+									sx={{ mb: 3 }}
+									fullWidth
+									value={username}
+									error={usernameError}
+									helperText={usernameError ? 'Please enter a valid username' : ''}
+								/>
+								<TextField
+									label="Password"
+									onChange={(e) => {
+										setPasswordError(false);
+										setPassword(e.target.value);
+									}}
+									required
+									variant="filled"
+									id="password"
+									type={showPassword ? 'text' : 'password'}
+									value={password}
+									error={passwordError}
+									helperText={passwordError ? 'Please enter a valid password' : ''}
+									fullWidth
+									sx={{ mb: 3 }}
+									InputProps={{
+										endAdornment: (
+											<InputAdornment position="end" sx={{ marginRight: '0.5rem' }}>
+												<IconButton
+													aria-label="toggle password visibility"
+													onClick={() => {
+														logEvent(analytics, 'show_password_icon_clicked', {
+															user_id: username
+														});
+														handleClickShowPassword();
+													}}
+													edge="end"
+												>
+													{showPassword ? <VisibilityOff /> : <Visibility />}
+												</IconButton>
+											</InputAdornment>
+										)
+									}}
+								/>
 
-									<PasswordInput
-										label="Password"
-										onChange={(e) => setPassword(e.target.value)}
-										required
-										variant="filled"
-										id="password"
-										type="password"
-										value={password}
-										error={passwordError}
-										fullWidth
-									/>
+								<span
+									onClick={() => {
+										logEvent(analytics, 'show_password_text_clicked', {
+											user_id: username
+										});
+										handleClickShowPassword();
+									}}
+									className={styles.showPasswordText}
+								>
+									{!showPassword ? 'Show Password' : 'Hide Password'}
+								</span>
 
-									<Padding width="100%" top="large">
-										<Button
-											id="loginBtn"
-											type="default"
-											loading={apiCall}
-											color="success"
-											width="fill"
-											label={'Login'}
-										/>
-									</Padding>
-								</Container>
-
+								<Button
+									id="loginBtn"
+									variant="contained"
+									color="success"
+									type="submit"
+									sx={{ padding: 1, width: '80%', height: '3rem', fontSize: 16, marginTop: 5 }}
+								>
+									{apiCall ? <CircularProgress color="inherit" /> : 'Login'}{' '}
+								</Button>
 								{error?.length > 0 && <p style={{ color: 'red' }}>{error}</p>}
 							</form>
 						</div>
