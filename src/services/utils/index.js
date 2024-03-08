@@ -210,12 +210,6 @@ export const storeImages = async (data, disableuserlogs) => {
 	}
 };
 
-// export const storeImages = async (data) => {
-// 	const imageRecords = (await localForage.getItem('imageRecords')) || [];
-// 	imageRecords.push(data);
-// 	return await localForage.setItem('imageRecords', imageRecords);
-// };
-
 export const getImages = async () => await localforage.getItem('imageRecords');
 
 export const getImagesForVillage = async (villageId) => {
