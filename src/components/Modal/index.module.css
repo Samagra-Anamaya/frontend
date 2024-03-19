@@ -1,54 +1,57 @@
 .overlayContainer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.2);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1200;
-    backdrop-filter: blur(2px);
-    overflow: hidden;
-    -ms-overflow-style: none;
-    overflow-y: hidden;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0, 0, 0, 0.2);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1200;
+	backdrop-filter: blur(2px);
+	overflow: hidden;
+	-ms-overflow-style: none;
+	overflow-y: hidden;
+	/* IE and Edge */
+	scrollbar-width: none;
+	/* Firefox */
 }
 
 .container {
-    background: #FFF;
-    padding: 2rem;
-    max-width: 70%;
-    width: 80%;
-    height: 76%;
-    z-index: 1300;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
+	background: #fff;
+	padding: 2rem;
+	max-width: 70%;
+	width: 80%;
+	/* height: 76%; */
+	z-index: 1300;
+	border-radius: 0.5rem;
+	overflow: hidden;
+	-ms-overflow-style: none;
+	/* IE and Edge */
+	scrollbar-width: none;
+	/* Firefox */
+	display: flex;
+	justify-content: center; /* Center horizontally */
+	align-items: center;
 }
 
 .container::-webkit-scrollbar {
-    display: none;
+	display: none;
 }
 
 @media screen and (max-width: 768px) {
-    .container {
-        width: 100vw !important;
-        min-height: 45%;
-        overflow: hidden;
-    }
+	.container {
+		width: 100vw !important;
+		min-height: 45%;
+		overflow: hidden;
+	}
 }
 
 @media screen and (min-width: 500px) {
-    .container {
-        width: 25vw !important;
-        min-height: 45%;
-        overflow: hidden;
-    }
+	.container {
+		width: 25vw !important;
+		min-height: 45%;
+		overflow: hidden;
+	}
 }

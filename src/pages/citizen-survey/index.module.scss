@@ -1,77 +1,77 @@
 .root {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    // padding: 2rem;
-    height: 100vh;
-    overflow: scroll;
-    background: #fff;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	// padding: 2rem;
+	height: 100vh;
+	overflow: scroll;
+	background: #fff;
 
-    .commonHeading {
-        font-size: 1.5rem;
-        font-weight: 600;
-        text-align: center;
-        opacity: 0.7;
-        margin: 0rem 0rem 2rem 0rem;
-    }
+	.commonHeading {
+		font-size: 1.5rem;
+		font-weight: 600;
+		text-align: center;
+		opacity: 0.7;
+		margin: 0rem 0rem 2rem 0rem;
+	}
 
-    .collectionMode {
-        display: flex;
-        flex-direction: column;
-        width: 80%;
-        border-radius: 0.5rem;
-        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
-        padding: 2rem;
-        background: #007922;
-        align-items: center;
-        color: #fff;
-        font-size: 1.2rem;
-        font-weight: bolder;
-        margin-bottom: 2rem;
+	.collectionMode {
+		display: flex;
+		flex-direction: column;
+		width: 80%;
+		border-radius: 0.5rem;
+		box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+		padding: 2rem;
+		background: #007922;
+		align-items: center;
+		color: #fff;
+		font-size: 1.2rem;
+		font-weight: bolder;
+		margin-bottom: 2rem;
 
-        &>div:nth-child(1) {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff;
-            border-radius: 0.5rem;
-            width: 4rem;
-            height: 4rem;
+		& > div:nth-child(1) {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: #fff;
+			border-radius: 0.5rem;
+			width: 4rem;
+			height: 4rem;
 
-            img {
-                width: 60%;
-            }
-        }
+			img {
+				width: 60%;
+			}
+		}
 
-        &>div:nth-child(3) {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: space-evenly;
-            background: #fff;
-            border-radius: 0.5rem;
-            color: #007922;
-            padding: 0.25rem;
+		& > div:nth-child(3) {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-evenly;
+			background: #fff;
+			border-radius: 0.5rem;
+			color: #007922;
+			padding: 0.25rem;
 
-            img {
-                width: 25%;
-            }
-        }
-    }
+			img {
+				width: 25%;
+			}
+		}
+	}
 
-    .qrContainer {
-        height: 100%;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+	.qrContainer {
+		height: 100%;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 
-        & p:nth-child(2) {
-            font-size: 1.4rem;
-            text-align: center;
-            opacity: 0.7;
-            padding: 2rem;
-        }
-    }
+		& p:nth-child(2) {
+			font-size: 1.4rem;
+			text-align: center;
+			opacity: 0.7;
+			padding: 2rem;
+		}
+	}
 }

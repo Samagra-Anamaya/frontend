@@ -108,13 +108,13 @@ Pamula
 `;
 
 export const getTbName = () => {
-  const dataArray = tb.split(/\n/).flatMap((line) => {
-    return line.split(",").map((label) => ({
-      label: label.trim(),
-    }));
-  });
+	const dataArray = tb.split(/\n/).flatMap((line) =>
+		line.split(',').map((label) => ({
+			label: label.trim()
+		}))
+	);
 
-  // Filter out any empty strings that might be a result of blank lines
-  dataArray.sort((a, b) => a.label.localeCompare(b.label));
-  return dataArray.filter((item) => item.label)
+	// Filter out any empty strings that might be a result of blank lines
+	dataArray.sort((a, b) => a.label.localeCompare(b.label));
+	return dataArray.filter((item) => item.label);
 };

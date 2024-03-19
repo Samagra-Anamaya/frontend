@@ -1,0 +1,89 @@
+.sidebar {
+    width: 280px; /* Adjust width as necessary */
+    background-color: #fff;
+    padding: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height: 100vh;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .header {
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+  }
+  
+  .profileSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .profileImage {
+    width: 100px; /* Adjust size as necessary */
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid #eee; /* Adjust border color as necessary */
+    margin-bottom: 0.5rem;
+  }
+  
+  .username {
+    font-size: 1rem;
+    color: #333;
+    margin: 0;
+  }
+  
+  .themeToggle {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  
+  .themeButton {
+    padding: 0.5rem 1rem;
+    border: none;
+    background-color: #f0f0f0;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+  
+  .light {
+    /* Specific styles for the light button */
+  }
+  
+  .dark {
+    /* Specific styles for the dark button */
+  }
+  
+  .navigation {
+    width: 100%;
+    margin-top: 1rem;
+  }
+  
+  .navItem {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: background-color 0.3s;
+  }
+  
+  .navItem:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .icon {
+    margin-right: 1rem;
+    /* Add styles for the icons here */
+  }
+  
+  /* Add media queries and other responsive design features as necessary */
+  

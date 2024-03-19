@@ -1,48 +1,38 @@
-"use client";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import styles from "./index.module.scss";
-import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
-import CommonHeader from "../../components/Commonheader";
-import { v4 as uuidv4 } from "uuid";
-import {
-  addCitizen,
-  setCurrentCitizen,
-  tokenSelector,
-  updateSearchQuery,
-} from "../../redux/store";
-import {
-  getVillageDetails,
-  getVillageSubmissions,
-  searchCitizen,
-} from "../../services/api";
-import Pagination from "@mui/material/Pagination";
-import { TextField, InputAdornment, CircularProgress } from "@mui/material";
-import { debounce } from "debounce";
+'use client';
 
-import SearchIcon from "@mui/icons-material/Search";
-import { MDBListGroup } from "mdbreact";
-import ListItem from "../../components/ListItem";
-import Banner from "../../components/Banner";
-import Breadcrumb from "../../components/Breadcrumb";
-import moment from "moment";
-import Lottie from "react-lottie";
-import * as emptyState from "public/lottie/emptyState.json";
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 
+import Pagination from '@mui/material/Pagination';
+import { TextField, InputAdornment, CircularProgress } from '@mui/material';
+import { debounce } from 'debounce';
+
+import SearchIcon from '@mui/icons-material/Search';
+import { MDBListGroup } from 'mdbreact';
+import moment from 'moment';
+import Lottie from 'react-lottie';
+import * as emptyState from '../../utils/lottie/emptyState.json';
+import ListItem from '../../components/ListItem';
+import Banner from '../../components/Banner';
+import Breadcrumb from '../../components/Breadcrumb';
+import { getVillageSubmissions, searchCitizen } from '../../services/api';
+import { setCurrentCitizen, tokenSelector, updateSearchQuery } from '../../redux/store';
+
+import styles from './index.module.scss';
 
 // Lottie Options
 const defaultOptions = {
-  loop: true,
-  autoplay: true,
-  animationData: emptyState,
-  rendererSettings: {
-    preserveAspectRatio: "xMidYMid slice",
-  },
+	loop: true,
+	autoplay: true,
+	animationData: emptyState,
+	rendererSettings: {
+		preserveAspectRatio: 'xMidYMid slice'
+	}
 };
 
 const CompletedEntries = ({ params }) => {
-  /* Component States and Refs*/
-  const userData = useSelector((state) => state?.userData);
+	const userData = useSelector((state) => state?.userData);
 	const _currLocation = useSelector((state) => state?.userData?.currentLocation);
 	const [hydrated, setHydrated] = React.useState(false);
 
@@ -204,10 +194,3 @@ const CompletedEntries = ({ params }) => {
 };
 
 export default CompletedEntries;
-
-{
-  /* <div key={el.citizenId} className={styles.submittedCitizen}
-onClick={() => { dispatch(setCurrentCitizen(el)); router.push(`/pages/citizen-survey`) }}>
-{el?.submissionData?.beneficiaryName}
-</div> */
-}

@@ -1,13 +1,12 @@
-import React from 'react'
+import React from 'react';
 
-const Loader = () => {
-    return (
-        <>
-        <div className="w-[60%] h-[200px] bg-gray-200 flex">
-            <div className="loader"></div>
-        </div>
-         <style>
-         {`
+const Loader = () => (
+	<>
+		<div className="w-[60%] h-[200px] bg-gray-200 flex">
+			<div className="loader"></div>
+		</div>
+		<style>
+			{`
                    .loader {
                        border: 8px solid #FFF; /* Light grey */
                        border-top: 8px solid #F8913D; /* Blue */
@@ -23,9 +22,8 @@ const Loader = () => {
                        100% { transform: rotate(360deg); }
                      }
                    `}
-       </style>
-       </>
-    )
-}
+		</style>
+	</>
+);
 
-export default Loader
+export default Loader;

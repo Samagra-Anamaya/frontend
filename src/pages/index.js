@@ -1,33 +1,26 @@
-import React, { useEffect } from "react";
-import AssignedLocations from "./assigned-locations";
-import { useUserData } from "../hooks/useAuth";
+import React from 'react';
 import { useMachine } from '@xstate/react';
-import authMachine from "../xstate/stateMachine";
-import Home from "./Home";
-import { useSelector } from "react-redux";
+import { useSelector } from 'react-redux';
+import { CircularProgress } from '@mui/material';
+import AssignedLocations from './assigned-locations';
+import authMachine from '../xstate/stateMachine';
+import Home from './Home';
+
 const Login = () => {
-  const userData = useSelector(state => state?.userData)
-  const [current, send] = useMachine(authMachine);
+	const userData = useSelector((state) => state?.userData);
+	const [current, send] = useMachine(authMachine);
 
-  const isAuthenticated = userData?.isAuthenticated;
-  if (isAuthenticated) {
-    send("AUTHENTICATED");
-  } else {
-    send("UNAUTHENTICATED");
-  }
+	const isAuthenticated = userData?.isAuthenticated;
+	if (isAuthenticated) {
+		send('AUTHENTICATED');
+	} else {
+		send('UNAUTHENTICATED');
+	}
 
-  console.log("hello", userData, current, isAuthenticated)
-
-  if (current) {
-    console.log(current.value)
-    return current.matches("authenticated") ? (
-      <AssignedLocations />
-    ) : (
-      <Home />
-    );
-  }
-  else
-    return <div>hello</div>
+	if (current) {
+		return current.matches('authenticated') ? <AssignedLocations /> : <Home />;
+	}
+	return <CircularProgress />;
 };
 
 export default Login;
