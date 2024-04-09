@@ -116,17 +116,17 @@ const CitizenSurveyPage = ({ params }) => {
       showSubmittedModal(true);
       let capturedAt = moment().utc();
       setTotalSteps((landImages?.length || 0) + (rorImages?.length || 0))
-      for (let el in landImages) {
-        const compressedImg = await compressImage(landImages[el].file, usemainworker, disableuserlogs);
-        setActiveStep(Number(el) + 1);
-        landImages[el] = compressedImg;
-      }
-      for (let el in rorImages) {
-        const compressedImg = await compressImage(rorImages[el].file, usemainworker, disableuserlogs);
-        setActiveStep((landImages?.length || 0) + Number(el) + 1);
+      // for (let el in landImages) {
+      //   const compressedImg = await compressImage(landImages[el].file, usemainworker, disableuserlogs);
+      //   setActiveStep(Number(el) + 1);
+      //   landImages[el] = compressedImg;
+      // }
+      // for (let el in rorImages) {
+      //   const compressedImg = await compressImage(rorImages[el].file, usemainworker, disableuserlogs);
+      //   setActiveStep((landImages?.length || 0) + Number(el) + 1);
 
-        rorImages[el] = compressedImg;
-      }
+      //   rorImages[el] = compressedImg;
+      // }
 
 
 
