@@ -8,10 +8,11 @@ import {
     Select,
     MenuItem,
     FormControl,
-    Tooltip
+    Tooltip,
+    Input
 } from "@mui/material";
+import { styled } from '@mui/material/styles';
 import Autocomplete from '@mui/material/Autocomplete';
-
 import MobileStepper from '@mui/material/MobileStepper';
 import ImageUploading from 'react-images-uploading';
 
@@ -20,7 +21,7 @@ import { toast } from "react-toastify";
 import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
 import { Carousel } from 'react-responsive-carousel';
 import ImageViewer from 'react-simple-image-viewer';
-import { validateAadhaar } from "../../services/utils";
+import { toBase64, validateAadhaar } from "../../services/utils";
 import { getImageFromMinio } from "../../services/api";
 import { useSelector } from "react-redux";
 import { getTbName } from "./tribe-names";
@@ -28,17 +29,52 @@ import { Stepper } from "@mui/material";
 import { Step } from "@mui/material";
 import { StepLabel } from "@mui/material";
 
+import { Worker } from '@react-pdf-viewer/core';
+import { Viewer } from '@react-pdf-viewer/core';
+
+// Import the styles
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+
+// Import styles
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
+import { thumbnailPlugin } from '@react-pdf-viewer/thumbnail';
+
+// Import styles
+import '@react-pdf-viewer/thumbnail/lib/styles/index.css';
+import CommonModal from "../Modal";
+
+
 const steps = [
     'Aadhaar Details',
     'Tribe & Land Details',
     'Plot Details',
 ];
 
+const VisuallyHiddenInput = styled('input')({
+    clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
+    height: 1,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    whiteSpace: 'nowrap',
+    width: 1,
+});
+
 const CitizenForm = (props) => {
-    const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages } = props;
+    const defaultLayoutPluginInstance = defaultLayoutPlugin();
+    const thumbnailPluginInstance = thumbnailPlugin();
+    const { Thumbnails } = thumbnailPluginInstance;
+    const { handleSubmit, setFormState, formState, currCitizen, submittedModal, formEditable, mode, savedEntries = false, setLandImages, setRorImages, rorImages, landImages, rorPdfs, setRorPdfs } = props;
     const [currentImage, setCurrentImage] = useState(0);
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
+    const [currentPdf, setCurrentPdf] = useState(null);
+    const [pdfModal, showPdfModal] = useState(false);
+
     const user = useSelector((state) => state?.userData?.user);
 
     console.log("FORM EDITABLE -->", formEditable)
@@ -85,12 +121,24 @@ const CitizenForm = (props) => {
         }
     }
 
+    const handlePdfUpload = async (e) => {
+        let file = e.target.files[0];
+        const base64File = await toBase64(file);
+        setRorPdfs((prev) => [...prev, { file: file, base64File: base64File }]);
+    }
+
+    const handlePdfSelection = (el) => {
+        setCurrentPdf(el);
+        showPdfModal(true);
+    }
+
     useEffect(() => {
         getRecordImages();
     }, [])
 
     const tribeOptions = useMemo(() => getTbName(), []);
 
+    console.log({ rorImages })
     return (
         <>
             <Stepper activeStep={activeStep} alternativeLabel
@@ -144,30 +192,31 @@ const CitizenForm = (props) => {
                         disabled={true}
                         sx={{ mb: 4, width: "80%" }}
                     />}
-                    {console.log(savedEntries, formEditable)}
-                    {formState?.isAadhaarAvailable ?
-                        <Tooltip title={!formEditable ? "Aadhaar will be display in hashed format" : ''}>
-                            <TextField
-                                type={"text"}
-                                variant="standard"
-                                label={"Aadhaar Number"}
-                                onChange={(e) => {
-                                    if (/^[0-9]*$/.test(e.target.value))
-                                        setFormState((prevState) => ({
-                                            ...prevState,
-                                            aadharNumber: e.target.value,
-                                        }));
-                                }}
-                                value={savedEntries ? `**** **** ${formState?.lastDigits ? formState?.lastDigits : formState?.aadharNumber.slice(8)}` : formEditable ? formState?.aadharNumber : "**** **** " + formState.lastDigits}
-                                required
-                                inputProps={{ maxLength: 12, minLength: 12 }}
-                                disabled={!formEditable ? true : false}
-                                sx={{ mb: 4, width: "80%" }}
-                            />
-                        </Tooltip>
-                        : <></>}
+                    {
+                        formState?.isAadhaarAvailable ?
+                            <Tooltip title={!formEditable ? "Aadhaar will be display in hashed format" : ''}>
+                                <TextField
+                                    type={"text"}
+                                    variant="standard"
+                                    label={"Aadhaar Number"}
+                                    onChange={(e) => {
+                                        if (/^[0-9]*$/.test(e.target.value))
+                                            setFormState((prevState) => ({
+                                                ...prevState,
+                                                aadharNumber: e.target.value,
+                                            }));
+                                    }}
+                                    value={savedEntries ? `**** **** ${formState?.lastDigits ? formState?.lastDigits : formState?.aadharNumber.slice(8)}` : formEditable ? formState?.aadharNumber : "**** **** " + formState.lastDigits}
+                                    required
+                                    inputProps={{ maxLength: 12, minLength: 12 }}
+                                    disabled={!formEditable ? true : false}
+                                    sx={{ mb: 4, width: "80%" }}
+                                />
+                            </Tooltip>
+                            : <></>
+                    }
                     <Button variant="contained" sx={{ position: 'absolute', bottom: '10px' }} color="success" size="large" type="submit" className={styles.submitBtn}>Next</Button>
-                </form>
+                </form >
             }
             {
                 activeStep == 1 && <form
@@ -455,249 +504,294 @@ const CitizenForm = (props) => {
                         <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(0)} className={styles.submitBtn}>Back</Button>
                         <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Next</Button>
                     </div>
-                </form>
+                </form >
             }
-            {activeStep == 2 && <form
-                onSubmit={(e) => {
-                    console.log("Submitting form -> ", e)
-                    e?.preventDefault();
-                    if (formState?.rorUpdated && !rorImages.length) {
-                        toast("Please upload ROR records!", {
-                            type: 'error'
-                        })
-                        return;
-                    } else if (formState?.forestLandType == 'revenueForest' && formState?.typeOfBlock == 'revenueBlock' && formState?.fraPlotsClaimed == 0) {
-                        toast("Plots claimed cannot be zero!", {
-                            type: 'error'
-                        })
-                        return;
-                    }
-                    handleSubmit();
-                }}
-                className={styles.userForm}>
-                {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
-                    <InputLabel id="land-type-label">Type of Forest Land</InputLabel>
-                    <Select
-                        labelId="land-type-label"
-                        id="land-type"
-                        value={formState?.forestLandType}
-                        variant="standard"
-                        label="Type of Forest Land"
-                        required
-                        onChange={e => { setFormState((prevState) => ({ ...prevState, forestLandType: e.target.value })) }}
-                    >
-                        <MenuItem value={'revenueForest'}>Revenue Forest</MenuItem>
-                        <MenuItem value={'reservedForest'}>Reserved Forest</MenuItem>
-                    </Select>
-                </FormControl> : <TextField
-                    variant='standard'
-                    label={"Type of Forest Land"}
-                    onChange={e => setFormState((prevState) => ({ ...prevState, forestLandType: e.target.value }))}
-                    value={formState?.forestLandType == 'revenueForest' ? 'Revenue Forest' : 'Reserved Forest'}
-                    required
-                    sx={{ mb: 4, width: '80%' }}
-                    disabled={!formEditable ? true : false}
-
-                />}
-                {formState?.forestLandType == 'revenueForest' ? formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
-                    <InputLabel id="block-type-label">Type of Block</InputLabel>
-                    <Select
-                        labelId="block-type-label"
-                        id="block-type"
-                        value={formState?.typeOfBlock}
-                        variant="standard"
-                        label="Type of Block"
-                        required
-                        onChange={e => {
-                            const currForm = { ...formState };
-                            if (e.target.value == 'revenueBlock') {
-                                delete currForm.compartmentNo;
-                            } else {
-                                delete currForm.fraPlotsClaimed;
-                            }
-                            currForm.typeOfBlock = e.target.value;
-                            setFormState(currForm);
-                        }}
-                    >
-                        <MenuItem value={'jungleBlock'}>Jungle Block</MenuItem>
-                        <MenuItem value={'revenueBlock'}>Revenue Block</MenuItem>
-                    </Select>
-                </FormControl> : <TextField
-                    variant='standard'
-                    label={"Type of Block"}
-                    onChange={e => setFormState((prevState) => ({ ...prevState, typeOfBlock: e.target.value }))}
-                    value={formState?.typeOfBlock == 'jungleBlock' ? 'Jungle Block' : 'Revenue Block'}
-                    required
-                    sx={{ mb: 4, width: '80%' }}
-                    disabled={!formEditable ? true : false}
-
-                /> : <></>}
-
-
-                {formState?.forestLandType == 'revenueForest' && formState?.typeOfBlock == 'jungleBlock' ? <TextField
-                    variant='standard'
-                    label={"Compartment No"}
-                    onChange={e => setFormState((prevState) => ({ ...prevState, compartmentNo: e.target.value }))}
-                    value={formState?.compartmentNo}
-                    required
-                    sx={{ mb: 4, width: '80%' }}
-                    disabled={!formEditable ? true : false}
-
-                /> : <></>}
-
-
-                {formState?.forestLandType == 'revenueForest' && formState?.typeOfBlock == 'revenueBlock' ? <>
-                    <TextField
+            {
+                activeStep == 2 && <form
+                    onSubmit={(e) => {
+                        console.log("Submitting form -> ", e)
+                        e?.preventDefault();
+                        if (formState?.rorUpdated && !rorImages?.length && !rorPdfs?.length) {
+                            toast("Please upload ROR records!", {
+                                type: 'error'
+                            })
+                            return;
+                        } else if (formState?.forestLandType == 'revenueForest' && formState?.typeOfBlock == 'revenueBlock' && formState?.fraPlotsClaimed == 0) {
+                            toast("Plots claimed cannot be zero!", {
+                                type: 'error'
+                            })
+                            return;
+                        }
+                        handleSubmit();
+                    }}
+                    className={styles.userForm} style={rorPdfs?.length ? { height: 'auto' } : {}}>
+                    {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
+                        <InputLabel id="land-type-label">Type of Forest Land</InputLabel>
+                        <Select
+                            labelId="land-type-label"
+                            id="land-type"
+                            value={formState?.forestLandType}
+                            variant="standard"
+                            label="Type of Forest Land"
+                            required
+                            onChange={e => { setFormState((prevState) => ({ ...prevState, forestLandType: e.target.value })) }}
+                        >
+                            <MenuItem value={'revenueForest'}>Revenue Forest</MenuItem>
+                            <MenuItem value={'reservedForest'}>Reserved Forest</MenuItem>
+                        </Select>
+                    </FormControl> : <TextField
                         variant='standard'
-                        label={"No. of Plots Claimed Under FRA"}
-                        onChange={e => {
-                            const newValue = e.target.value;
-                            if (newValue === '' || (((parseInt(newValue, 10) >= 0 && parseInt(newValue, 10) <= 50)) && /^\d+$/.test(newValue))) {
-                                setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: newValue }))
-                            }
-                        }}
-                        value={formState?.fraPlotsClaimed || ''}
+                        label={"Type of Forest Land"}
+                        onChange={e => setFormState((prevState) => ({ ...prevState, forestLandType: e.target.value }))}
+                        value={formState?.forestLandType == 'revenueForest' ? 'Revenue Forest' : 'Reserved Forest'}
                         required
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
-                    />
-                    {formState.fraPlotsClaimed > 0 && Array.from(Array(Number(formState.fraPlotsClaimed)).keys()).map(el => {
-                        return <TextField
+
+                    />}
+                    {formState?.forestLandType == 'revenueForest' ? formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
+                        <InputLabel id="block-type-label">Type of Block</InputLabel>
+                        <Select
+                            labelId="block-type-label"
+                            id="block-type"
+                            value={formState?.typeOfBlock}
+                            variant="standard"
+                            label="Type of Block"
+                            required
+                            onChange={e => {
+                                const currForm = { ...formState };
+                                if (e.target.value == 'revenueBlock') {
+                                    delete currForm.compartmentNo;
+                                } else {
+                                    delete currForm.fraPlotsClaimed;
+                                }
+                                currForm.typeOfBlock = e.target.value;
+                                setFormState(currForm);
+                            }}
+                        >
+                            <MenuItem value={'jungleBlock'}>Jungle Block</MenuItem>
+                            <MenuItem value={'revenueBlock'}>Revenue Block</MenuItem>
+                        </Select>
+                    </FormControl> : <TextField
+                        variant='standard'
+                        label={"Type of Block"}
+                        onChange={e => setFormState((prevState) => ({ ...prevState, typeOfBlock: e.target.value }))}
+                        value={formState?.typeOfBlock == 'jungleBlock' ? 'Jungle Block' : 'Revenue Block'}
+                        required
+                        sx={{ mb: 4, width: '80%' }}
+                        disabled={!formEditable ? true : false}
+
+                    /> : <></>}
+
+
+                    {formState?.forestLandType == 'revenueForest' && formState?.typeOfBlock == 'jungleBlock' ? <TextField
+                        variant='standard'
+                        label={"Compartment No"}
+                        onChange={e => setFormState((prevState) => ({ ...prevState, compartmentNo: e.target.value }))}
+                        value={formState?.compartmentNo}
+                        required
+                        sx={{ mb: 4, width: '80%' }}
+                        disabled={!formEditable ? true : false}
+
+                    /> : <></>}
+
+
+                    {formState?.forestLandType == 'revenueForest' && formState?.typeOfBlock == 'revenueBlock' ? <>
+                        <TextField
                             variant='standard'
-                            label={`Plot Number ${el + 1}`}
-                            onChange={e => setFormState((prevState) => ({ ...prevState, [`plotNumber${el + 1}`]: e.target.value }))}
-                            value={formState?.[`plotNumber${el + 1}`]}
+                            label={"No. of Plots Claimed Under FRA"}
+                            onChange={e => {
+                                const newValue = e.target.value;
+                                if (newValue === '' || (((parseInt(newValue, 10) >= 0 && parseInt(newValue, 10) <= 50)) && /^\d+$/.test(newValue))) {
+                                    setFormState((prevState) => ({ ...prevState, fraPlotsClaimed: newValue }))
+                                }
+                            }}
+                            value={formState?.fraPlotsClaimed || ''}
                             required
                             sx={{ mb: 4, width: '80%' }}
                             disabled={!formEditable ? true : false}
                         />
-                    })}
-                </> : <></>
-                }
+                        {formState.fraPlotsClaimed > 0 && Array.from(Array(Number(formState.fraPlotsClaimed)).keys()).map(el => {
+                            return <TextField
+                                variant='standard'
+                                label={`Plot Number ${el + 1}`}
+                                onChange={e => setFormState((prevState) => ({ ...prevState, [`plotNumber${el + 1}`]: e.target.value }))}
+                                value={formState?.[`plotNumber${el + 1}`]}
+                                required
+                                sx={{ mb: 4, width: '80%' }}
+                                disabled={!formEditable ? true : false}
+                            />
+                        })}
+                    </> : <></>
+                    }
 
-                {formState?.forestLandType == 'reservedForest' ? <TextField
-                    variant='standard'
-                    label={"Compartment No"}
-                    onChange={e => setFormState((prevState) => ({ ...prevState, compartmentNo: e.target.value }))}
-                    value={formState?.compartmentNo}
-                    required
-                    sx={{ mb: 4, width: '80%' }}
-                    disabled={!formEditable ? true : false}
-
-                /> : <></>}
-
-                {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
-                    <InputLabel id="ror-updated-label">Has ROR been updated? *</InputLabel>
-                    <Select
-                        labelId="ror-updated-label"
-                        id="ror-updated"
-                        value={formState?.rorUpdated}
-                        variant="standard"
-                        label="Has ROR been updated?"
-                        required
-                        onChange={e => setFormState((prevState) => ({ ...prevState, rorUpdated: e.target.value }))}
-                    >
-                        <MenuItem value={true}>Yes</MenuItem>
-                        <MenuItem value={false}>No</MenuItem>
-                    </Select>
-                </FormControl> : <TextField
-                    variant='standard'
-                    label={"Has ROR been updated?"}
-                    onChange={e => setFormState((prevState) => ({ ...prevState, address: e.target.value }))}
-                    value={formState?.rorUpdated ? 'Yes' : 'No'}
-                    required
-                    sx={{ mb: 4, width: '80%' }}
-                    disabled={!formEditable ? true : false}
-
-                />}
-                {formState?.rorUpdated ? <>
-                    <TextField
+                    {formState?.forestLandType == 'reservedForest' ? <TextField
                         variant='standard'
-                        label={`Khata Number`}
-                        onChange={e => setFormState((prevState) => ({ ...prevState, khataNumber: e.target.value }))}
-                        value={formState?.khataNumber}
+                        label={"Compartment No"}
+                        onChange={e => setFormState((prevState) => ({ ...prevState, compartmentNo: e.target.value }))}
+                        value={formState?.compartmentNo}
                         required
                         sx={{ mb: 4, width: '80%' }}
                         disabled={!formEditable ? true : false}
-                    />
-                    {formEditable && <ImageUploading
-                        multiple
-                        value={rorImages}
-                        onChange={handleRorImages}
-                        maxNumber={69}
-                        dataURLKey="ror_records"
-                    >
-                        {({
-                            imageList,
-                            onImageUpload,
-                            onImageRemove,
-                            isDragging,
-                            dragProps,
-                        }) => (
-                            <div className={styles.uploadImageWrapper}>
-                                <Button
-                                    onClick={onImageUpload}
-                                    {...dragProps}
-                                    variant="outlined"
-                                >
-                                    Upload ROR Records
-                                </Button>
-                                <div className={styles.imagePreviewContainer}>
-                                    {imageList.map((image, index) => (
-                                        <div key={index} className="image-item">
-                                            <img src={image['ror_records']} alt="" width="100" onClick={() => openImageViewer(index)} />
-                                            <div className="image-item__btn-wrapper">
-                                                <Button variant="outlined" color="error" onClick={() => onImageRemove(index)}>Remove</Button>
+
+                    /> : <></>}
+
+                    {formEditable ? <FormControl sx={{ mb: 4, width: '80%' }}>
+                        <InputLabel id="ror-updated-label">Has ROR been updated? *</InputLabel>
+                        <Select
+                            labelId="ror-updated-label"
+                            id="ror-updated"
+                            value={formState?.rorUpdated}
+                            variant="standard"
+                            label="Has ROR been updated?"
+                            required
+                            onChange={e => setFormState((prevState) => ({ ...prevState, rorUpdated: e.target.value }))}
+                        >
+                            <MenuItem value={true}>Yes</MenuItem>
+                            <MenuItem value={false}>No</MenuItem>
+                        </Select>
+                    </FormControl> : <TextField
+                        variant='standard'
+                        label={"Has ROR been updated?"}
+                        onChange={e => setFormState((prevState) => ({ ...prevState, address: e.target.value }))}
+                        value={formState?.rorUpdated ? 'Yes' : 'No'}
+                        required
+                        sx={{ mb: 4, width: '80%' }}
+                        disabled={!formEditable ? true : false}
+
+                    />}
+                    {formState?.rorUpdated ? <>
+                        <TextField
+                            variant='standard'
+                            label={`Khata Number`}
+                            onChange={e => setFormState((prevState) => ({ ...prevState, khataNumber: e.target.value }))}
+                            value={formState?.khataNumber}
+                            required
+                            sx={{ mb: 4, width: '80%' }}
+                            disabled={!formEditable ? true : false}
+                        />
+                        {formEditable && <ImageUploading
+                            multiple
+                            value={rorImages}
+                            onChange={handleRorImages}
+                            maxNumber={69}
+                            dataURLKey="ror_records"
+                        >
+                            {({
+                                imageList,
+                                onImageUpload,
+                                onImageRemove,
+                                isDragging,
+                                dragProps,
+                            }) => (
+                                <div className={styles.uploadImageWrapper}>
+                                    <Button
+                                        onClick={onImageUpload}
+                                        {...dragProps}
+                                        variant="outlined"
+                                    >
+                                        Upload ROR Records
+                                    </Button>
+                                    <div className={styles.imagePreviewContainer}>
+                                        {imageList.map((image, index) => (
+                                            <div key={index} className="image-item">
+                                                <img src={image['ror_records']} alt="" width="100" onClick={() => openImageViewer(index)} />
+                                                <div className="image-item__btn-wrapper">
+                                                    <Button variant="outlined" color="error" onClick={() => onImageRemove(index)}>Remove</Button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                    {isViewerOpen && (
-                                        <ImageViewer
-                                            src={imageList.map(el => el['ror_records'])}
-                                            currentIndex={currentImage}
-                                            disableScroll={false}
-                                            closeOnClickOutside={true}
-                                            onClose={closeImageViewer}
-                                            backgroundStyle={{ background: '#fff', zIndex: 10, border: '5px solid #017922' }}
-                                            closeComponent={<p style={{ fontSize: '3rem', color: '#000', opacity: 1, paddingRight: '1rem' }}>X</p>}
-                                        />
-                                    )}
+                                        ))}
+                                        {isViewerOpen && (
+                                            <ImageViewer
+                                                src={imageList.map(el => el['ror_records'])}
+                                                currentIndex={currentImage}
+                                                disableScroll={false}
+                                                closeOnClickOutside={true}
+                                                onClose={closeImageViewer}
+                                                backgroundStyle={{ background: '#fff', zIndex: 10, border: '5px solid #017922' }}
+                                                closeComponent={<p style={{ fontSize: '3rem', color: '#000', opacity: 1, paddingRight: '1rem' }}>X</p>}
+                                            />
+                                        )}
+                                    </div>
                                 </div>
+                            )}
+                        </ImageUploading>}
+
+                        {rorImages.length > 0 && !formEditable && <div>
+                            <p style={{ textAlign: 'center' }}>ROR Records</p>
+                            <div className={styles.imageRecordContainer}>
+                                {rorImages?.map((el, index) => {
+                                    if (typeof el == 'string') {
+                                        if (!el.includes('pdf'))
+                                            return <img src={el} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                                        if (el.includes('pdf'))
+                                            return <div className={styles.pdfItem} style={{ width: '20vw', height: '17vh' }}>
+                                                <div className={styles.pdfView} style={{ width: '20vw', height: '17vh' }} onClick={() => handlePdfSelection(el)}>
+                                                    <Viewer plugins={[thumbnailPluginInstance]} defaultScale={0.2} fileUrl={el} />
+                                                </div>
+                                            </div>
+                                    }
+                                    else {
+                                        if (el?.type != 'application/pdf') {
+                                            let objectURL = URL.createObjectURL(el);
+                                            return <img src={objectURL} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+                                        }
+                                    }
+                                })}
                             </div>
-                        )}
-                    </ImageUploading>}
-                    {rorImages.length > 0 && !formEditable && <div>
-                        <p style={{ textAlign: 'center' }}>ROR Record Images</p>
-                        <div className={styles.imageRecordContainer}>
-                            {rorImages?.map((el, index) => {
-                                if (typeof el == 'string') {
-                                    return <img src={el} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
-                                }
-                                else {
-                                    let objectURL = URL.createObjectURL(el);
-                                    return <img src={objectURL} onClick={() => openImageViewer(index)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
-                                }
-                            })}
-                        </div>
-                        {isViewerOpen && (
-                            <ImageViewer
-                                src={rorImages.map(el => typeof el == 'string' ? el : URL.createObjectURL(el))}
-                                currentIndex={currentImage}
-                                disableScroll={false}
-                                closeOnClickOutside={true}
-                                onClose={closeImageViewer}
-                                backgroundStyle={{ background: '#fff', zIndex: 10, border: '5px solid #017922' }}
-                                closeComponent={<p style={{ fontSize: '3rem', color: '#000', opacity: 1, paddingRight: '1rem' }}>X</p>}
-                            />
-                        )}
+                            {isViewerOpen && (
+                                <ImageViewer
+                                    src={rorImages.map(el => typeof el == 'string' ? el : URL.createObjectURL(el))}
+                                    currentIndex={currentImage}
+                                    disableScroll={false}
+                                    closeOnClickOutside={true}
+                                    onClose={closeImageViewer}
+                                    backgroundStyle={{ background: '#fff', zIndex: 10, border: '5px solid #017922' }}
+                                    closeComponent={<p style={{ fontSize: '3rem', color: '#000', opacity: 1, paddingRight: '1rem' }}>X</p>}
+                                />
+                            )}
+                        </div>}
+
+
+                        {formEditable && <Button component="label" role={undefined} tabIndex={-1} variant="outlined" sx={{ width: '80%', marginTop: 0, marginBottom: 10 }}>
+                            Upload ROR Records PDF
+                            <VisuallyHiddenInput onChange={handlePdfUpload} accept="application/pdf,application/vnd.ms-excel" type="file" />
+                        </Button>}
+
+
+                        <div className={styles.pdfContainer}>
+                            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                                {rorPdfs?.map(el =>
+                                    <div className={styles.pdfItem}>
+                                        <div className={styles.pdfView} onClick={() => handlePdfSelection(el?.base64File)}>
+                                            <Viewer plugins={[thumbnailPluginInstance]} defaultScale={0.2} fileUrl={el?.base64File} />
+                                        </div>
+                                        <Button onClick={() => {
+                                            if (rorPdfs?.length == 1)
+                                                setRorPdfs([]);
+                                            else
+                                                setRorPdfs((prev) => prev.filter(x => x?.base64File != el?.base64File))
+                                        }} variant="outlined" color="error" sx={{ marginTop: 2 }} fullWidth>Remove</Button>
+                                    </div>
+                                )}
+                            </Worker>
+                        </div >
+
+                        {pdfModal && <CommonModal sx={{ height: '100vh', maxWidth: '100vw', margin: 0, padding: 0 }}>
+                            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                                <Viewer defaultLayoutPlugin={[defaultLayoutPluginInstance]} fileUrl={currentPdf} />
+                            </Worker>
+                            <div className={styles.goBackBtn} onClick={() => { setCurrentPdf(null); showPdfModal(false); }}>Go Back</div>
+                        </CommonModal>}
+
+                    </> : <></>}
+                    {!submittedModal && formEditable && <div className={styles.btnContainer}>
+                        <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(1)} className={styles.submitBtn}>Back</Button>
+                        <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Save</Button>
                     </div>}
-                </> : <></>}
-                {!submittedModal && formEditable && <div className={styles.btnContainer}>
-                    <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(1)} className={styles.submitBtn}>Back</Button>
-                    <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" type="submit" className={styles.submitBtn}>Save</Button>
-                </div>}
-                {!submittedModal && !formEditable && <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(1)} className={styles.submitBtn}>Back</Button>}
-            </form>}
+                    {!submittedModal && !formEditable && <Button variant="contained" style={{ position: 'relative' }} color="success" size="large" onClick={() => setActiveStep(1)} className={styles.submitBtn}>Back</Button>}
+                </form >
+            }
         </>
     );
 };
