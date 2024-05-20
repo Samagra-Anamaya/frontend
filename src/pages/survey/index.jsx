@@ -181,10 +181,18 @@ const SurveyPage = ({ params }) => {
           }
 
           _image?.images.forEach((file) => {
-            if (file?.file)
-              data.append("files", file.file, uuidv4() + ".webp");
-            else if (file instanceof Blob)
-              data.append("files", file, uuidv4() + ".webp");
+            if (file?.file) {
+              if (file?.file?.type == 'application/pdf' || file?.type == 'application/pdf')
+                data.append("files", file.file, uuidv4() + ".pdf");
+              else
+                data.append("files", file.file, uuidv4() + ".webp");
+            }
+            else if (file instanceof Blob) {
+              if (file?.file?.type == 'application/pdf' || file?.type == 'application/pdf')
+                data.append("files", file, uuidv4() + ".pdf");
+              else
+                data.append("files", file, uuidv4() + ".webp");
+            }
             else {
               toast.error(
                 `Please check your media files`

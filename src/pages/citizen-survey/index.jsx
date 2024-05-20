@@ -14,7 +14,7 @@ import { QrScanner } from "@yudiel/react-qr-scanner";
 import { logEvent } from "firebase/analytics";
 import CircularProgress from "@mui/material/CircularProgress";
 import { analytics } from "../../services/firebase/firebase";
-import { compressImage, getCitizenImageRecords, getImages, removeCitizenImageRecord, storeImages, sanitizeForm } from "../../services/utils";
+import { compressImage, getCitizenImageRecords, getImages, removeCitizenImageRecord, storeImages, sanitizeForm, toBase64 } from "../../services/utils";
 import Banner from "../../components/Banner";
 import Breadcrumb from "../../components/Breadcrumb";
 import moment from "moment";
@@ -50,6 +50,7 @@ const CitizenSurveyPage = ({ params }) => {
   const [formState, setFormState] = useState({});
   const [landImages, setLandImages] = useState([]);
   const [rorImages, setRorImages] = useState([]);
+  const [rorPdfs, setRorPdfs] = useState([]);
   const [totalSteps, setTotalSteps] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
   const [formStartTime, setFormStartTime] = useState(moment().valueOf());
@@ -121,14 +122,14 @@ const CitizenSurveyPage = ({ params }) => {
         setActiveStep(Number(el) + 1);
         landImages[el] = compressedImg;
       }
+
       for (let el in rorImages) {
         const compressedImg = await compressImage(rorImages[el].file, usemainworker, disableuserlogs);
         setActiveStep((landImages?.length || 0) + Number(el) + 1);
 
         rorImages[el] = compressedImg;
       }
-
-
+      const newRorImages = [...rorImages, ...rorPdfs?.map(el => el?.file)];
 
       if (!indexDbStats.isAvailable) {
         toast.error("Device space full, please make space before continuing");
@@ -153,10 +154,10 @@ const CitizenSurveyPage = ({ params }) => {
         },
         disableuserlogs
       );
-      if (rorImages?.length) await storeImages(
+      if (newRorImages?.length) await storeImages(
         {
           citizenId: currCitizen.citizenId,
-          images: rorImages,
+          images: newRorImages,
           isLandRecord: false,
           villageId: _currLocation.villageCode
         },
@@ -253,7 +254,13 @@ const CitizenSurveyPage = ({ params }) => {
     let { landRecords, rorRecords } = await getCitizenImageRecords(currCitizen.citizenId);
     if (currCitizen?.submissionData && Object.keys(currCitizen?.submissionData)?.length > 0) {
       if (landRecords?.images?.length) setLandImages(landRecords.images)
-      if (rorRecords?.images?.length) setRorImages(rorRecords.images)
+      if (rorRecords?.images?.length) {
+        let rr = rorRecords?.images;
+        for (let i = 0; i < rr?.length; i++) {
+          if (rr[i]?.type == 'application/pdf') rr[i] = await toBase64(rr[i]);
+        }
+        setRorImages(rr)
+      }
     }
   }
 
@@ -294,6 +301,8 @@ const CitizenSurveyPage = ({ params }) => {
           setRorImages={setRorImages}
           landImages={landImages}
           setLandImages={setLandImages}
+          rorPdfs={rorPdfs}
+          setRorPdfs={setRorPdfs}
         />
 
 
