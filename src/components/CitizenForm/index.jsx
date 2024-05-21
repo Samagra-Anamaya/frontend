@@ -760,7 +760,7 @@ const CitizenForm = (props) => {
 
 
                         <div className={styles.pdfContainer}>
-                            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
                                 {rorPdfs?.map(el =>
                                     <div className={styles.pdfItem}>
                                         <div className={styles.pdfView} onClick={() => handlePdfSelection(el?.base64File)}>
@@ -778,7 +778,7 @@ const CitizenForm = (props) => {
                         </div >
 
                         {pdfModal && <CommonModal sx={{ height: '100vh', maxWidth: '100vw', margin: 0, padding: 0 }}>
-                            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
                                 <Viewer defaultLayoutPlugin={[defaultLayoutPluginInstance]} fileUrl={currentPdf} />
                             </Worker>
                             <div className={styles.goBackBtn} onClick={() => { setCurrentPdf(null); showPdfModal(false); }}>Go Back</div>
