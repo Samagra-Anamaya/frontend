@@ -4,6 +4,7 @@ import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
 import { replaceMediaObject } from "./actions/replaceMediaObject";
 import { _updateSubmissionMedia } from "./actions/updateSubmissionMedia";
+import { _updateSubmissionEntries } from "./actions/updateSubmissionEntries";
 import { saveCitizenFormData } from "./actions/saveCitizenFormData";
 import { removeSubmission } from "./actions/removeSubmission";
 import { ptBR } from "@mui/x-date-pickers";
@@ -345,6 +346,16 @@ const userDataSlice = createSlice({
             action.payload,
           ],
         };
+      }).addCase(_updateSubmissionEntries.fulfilled, (state, action) => {
+        Object.keys(state.submissions).forEach(x => {
+          state.submissions[x] = state.submissions[x]?.map(el => {
+            if (el?.submissionData?.aadharNumber == action.payload.aadhaar) {
+              return { ...el, submissionData: { ...el.submissionData, aadhaarVaultReference: action.payload.referenceNo } }
+            }
+            return el;
+          })
+        })
+        return state;
       })
   },
 });

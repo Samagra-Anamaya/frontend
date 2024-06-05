@@ -47,6 +47,7 @@ import isOnline from "is-online";
 import * as Sentry from "@sentry/nextjs";
 import { omit, omitBy } from "lodash";
 import { useFlags, useFlagsmith } from 'flagsmith/react';
+import localforage from "localforage";
 
 const BACKEND_SERVICE_URL = process.env.NEXT_PUBLIC_BACKEND_SERVICE_URL;
 
@@ -371,14 +372,23 @@ const SurveyPage = ({ params }) => {
     console.log("Batch submission completed");
   }
 
-  const startSubmission = () => {
+  const startSubmission = async () => {
     logEvent(analytics, "submit_entries_clicked", {
       villageId: _currLocation.villageCode,
       villageName: _currLocation.villageName,
       user_id: userData?.user?.user?.username,
       app_status: navigator.onLine ? "online" : "offline",
-    }),
-      showSubmitModal(true);
+    });
+
+    const apiRequests = await localforage.getItem("apiRequests");
+    for (let el of apiRequests) {
+      if (el?.url?.includes('getRefFromAadhaar')) {
+        if (navigator.online) toast.info("You're back online. Please wait while Aadhaar references are generated for all submissions. Try again in some time");
+        else toast.info("You're currently offline. Aadhaar references will be generated once you're back online and submissions will be allowed");
+        return;
+      }
+    }
+    showSubmitModal(true);
   };
 
   //const showSubmitBtn =useMemo(()=>,[]);
