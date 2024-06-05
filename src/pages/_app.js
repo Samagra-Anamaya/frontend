@@ -39,6 +39,7 @@ import { Button } from "@mui/material";
 import AnnouncementBar from '../components/AnnouncementBar'
 import flagsmith from "flagsmith/isomorphic";
 import { FlagsmithProvider } from 'flagsmith/react';
+import { _updateSubmissionEntries } from "../redux/actions/updateSubmissionEntries";
 
 
 // Lottie Options
@@ -53,7 +54,7 @@ const defaultOptions = {
 
 export default function App({ Component, pageProps, flagsmithState }) {
   const [hydrated, setHydrated] = useState(false);
-  const [appVersion,setAppVersion] =useState();
+  const [appVersion, setAppVersion] = useState();
   const [syncing, setSyncing] = useState(false);
   const [syncComplete, setSyncComplete] = useState(true);
   const [isDesktop, setIsDesktop] = useState(true);
@@ -83,54 +84,59 @@ export default function App({ Component, pageProps, flagsmithState }) {
   const onSyncSuccess = async (response) => {
     const apiRequests = await localforage.getItem("apiRequests");
 
-    if (
-      store.getState().userData.isOffline &&
-      apiRequests?.length > 0 &&
-      !syncing
-    ) {
-      setSyncing(true);
+    if (response?.config?.url?.includes("getRefFromAadhaar")) {
+      await store?.dispatch(_updateSubmissionEntries({ ...response?.data?.data?.aadhaarDetails, aadhaar: response?.config?.data?.aadhaarNo }));
     }
-    console.log("debug sync response -->", response);
-    const images = await getImages();
-    console.log("debug: before", { images });
-    if (response?.config?.meta?.citizenId) {
-      //  store?.dispatch(_updateSubmissionMedia(response?.config?.meta)).then(res => {
-      store
-        ?.dispatch(_updateSubmissionMedia(response?.data?.data?.result))
-        .then(async (res) => {
-          console.log("debug: _app then", res);
-          if (res?.type?.includes("fulfilled")) {
-            console.log(
-              "Clearing Image Records for --->",
-              response?.config?.meta?.citizenId
-            );
-            removeCitizenImageRecord(response?.config?.meta?.citizenId);
-          }
-        });
-
-      // Updating villageId in pending submissions
-      if (store.getState().userData.isOffline) {
-        let ps = [...store.getState().userData.pendingSubmissions];
-        if (!ps.includes(response?.config?.meta?.villageId))
-          ps.push(response?.config?.meta?.villageId);
-        store.dispatch(updatePendingSubmissions(ps));
+    else {
+      if (
+        store.getState().userData.isOffline &&
+        apiRequests?.length > 0 &&
+        !syncing
+      ) {
+        setSyncing(true);
       }
+      console.log("debug sync response -->", response);
+      const images = await getImages();
+      console.log("debug: before", { images });
+      if (response?.config?.meta?.citizenId) {
+        //  store?.dispatch(_updateSubmissionMedia(response?.config?.meta)).then(res => {
+        store
+          ?.dispatch(_updateSubmissionMedia(response?.data?.data?.result))
+          .then(async (res) => {
+            console.log("debug: _app then", res);
+            if (res?.type?.includes("fulfilled")) {
+              console.log(
+                "Clearing Image Records for --->",
+                response?.config?.meta?.citizenId
+              );
+              removeCitizenImageRecord(response?.config?.meta?.citizenId);
+            }
+          });
 
-      if (apiRequests?.length == 1) {
+        // Updating villageId in pending submissions
         if (store.getState().userData.isOffline) {
-          store.dispatch(updateIsOffline(false));
-          setTimeout(() => {
-            // setSyncing(false);
-            setSyncComplete(true);
-            window.location.reload();
-          }, 1000);
+          let ps = [...store.getState().userData.pendingSubmissions];
+          if (!ps.includes(response?.config?.meta?.villageId))
+            ps.push(response?.config?.meta?.villageId);
+          store.dispatch(updatePendingSubmissions(ps));
+        }
+
+        if (apiRequests?.length == 1) {
+          if (store.getState().userData.isOffline) {
+            store.dispatch(updateIsOffline(false));
+            setTimeout(() => {
+              // setSyncing(false);
+              setSyncComplete(true);
+              window.location.reload();
+            }, 1000);
+          }
         }
       }
     }
   };
 
   // useEffect(() => {
-    
+
   //   getAppVersion().then(res => {
   //     const version = packageJson.version;
   //     setAppVersion(res.data.result.data);

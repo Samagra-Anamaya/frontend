@@ -22,7 +22,7 @@ import { MobileStepper } from "@mui/material";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
 import { saveCitizenFormData } from "../../redux/actions/saveCitizenFormData";
-import { getStorageQuota, sendLogs } from "../../services/api";
+import { getAadharVaultReference, getStorageQuota, sendLogs } from "../../services/api";
 import * as Sentry from "@sentry/nextjs";
 import flagsmith from 'flagsmith/isomorphic';
 import { useFlags, useFlagsmith } from 'flagsmith/react';
@@ -117,6 +117,47 @@ const CitizenSurveyPage = ({ params }) => {
       showSubmittedModal(true);
       let capturedAt = moment().utc();
       setTotalSteps((landImages?.length || 0) + (rorImages?.length || 0))
+
+      newFormState = sanitizeForm({ ...formState });
+
+      console.log("SANITIZED FORM ---->", newFormState)
+      // newFormState['landRecords'] = landImages;
+      // newFormState['rorRecords'] = rorImages;
+      newFormState['imageUploaded'] = false;
+
+      // Fetch aadhar vault reference if aadhaar available
+      if (newFormState?.isAadhaarAvailable) {
+        const config = {
+          method: "POST",
+          url: 'http://117.239.112.230/AadhaarVaultEncryption/rest/getRefFromAadhaar',
+          data: {
+            aadhaarNo: newFormState?.aadharNumber,
+            schemeId: 17
+          }
+        };
+
+        const res = await sendRequest(config);
+        const vaultReference = res?.aadhaarDetails?.referenceNo;
+        console.log("Res --->", vaultReference)
+
+        if (!vaultReference) {
+          toast.info("Cannot assign Aadhaar vault reference as you're offline right now. Your request has been saved");
+          // return;
+        } else newFormState['aadhaarVaultReference'] = vaultReference;
+      }
+
+      if (!newFormState?.isAadhaarAvailable) {
+        delete newFormState?.aadharNumber;
+      }
+      if (!newFormState?.rorUpdated) {
+        delete newFormState?.khataNumber;
+        delete newFormState?.landImages;
+      }
+      if (!newFormState?.coClaimantAvailable) {
+        delete newFormState?.coClaimantName;
+      }
+
+
       for (let el in landImages) {
         const compressedImg = await compressImage(landImages[el].file, usemainworker, disableuserlogs);
         setActiveStep(Number(el) + 1);
@@ -163,23 +204,6 @@ const CitizenSurveyPage = ({ params }) => {
         },
         disableuserlogs
       );
-
-      newFormState = sanitizeForm({ ...formState });
-
-      console.log("SANITIZED FORM ---->", newFormState)
-      // newFormState['landRecords'] = landImages;
-      // newFormState['rorRecords'] = rorImages;
-      newFormState['imageUploaded'] = false;
-      if (!formState?.isAadhaarAvailable) {
-        delete formState?.aadharNumber;
-      }
-      if (!formState?.rorUpdated) {
-        delete formState?.khataNumber;
-        delete formState?.landImages;
-      }
-      if (!formState?.coClaimantAvailable) {
-        delete formState?.coClaimantName;
-      }
 
       dispatch(
         saveCitizenFormData({

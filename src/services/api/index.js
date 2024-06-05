@@ -496,3 +496,15 @@ export const updateAppVersion = async () => {
 export const getAppVersion = async () => {
   return axios.get(BACKEND_SERVICE_URL + `/utils/getAppVersion`);
 }
+
+export const getAadharVaultReference = async (aadhaarNo) => {
+  try {
+    let res = await axios.post('http://117.239.112.230/AadhaarVaultEncryption/rest/getRefFromAadhaar', {
+      aadhaarNo,
+      schemeId: 17
+    });
+    return res?.data?.aadhaarDetails?.referenceNo;
+  } catch (err) {
+    return false;
+  }
+}
