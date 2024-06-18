@@ -129,7 +129,7 @@ const CitizenSurveyPage = ({ params }) => {
       if (newFormState?.isAadhaarAvailable) {
         const config = {
           method: "POST",
-          url: 'http://117.239.112.230/AadhaarVaultEncryption/rest/getRefFromAadhaar',
+          url: `${BACKEND_SERVICE_URL}/utils/AadhaarVaultEncryption/rest/getRefFromAadhaar`,
           data: {
             aadhaarNo: newFormState?.aadharNumber,
             schemeId: 17
