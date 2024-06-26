@@ -129,7 +129,7 @@ const CitizenSurveyPage = ({ params }) => {
       if (newFormState?.isAadhaarAvailable) {
         const config = {
           method: "POST",
-          url: `${BACKEND_SERVICE_URL}/utils/AadhaarVaultEncryption/rest/getRefFromAadhaar`,
+          url: `https://adv.odisha.gov.in/AadhaarVaultEncryption/rest/getRefFromAadhaar`,
           data: {
             aadhaarNo: newFormState?.aadharNumber,
             schemeId: 17
