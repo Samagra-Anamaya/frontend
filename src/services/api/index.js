@@ -90,8 +90,7 @@ export const searchCitizen = async (villageId, query, user) => {
 export const getEntriesMade = async (user) => {
 	try {
 		const res = await axios.get(
-			`${getEnvVariables().BACKEND_SERVICE_URL}/submissions/enumerator/${
-				user?.user?.uniqueUsername
+			`${getEnvVariables().BACKEND_SERVICE_URL}/submissions/enumerator/${user?.user?.uniqueUsername
 			}?page=1&limit=1`,
 			{
 				headers: {
@@ -208,3 +207,26 @@ export const getNewToken = async (refreshToken, token) => {
 		return null;
 	}
 };
+
+export const updateAppVersion = async () => {
+	return axios.post(BACKEND_SERVICE_URL + `/utils/updateAppVersion`, {
+		appVersion: APP_VERSION,
+		createdAt: new Date()
+	});
+}
+
+export const getAppVersion = async () => {
+	return axios.get(BACKEND_SERVICE_URL + `/utils/getAppVersion`);
+}
+
+export const getAadharVaultReference = async (aadhaarNo) => {
+	try {
+		let res = await axios.post('http://117.239.112.230/AadhaarVaultEncryption/rest/getRefFromAadhaar', {
+			aadhaarNo,
+			schemeId: 17
+		});
+		return res?.data?.aadhaarDetails?.referenceNo;
+	} catch (err) {
+		return false;
+	}
+}

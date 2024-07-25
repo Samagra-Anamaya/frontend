@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import {
 	Button,
@@ -17,6 +17,33 @@ import ImageUploading from 'react-images-uploading';
 import CloseIcon from '@mui/icons-material/Close';
 import { map } from 'lodash';
 import styles from './step.module.scss';
+import { styled } from '@mui/material/styles';
+
+import { Worker } from '@react-pdf-viewer/core';
+import { Viewer } from '@react-pdf-viewer/core';
+
+
+// Import the styles
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+
+// Import styles
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
+import { thumbnailPlugin } from '@react-pdf-viewer/thumbnail';
+import CommonModal from "../Modal";
+
+const VisuallyHiddenInput = styled('input')({
+	clip: 'rect(0 0 0 0)',
+	clipPath: 'inset(50%)',
+	height: 1,
+	overflow: 'hidden',
+	position: 'absolute',
+	bottom: 0,
+	left: 0,
+	whiteSpace: 'nowrap',
+	width: 1,
+});
 
 const Step3 = ({
 	setActiveStep,
@@ -29,8 +56,18 @@ const Step3 = ({
 	submittedModal,
 	feedbacks,
 	isFeedbackPage,
-	handleUpdate
+	handleUpdate,
+	rorPdfs,
+	setRorPdfs,
+	pdfModal,
+	currentPdf,
+	handlePdfUpload,
+	handlePdfSelection,
+	setCurrentPdf,
+	showPdfModal
 }) => {
+	const defaultLayoutPluginInstance = defaultLayoutPlugin();
+	const thumbnailPluginInstance = thumbnailPlugin();
 	const [isViewerOpen, setIsViewerOpen] = useState(false);
 	const [currentImage, setCurrentImage] = useState(0);
 	const [viewerSource, setViewerSource] = useState(null);
@@ -48,21 +85,17 @@ const Step3 = ({
 
 	const onFormSubmit = useCallback(
 		(e) => {
+			console.log("Submitting form -> ", e)
 			e?.preventDefault();
-			if (formState?.rorUpdated && !rorImages.length) {
-				toast('Please upload ROR records!', {
+			if (formState?.rorUpdated && !rorImages?.length && !rorPdfs?.length) {
+				toast("Please upload ROR records!", {
 					type: 'error'
-				});
+				})
 				return;
-			}
-			if (
-				formState?.forestLandType === 'revenueForest' &&
-				formState?.typeOfBlock === 'revenueBlock' &&
-				formState?.fraPlotsClaimed === 0
-			) {
-				toast('Plots claimed cannot be zero!', {
+			} else if (formState?.forestLandType == 'revenueForest' && formState?.typeOfBlock == 'revenueBlock' && formState?.fraPlotsClaimed == 0) {
+				toast("Plots claimed cannot be zero!", {
 					type: 'error'
-				});
+				})
 				return;
 			}
 			isFeedbackPage ? handleUpdate() : handleSubmit();
@@ -85,8 +118,14 @@ const Step3 = ({
 		return 'editableViewer';
 	}, [formEditable, isFeedbackPage, rorImages.length]);
 
+	useEffect(() => {
+		if (isFeedbackPage) {
+			setRorPdfs(rorImages?.filter(el => el?.includes('pdf'))?.map(x => ({ file: null, base64File: x })) || [])
+		}
+	}, [isFeedbackPage])
+
 	return (
-		<form onSubmit={onFormSubmit} className={styles.userForm}>
+		<form onSubmit={onFormSubmit} className={styles.userForm} style={rorPdfs?.length ? { height: 'auto' } : {}}>
 			{formEditable && (
 				<>
 					<FormControl sx={{ mb: 4, width: '80%' }}>
@@ -280,42 +319,67 @@ const Step3 = ({
 					/>
 
 					{activeImageViewer === 'feedbackViewer' && (
-						<ImageUploading
-							multiple
-							value={rorImages}
-							onChange={handleRorImages}
-							maxNumber={69}
-							dataURLKey="ror_records"
-						>
-							{({ imageList, onImageUpload, onImageRemove, isDragging, dragProps }) => (
-								<div className={styles.uploadImageWrapper}>
-									<Button onClick={onImageUpload} {...dragProps} variant="outlined">
-										Upload ROR Records
-									</Button>
-									<div className={styles.imagePreviewContainer}>
-										{imageList.map((image, index) => {
-											const imageSrc = imageList.map((el) => el?.ror_records || el);
-											return (
-												<div key={index} className={styles.imageItem}>
-													<img
-														src={image.ror_records || image}
-														alt=""
-														width="100"
-														style={{ height: '100px', width: '140px', borderRadius: '10px' }}
-														onClick={() => openImageViewer(index, imageSrc)}
-													/>
-													<div className={styles.removeBtn}>
-														<IconButton aria-label="delete" onClick={() => onImageRemove(index)}>
-															<CloseIcon style={{ color: 'white' }} />
-														</IconButton>
-													</div>
-												</div>
-											);
-										})}
+						<>
+							<ImageUploading
+								multiple
+								value={rorImages}
+								onChange={handleRorImages}
+								maxNumber={69}
+								dataURLKey="ror_records"
+							>
+								{({ imageList, onImageUpload, onImageRemove, isDragging, dragProps }) => (
+									<div className={styles.uploadImageWrapper}>
+										<Button onClick={onImageUpload} {...dragProps} variant="outlined">
+											Upload ROR Records
+										</Button>
+										<div className={styles.imagePreviewContainer}>
+											{imageList.map((image, index) => {
+												const imageSrc = imageList.map((el) => el?.ror_records || el);
+												if (typeof image == 'string' && !image.includes('pdf'))
+													return (
+														<div key={index} className={styles.imageItem}>
+															<img
+																src={image.ror_records || image}
+																alt=""
+																width="100"
+																style={{ height: '100px', width: '140px', borderRadius: '10px' }}
+																onClick={() => openImageViewer(index, imageSrc)}
+															/>
+															<div className={styles.removeBtn}>
+																<IconButton aria-label="delete" onClick={() => onImageRemove(index)}>
+																	<CloseIcon style={{ color: 'white' }} />
+																</IconButton>
+															</div>
+														</div>
+													);
+											})}
+										</div>
 									</div>
-								</div>
-							)}
-						</ImageUploading>
+								)}
+							</ImageUploading>
+							<Button component="label" role={undefined} tabIndex={-1} variant="outlined" sx={{ width: '80%', marginTop: 0, marginBottom: 10 }}>
+								Upload ROR Records PDF
+								<VisuallyHiddenInput onChange={handlePdfUpload} accept="application/pdf,application/vnd.ms-excel" type="file" />
+							</Button>
+
+							<div className={styles.pdfContainer}>
+								<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+									{rorPdfs?.map(el =>
+										<div className={styles.pdfItem}>
+											<div className={styles.pdfView} onClick={() => handlePdfSelection(el?.base64File)}>
+												<Viewer plugins={[thumbnailPluginInstance]} defaultScale={0.2} fileUrl={el?.base64File} />
+											</div>
+											<Button onClick={() => {
+												if (rorPdfs?.length == 1)
+													setRorPdfs([]);
+												else
+													setRorPdfs((prev) => prev.filter(x => x?.base64File != el?.base64File))
+											}} variant="outlined" color="error" sx={{ marginTop: 2 }} fullWidth>Remove</Button>
+										</div>
+									)}
+								</Worker>
+							</div >
+						</>
 					)}
 					{activeImageViewer === 'editableViewer' && (
 						<ImageUploading
@@ -360,54 +424,67 @@ const Step3 = ({
 							)}
 						</ImageUploading>
 					)}
-					{activeImageViewer === 'savedViewer' && (
-						<div>
-							<p style={{ textAlign: 'center' }}>ROR Record Images</p>
-							<div className={styles.imageRecordContainer}>
-								{rorImages?.map((el, index) => {
-									const imageSrc = rorImages?.map((_el) => {
-										if (typeof _el === 'string') return _el;
-										if (_el?.file) return URL.createObjectURL(_el?.file);
-										return URL.createObjectURL(_el);
-									});
-									if (typeof el === 'string') {
-										return (
-											<img
-												key={el}
-												src={el}
-												alt="logo"
-												style={{
-													height: '100px',
-													width: '140px',
-													borderRadius: '10px',
-													margin: '0.5rem',
-													cursor: 'pointer'
-												}}
-												onClick={() => openImageViewer(index, imageSrc)}
-											/>
-										);
-									}
 
-									const objectURL = URL.createObjectURL(el?.file);
-									return (
-										<img
-											key={el}
-											alt="logo"
-											src={objectURL}
-											onClick={() => openImageViewer(index, imageSrc)}
-											style={{
-												height: '100px',
-												width: '140px',
-												borderRadius: '10px',
-												margin: '0.5rem',
-												cursor: 'pointer'
-											}}
-										/>
-									);
-								})}
-							</div>
+					{rorImages.length > 0 && activeImageViewer == 'savedViewer' && <div>
+						<p style={{ textAlign: 'center' }}>ROR Records</p>
+						<div className={styles.imageRecordContainer}>
+							{rorImages?.map((el, index) => {
+								const imageSrc = rorImages?.map((_el) => {
+									if (typeof _el === 'string') return _el;
+									if (_el?.file) return URL.createObjectURL(_el?.file);
+									return URL.createObjectURL(_el);
+								});
+								if (typeof el == 'string') {
+									if (!el.includes('pdf'))
+										return <img src={el} onClick={() => openImageViewer(index, imageSrc)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+									if (el.includes('pdf'))
+										return <div className={styles.pdfItem} style={{ width: '20vw', height: '17vh' }}>
+											<div className={styles.pdfView} style={{ width: '20vw', height: '17vh' }} onClick={() => handlePdfSelection(el)}>
+												<Viewer plugins={[thumbnailPluginInstance]} defaultScale={0.2} fileUrl={el} />
+											</div>
+										</div>
+								}
+								else {
+									if (el?.type != 'application/pdf') {
+										let objectURL = URL.createObjectURL(el);
+										return <img src={objectURL} onClick={() => openImageViewer(index, imageSrc)} style={{ width: '7rem', margin: '0rem 1rem 1rem 1rem' }} />
+									}
+								}
+							})}
 						</div>
-					)}
+					</div>}
+
+					{activeImageViewer == 'editableViewer' && <> <Button component="label" role={undefined} tabIndex={-1} variant="outlined" sx={{ width: '80%', marginTop: 0, marginBottom: 10 }}>
+						Upload ROR Records PDF
+						<VisuallyHiddenInput onChange={handlePdfUpload} accept="application/pdf,application/vnd.ms-excel" type="file" />
+					</Button>
+
+						<div className={styles.pdfContainer}>
+							<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+								{rorPdfs?.map(el =>
+									<div className={styles.pdfItem}>
+										<div className={styles.pdfView} onClick={() => handlePdfSelection(el?.base64File)}>
+											<Viewer plugins={[thumbnailPluginInstance]} defaultScale={0.2} fileUrl={el?.base64File} />
+										</div>
+										<Button onClick={() => {
+											if (rorPdfs?.length == 1)
+												setRorPdfs([]);
+											else
+												setRorPdfs((prev) => prev.filter(x => x?.base64File != el?.base64File))
+										}} variant="outlined" color="error" sx={{ marginTop: 2 }} fullWidth>Remove</Button>
+									</div>
+								)}
+							</Worker>
+						</div >
+					</>
+					}
+
+					{pdfModal && <CommonModal sx={{ height: '100vh', maxWidth: '100vw', margin: 0, padding: 0 }}>
+						<Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+							<Viewer defaultLayoutPlugin={[defaultLayoutPluginInstance]} fileUrl={currentPdf} />
+						</Worker>
+						<div className={styles.goBackBtn} onClick={() => { setCurrentPdf(null); showPdfModal(false); }}>Go Back</div>
+					</CommonModal>}
 				</>
 			)}
 

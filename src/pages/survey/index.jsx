@@ -1,4 +1,53 @@
-'use client';
+"use client";
+// import React, {
+// 	useCallback,
+// 	useEffect,
+// 	useMemo,
+// 	useRef,
+// 	useState,
+// } from "react";
+// import styles from "./index.module.scss";
+// import { useDispatch, useSelector } from "react-redux";
+// import { useRouter } from "next/navigation";
+// import CommonHeader from "../../components/Commonheader";
+// import { v4 as uuidv4 } from "uuid";
+// import {
+// 	clearSubmissionBatch,
+// 	clearSubmissions,
+// 	setCurrentCitizen,
+// 	store,
+// 	tokenSelector,
+// 	updateCitizenFormData,
+// } from "../../redux/store";
+// import { useOfflineSyncContext } from "offline-sync-handler-test";
+// import GovtBanner from "../../components/GovtBanner";
+// import SelectionItem from "../../components/SelectionItem";
+// import CircularProgress from "@mui/material/CircularProgress";
+// import { toast } from "react-toastify";
+// import CommonModal from "../../components/Modal";
+// import { logEvent } from "firebase/analytics";
+// import { analytics } from "../../services/firebase/firebase";
+// import { sendLogs, uploadMedia } from "../../services/api";
+// import Banner from "../../components/Banner";
+// import Breadcrumb from "../../components/Breadcrumb";
+// import {
+// 	chunkArray,
+// 	getCitizenImageRecords,
+// 	getImages,
+// 	getImagesForVillage,
+// 	sleep,
+// } from "../../services/utils";
+// import { formDataToObject } from "../../utils/formdata-to-object";
+// import { replaceMediaObject } from "../../redux/actions/replaceMediaObject";
+// import * as done from "public/lottie/done.json";
+// import * as warning from "public/lottie/warning.json";
+// import { Button } from "@mui/material";
+// import Lottie from "react-lottie";
+// import isOnline from "is-online";
+// import * as Sentry from "@sentry/nextjs";
+// import { omit, omitBy } from "lodash";
+import { useFlags, useFlagsmith } from 'flagsmith/react';
+import localforage from "localforage";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -148,9 +197,26 @@ const SurveyPage = ({ params }) => {
 			// eslint-disable-next-line no-restricted-syntax
 			for (const _image of batch) {
 				const data = new FormData();
+
 				_image?.images.forEach((file) => {
-					console.log('holacd:', { file, _image });
-					data.append('files', file.file ?? file, `${uuidv4()}.webp`);
+					if (file?.file) {
+						if (file?.file?.type == 'application/pdf' || file?.type == 'application/pdf')
+							data.append("files", file.file, uuidv4() + ".pdf");
+						else
+							data.append("files", file.file, uuidv4() + ".webp");
+					}
+					else if (file instanceof Blob) {
+						if (file?.file?.type == 'application/pdf' || file?.type == 'application/pdf')
+							data.append("files", file, uuidv4() + ".pdf");
+						else
+							data.append("files", file, uuidv4() + ".webp");
+					}
+					else {
+						toast.error(
+							`Please check your media files`
+						);
+						return;
+					}
 				});
 
 				// eslint-disable-next-line no-await-in-loop
@@ -307,13 +373,23 @@ const SurveyPage = ({ params }) => {
 		setSubmissionCompleted(true);
 	}
 
-	const startSubmission = () => {
-		logEvent(analytics, 'submit_entries_clicked', {
-			villageId: _currLocation.villageCode,
-			villageName: _currLocation.villageName,
+	const startSubmission = async () => {
+		logEvent(analytics, "submit_entries_clicked", {
+			villageId: _currLocation?.villageCode,
+			villageName: _currLocation?.villageName,
 			user_id: userData?.user?.user?.username,
-			app_status: navigator.onLine ? 'online' : 'offline'
+			app_status: navigator.onLine ? "online" : "offline",
 		});
+
+		const apiRequests = await localforage.getItem("apiRequests");
+		if (apiRequests?.length)
+			for (let el of apiRequests) {
+				if (el?.url?.includes('getRefFromAadhaar')) {
+					if (navigator.online) toast.info("You're back online. Please wait while Aadhaar references are generated for all submissions. Try again in some time");
+					else toast.info("You're currently offline. Aadhaar references will be generated once you're back online and submissions will be allowed");
+					return;
+				}
+			}
 		showSubmitModal(true);
 	};
 
@@ -431,19 +507,21 @@ const SurveyPage = ({ params }) => {
 					)
 				)}
 
-				{map(selectionItems, (item) => (
-					<SelectionItem
-						key={item.id}
-						leftImage={item.leftImage}
-						rightImage={item.rightImage}
-						onClick={item.onClick}
-						mainText={item.mainText}
-						href={item.href ?? null}
-						clName={item.clName ?? null}
-						htmlId={item?.htmlId ?? null}
-					/>
-				))}
-			</div>
+				{
+					map(selectionItems, (item) => (
+						<SelectionItem
+							key={item.id}
+							leftImage={item.leftImage}
+							rightImage={item.rightImage}
+							onClick={item.onClick}
+							mainText={item.mainText}
+							href={item.href ?? null}
+							clName={item.clName ?? null}
+							htmlId={item?.htmlId ?? null}
+						/>
+					))
+				}
+			</div >
 			{submitModal && (
 				<CommonModal sx={{ maxHeight: '50vh', maxWidth: '80vw', overflow: 'scroll' }}>
 					<>
@@ -562,35 +640,37 @@ const SurveyPage = ({ params }) => {
 				</CommonModal>
 			)}
 
-			{warningModal && (
-				<CommonModal sx={{ maxHeight: '30vh', overflow: 'scroll' }}>
-					<div style={surveyPageWarningModalStyles.container}>
-						<div style={surveyPageWarningModalStyles.warningText}>
-							Adding new entries will delete all previous pending submissions in offline mode.
+			{
+				warningModal && (
+					<CommonModal sx={{ maxHeight: '30vh', overflow: 'scroll' }}>
+						<div style={surveyPageWarningModalStyles.container}>
+							<div style={surveyPageWarningModalStyles.warningText}>
+								Adding new entries will delete all previous pending submissions in offline mode.
+							</div>
+							<p style={surveyPageWarningModalStyles.mainText}>
+								You will have to re-submit saved titles in villages again {'(your data is safe)'}
+							</p>
+							<div style={surveyPageWarningModalStyles.btnContainer}>
+								<Button
+									style={surveyPageWarningModalStyles.confirmBtn}
+									onClick={() => {
+										clearEntriesAndProceed();
+									}}
+								>
+									Confirm
+								</Button>
+								<Button
+									style={surveyPageWarningModalStyles.exitBtn}
+									onClick={() => showWarningModal(false)}
+								>
+									Cancel
+								</Button>
+							</div>
 						</div>
-						<p style={surveyPageWarningModalStyles.mainText}>
-							You will have to re-submit saved titles in villages again {'(your data is safe)'}
-						</p>
-						<div style={surveyPageWarningModalStyles.btnContainer}>
-							<Button
-								style={surveyPageWarningModalStyles.confirmBtn}
-								onClick={() => {
-									clearEntriesAndProceed();
-								}}
-							>
-								Confirm
-							</Button>
-							<Button
-								style={surveyPageWarningModalStyles.exitBtn}
-								onClick={() => showWarningModal(false)}
-							>
-								Cancel
-							</Button>
-						</div>
-					</div>
-				</CommonModal>
-			)}
-		</div>
+					</CommonModal>
+				)
+			}
+		</div >
 	);
 };
 

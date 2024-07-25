@@ -113,13 +113,9 @@ export const compressImage = async (imageFile, flag, disableuserlogs) => {
 		maxWidthOrHeight: 1920,
 		useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true,
 		fileType: 'image/webp'
-	};
+	}
 	try {
-		const compressedFile = flag?.enabled
-			? flag?.value?.split(',')?.includes(user?.user?.username)
-				? await compressImageToTargetSize(imageFile)
-				: await imageCompression(imageFile, options)
-			: await imageCompression(imageFile, options);
+		const compressedFile = flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) ? await compressImageToTargetSize(imageFile) : await imageCompression(imageFile, options) : await imageCompression(imageFile, options);
 		// const compressedFile =  await compressImageToTargetSize(imageFile) ;
 		return compressedFile;
 	} catch (err) {
@@ -128,24 +124,13 @@ export const compressImage = async (imageFile, flag, disableuserlogs) => {
 			//  sendLogs({ meta: `at compressImage inside if, fileName: ${imageFile?.name}, minioName: ${JSON.stringify(uploadedFile)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
 			return imageFile;
 		}
-
-		const uploadedFile = await uploadMedia([imageFile], user);
-		sendLogs(
-			{
-				meta: `at compressImage inside else, fileName: ${
-					imageFile?.name
-				}, minioName: ${JSON.stringify(uploadedFile)}`,
-				gpId: store?.getState().userData?.user?.user?.username,
-				error: err?.message || err?.toString(),
-				useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true
-			},
-			disableuserlogs?.enabled
-				? disableuserlogs?.value?.split(',')?.includes(user?.user?.username)
-				: true
-		);
-		throw new Error('Invalid File Type');
+		else {
+			let uploadedFile = await uploadMedia([imageFile], user)
+			sendLogs({ meta: `at compressImage inside else, fileName: ${imageFile?.name}, minioName: ${JSON.stringify(uploadedFile)}`, gpId: store?.getState().userData?.user?.user?.username, error: err?.message || err?.toString(), useWebWorker: flag?.enabled ? flag?.value?.split(',')?.includes(user?.user?.username) : true }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user?.user?.username) : true)
+			throw new Error("Invalid File Type")
+		}
 	}
-};
+}
 
 const compressImageToTargetSize = (
 	file,
@@ -339,15 +324,18 @@ export const checkTokenValidity = () => {
 export const refreshToken = async () => {
 	const userData = store.getState()?.userData?.user;
 	if (userData) {
-		const res = await getNewToken(userData.refreshToken, userData.token);
+		let res = await getNewToken(userData.refreshToken, userData.token)
 		if (res?.result?.user) {
-			store.dispatch(
-				updateUserToken({
-					token: res.result.user.token,
-					refreshToken: res.result.user.refreshToken,
-					tokenExpirationInstant: res.result.user.tokenExpirationInstant
-				})
-			);
+			store.dispatch(updateUserToken({ token: res.result.user.token, refreshToken: res.result.user.refreshToken, tokenExpirationInstant: res.result.user.tokenExpirationInstant }))
 		}
 	}
-};
+}
+
+export const toBase64 = file => new Promise((resolve, reject) => {
+	const reader = new FileReader();
+	reader.readAsDataURL(file);
+	reader.onload = () => resolve(reader.result);
+	reader.onerror = reject;
+});
+
+

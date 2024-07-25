@@ -1,14 +1,15 @@
 /* eslint-disable no-unsafe-optional-chaining */
-import { configureStore, createSlice, current } from '@reduxjs/toolkit';
-import { cloneDeep, forEach, map } from 'lodash';
-import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
-import { ptBR } from '@mui/x-date-pickers';
-import { replaceMediaObject } from './actions/replaceMediaObject';
-import { _updateSubmissionMedia } from './actions/updateSubmissionMedia';
-import { saveCitizenFormData } from './actions/saveCitizenFormData';
-import { removeSubmission } from './actions/removeSubmission';
-import { loginUser } from './actions/login';
+import { configureStore, createSlice, current } from "@reduxjs/toolkit";
+import { cloneDeep, forEach, map } from "lodash";
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
+import { replaceMediaObject } from "./actions/replaceMediaObject";
+import { _updateSubmissionMedia } from "./actions/updateSubmissionMedia";
+import { _updateSubmissionEntries } from "./actions/updateSubmissionEntries";
+import { saveCitizenFormData } from "./actions/saveCitizenFormData";
+import { removeSubmission } from "./actions/removeSubmission";
+import { ptBR } from "@mui/x-date-pickers";
+import { loginUser } from "./actions/login";
 // import storage from 'redux-persist-indexeddb-storage';
 
 // const authSlice = createSlice({
@@ -133,34 +134,37 @@ const userDataSlice = createSlice({
 
 			state.submissions = {
 				...state.submissions,
-				[action.payload.spdpVillageId]: submissionArray
+				[action.payload.spdpVillageId]: submissionArray,
 			};
 		},
 		updateSubmissionMedia: (state, action) => {
 			console.log({ state: cloneDeep(state), action });
-			const villageData = map(state?.submissions?.[action?.payload?.villageId], (item, index) =>
-				item?.citizenId === action?.payload?.citizenId
-					? {
+			const villageData = map(
+				state?.submissions?.[action?.payload?.villageId],
+				(item, index) => {
+					return item?.citizenId === action?.payload?.citizenId
+						? {
 							...item,
 							submissionData: action?.payload?.isLandRecord
 								? {
-										...item.submissionData,
-										landRecords: action?.payload?.images
-								  }
+									...item.submissionData,
+									landRecords: action?.payload?.images,
+								}
 								: {
-										...item.submissionData,
-										rorRecords: action?.payload?.images
-								  }
-					  }
-					: item
+									...item.submissionData,
+									rorRecords: action?.payload?.images,
+								},
+						}
+						: item;
+				}
 			);
 			state.submissions = {
 				...state.submissions,
-				[action.payload.villageId]: villageData
+				[action.payload.villageId]: villageData,
 			};
 		},
 		clearSubmissions: (state, action) => {
-			const tempState = state?.submissions;
+			let tempState = state?.submissions;
 			delete tempState[action.payload];
 			state.submissions = tempState;
 		},
@@ -170,27 +174,24 @@ const userDataSlice = createSlice({
 		updateSearchQuery: (state, action) => {
 			state.searchQuery = {
 				...state.searchQuery,
-				[action.payload.villageId]: action.payload.query
+				[action.payload.villageId]: action.payload.query,
 			};
 		},
 		updateSearchSavedQuery: (state, action) => {
 			state.searchSavedQuery = {
 				...state.searchSavedQuery,
-				[action.payload.villageId]: action.payload.query
+				[action.payload.villageId]: action.payload.query,
 			};
 		},
 		updateIsOffline: (state, action) => {
-			state.isOffline = action.payload;
+			state.isOffline = action.payload
 		},
 		updateCanSubmit: (state, action) => {
-			state.canSubmit = action.payload;
+			state.canSubmit = action.payload
 		},
 		clearSubmissionBatch: (state, action) => {
-			const currSubmission = current(state.submissions[action.payload[0]?.spdpVillageId]);
-			const newSubmissions = currSubmission.filter(
-				// eslint-disable-next-line eqeqeq
-				(el) => el.citizenId != action.payload.find((x) => x.citizenId == el.citizenId)?.citizenId
-			);
+			let currSubmission = current(state.submissions[action.payload[0]?.spdpVillageId]);
+			let newSubmissions = currSubmission.filter(el => el.citizenId != action.payload.find(x => x.citizenId == el.citizenId)?.citizenId);
 			state.submissions[action.payload[0]?.spdpVillageId] = newSubmissions;
 		},
 		clearSubmission: (state, action) => {
@@ -202,21 +203,16 @@ const userDataSlice = createSlice({
 			state.submissions[action.payload?.spdpVillageId] = newSubmissions;
 		},
 		updatePendingSubmissions: (state, action) => {
-			state.pendingSubmissions = action.payload;
+			state.pendingSubmissions = action.payload
 		},
 		updateUserToken: (state, action) => {
-			state.user = {
-				...state.user,
-				token: action.payload.token,
-				refreshToken: action.payload.refreshToken,
-				tokenExpirationInstant: action.payload.tokenExpirationInstant
-			};
+			state.user = { ...state.user, token: action.payload.token, refreshToken: action.payload.refreshToken, tokenExpirationInstant: action.payload.tokenExpirationInstant }
 		}
 	},
 	extraReducers: (builder) => {
 		builder
 			.addCase(replaceMediaObject.fulfilled, (state, action) => {
-				state.status = 'succeeded';
+				state.status = "succeeded";
 				forEach(action?.payload?.result, (fileData) => {
 					const fileMeta = JSON.parse(fileData?.meta);
 					state.submissions[fileMeta.villageId] = map(
@@ -229,32 +225,38 @@ const userDataSlice = createSlice({
 										submissionData: {
 											...prev?.submissionData,
 											landRecords: prev?.submissionData?.landRecords
-												? [...prev?.submissionData?.landRecords, fileData.filename]
-												: [fileData.filename]
-										}
+												? [
+													...prev?.submissionData?.landRecords,
+													fileData.filename,
+												]
+												: [fileData.filename],
+										},
 									};
-								return {
-									...prev,
-									submissionData: {
-										...prev?.submissionData,
-										rorRecords: prev?.submissionData?.rorRecords
-											? [...prev?.submissionData?.rorRecords, fileData.filename]
-											: [fileData.filename]
-									}
-								};
-							}
-							return prev;
+								else
+									return {
+										...prev,
+										submissionData: {
+											...prev?.submissionData,
+											rorRecords: prev?.submissionData?.rorRecords
+												? [
+													...prev?.submissionData?.rorRecords,
+													fileData.filename,
+												]
+												: [fileData.filename],
+										},
+									};
+							} else return prev
 						}
 					);
 				});
 				return state;
 			})
 			.addCase(replaceMediaObject.rejected, (state, action) => {
-				state.status = 'failed';
+				state.status = "failed";
 				state.error = action.error.message;
 			})
 			.addCase(_updateSubmissionMedia.fulfilled, (state, action) => {
-				console.log('Updating Submission Media ---->', { state: cloneDeep(state), action });
+				console.log("Updating Submission Media ---->", { state: cloneDeep(state), action });
 				forEach(action?.payload, (fileData) => {
 					const fileMeta = JSON.parse(fileData?.meta);
 					state.submissions[fileMeta.villageId] = map(
@@ -262,47 +264,44 @@ const userDataSlice = createSlice({
 						(prev) => {
 							if (prev?.citizenId === fileMeta?.citizenId) {
 								if (fileMeta?.isLandRecord) {
-									const prevLandRecords = prev?.submissionData?.landRecords || [];
+									let prevLandRecords = prev?.submissionData?.landRecords || [];
 									if (prevLandRecords?.length) {
 										return {
 											...prev,
 											submissionData: {
 												...prev?.submissionData,
-												landRecords: prevLandRecords.includes(fileData.filename)
-													? prevLandRecords
-													: [...prevLandRecords, fileData.filename]
-											}
+												landRecords: prevLandRecords.includes(fileData.filename) ? prevLandRecords : [...prevLandRecords, fileData.filename],
+											},
 										};
-									}
-									return {
-										...prev,
-										submissionData: {
-											...prev?.submissionData,
-											landRecords: [fileData.filename]
-										}
-									};
+									} else
+										return {
+											...prev,
+											submissionData: {
+												...prev?.submissionData,
+												landRecords: [fileData.filename],
+											},
+										};
 								}
-								const prevRorRecords = prev?.submissionData?.rorRecords || [];
-								if (prevRorRecords?.length) {
-									return {
-										...prev,
-										submissionData: {
-											...prev?.submissionData,
-											rorRecords: prevRorRecords.includes(fileData.filename)
-												? prevRorRecords
-												: [...prevRorRecords, fileData.filename]
-										}
-									};
+								else {
+									let prevRorRecords = prev?.submissionData?.rorRecords || [];
+									if (prevRorRecords?.length) {
+										return {
+											...prev,
+											submissionData: {
+												...prev?.submissionData,
+												rorRecords: prevRorRecords.includes(fileData.filename) ? prevRorRecords : [...prevRorRecords, fileData.filename],
+											},
+										};
+									} else
+										return {
+											...prev,
+											submissionData: {
+												...prev?.submissionData,
+												rorRecords: [fileData.filename],
+											},
+										};
 								}
-								return {
-									...prev,
-									submissionData: {
-										...prev?.submissionData,
-										rorRecords: [fileData.filename]
-									}
-								};
-							}
-							return prev;
+							} else return prev
 						}
 					);
 				});
@@ -330,30 +329,36 @@ const userDataSlice = createSlice({
 				//   ...state.submissions,
 				//   [action.payload.villageId]: villageData,
 				// };
-			})
-			.addCase(removeSubmission.fulfilled, (state, action) => {
-				const tempState = state?.submissions;
+			}).addCase(removeSubmission.fulfilled, (state, action) => {
+				let tempState = state?.submissions;
 				forEach(Object.keys(action.payload), (key) => {
 					delete tempState[key];
-				});
+				})
 				state.submissions = tempState;
-			})
-			.addCase(loginUser.fulfilled, (state, action) => {
+			}).addCase(loginUser.fulfilled, (state, action) => {
 				state.isAuthenticated = true;
 				state.user = action.payload;
 				state.assignedLocations = action.payload?.user?.data?.villages;
-			})
-			.addCase(saveCitizenFormData.fulfilled, (state, action) => {
-				console.log('hola:', { action });
+			}).addCase(saveCitizenFormData.fulfilled, (state, action) => {
 				state.submissions = {
 					...state?.submissions,
 					[action.payload.spdpVillageId]: [
 						...(state?.submissions?.[action.payload.spdpVillageId] || []),
-						action.payload
-					]
+						action.payload,
+					],
 				};
-			});
-	}
+			}).addCase(_updateSubmissionEntries.fulfilled, (state, action) => {
+				Object.keys(state.submissions).forEach(x => {
+					state.submissions[x] = state.submissions[x]?.map(el => {
+						if (el?.submissionData?.aadharNumber == action.payload.aadhaar) {
+							return { ...el, submissionData: { ...el.submissionData, aadhaarVaultReference: action.payload.referenceNo } }
+						}
+						return el;
+					})
+				})
+				return state;
+			})
+	},
 });
 
 const persistConfig = {

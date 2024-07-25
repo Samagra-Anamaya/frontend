@@ -64,8 +64,29 @@ const FlaggedItem = (props) => {
 
 		for (const _image of submissionImages) {
 			const data = new FormData();
+			// _image?.images.forEach((file) => {
+			// 	data.append('files', file || file.file, `${uuidv4()}.webp`);
+			// });
+
 			_image?.images.forEach((file) => {
-				data.append('files', file || file.file, `${uuidv4()}.webp`);
+				if (file?.file) {
+					if (file?.file?.type == 'application/pdf' || file?.type == 'application/pdf')
+						data.append("files", file.file, uuidv4() + ".pdf");
+					else
+						data.append("files", file.file, uuidv4() + ".webp");
+				}
+				else if (file instanceof Blob) {
+					if (file?.file?.type == 'application/pdf' || file?.type == 'application/pdf')
+						data.append("files", file, uuidv4() + ".pdf");
+					else
+						data.append("files", file, uuidv4() + ".webp");
+				}
+				else {
+					toast.error(
+						`Please check your media files`
+					);
+					return;
+				}
 			});
 
 			// eslint-disable-next-line no-await-in-loop
@@ -234,10 +255,10 @@ const FlaggedItem = (props) => {
 							onClick={
 								onSecondaryAction
 									? (ev) => {
-											ev.preventDefault();
-											ev.stopPropagation();
-											onSecondaryAction();
-									  }
+										ev.preventDefault();
+										ev.stopPropagation();
+										onSecondaryAction();
+									}
 									: null
 							}
 							style={{ width: '40px', height: '40px' }}

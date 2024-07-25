@@ -128,7 +128,7 @@ const Step2 = ({
 					{({ imageList, onImageUpload, onImageRemove, dragProps }) => (
 						<div className={styles.uploadImageWrapper}>
 							<Button onClick={onImageUpload} {...dragProps} variant="outlined">
-								Upload ROR Records
+								Upload Land Records
 							</Button>
 							<div className={styles.imagePreviewContainer}>
 								{imageList.map((image, index) => {
@@ -162,9 +162,10 @@ const Step2 = ({
 			)}
 			{activeImageViewer === 'savedViewer' && (
 				<div>
-					<p style={{ textAlign: 'center' }}>ROR Record Images</p>
+					<p style={{ textAlign: 'center' }}>Land Record Images</p>
 					<div className={styles.imageRecordContainer}>
 						{landImages?.map((el, index) => {
+							console.log(el, index)
 							const imageSrc = landImages?.map((_el) => {
 								if (typeof _el === 'string') return _el;
 								if (_el?.file) return URL.createObjectURL(_el?.file);
@@ -188,7 +189,7 @@ const Step2 = ({
 								);
 							}
 
-							const objectURL = URL.createObjectURL(el?.file);
+							const objectURL = URL.createObjectURL(el?.file || el);
 							return (
 								<img
 									key={el}
@@ -248,6 +249,7 @@ const Step2 = ({
 				variant="standard"
 				label={'No. of Co Claimants'}
 				onChange={(e) => {
+					console.log("test:", e.target.value)
 					const newValue = e.target.value;
 					if (
 						newValue === '' ||

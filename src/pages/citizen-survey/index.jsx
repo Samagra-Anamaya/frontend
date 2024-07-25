@@ -29,7 +29,8 @@ import {
 	getImages,
 	removeCitizenImageRecord,
 	storeImages,
-	sanitizeForm
+	sanitizeForm,
+	toBase64
 } from '../../services/utils';
 import Banner from '../../components/Banner';
 import Breadcrumb from '../../components/Breadcrumb';
@@ -62,6 +63,7 @@ const CitizenSurveyPage = ({ params, props }) => {
 	const [formState, setFormState] = useState({});
 	const [landImages, setLandImages] = useState([]);
 	const [rorImages, setRorImages] = useState([]);
+	const [rorPdfs, setRorPdfs] = useState([]);
 	const [totalSteps, setTotalSteps] = useState(0);
 	const [activeStep, setActiveStep] = useState(0);
 	const [formStartTime, setFormStartTime] = useState(moment().valueOf());
@@ -83,10 +85,16 @@ const CitizenSurveyPage = ({ params, props }) => {
 	console.log('CURR CITIZEN -->', currCitizen);
 
 	const getImagesFromStore = useCallback(async () => {
-		const { landRecords, rorRecords } = await getCitizenImageRecords(currCitizen.citizenId);
+		let { landRecords, rorRecords } = await getCitizenImageRecords(currCitizen.citizenId);
 		if (currCitizen?.submissionData && Object.keys(currCitizen?.submissionData)?.length > 0) {
-			if (landRecords?.images?.length) setLandImages(landRecords.images);
-			if (rorRecords?.images?.length) setRorImages(rorRecords.images);
+			if (landRecords?.images?.length) setLandImages(landRecords.images)
+			if (rorRecords?.images?.length) {
+				let rr = rorRecords?.images;
+				for (let i = 0; i < rr?.length; i++) {
+					if (rr[i]?.type == 'application/pdf') rr[i] = await toBase64(rr[i]);
+				}
+				setRorImages(rr)
+			}
 		}
 	}, [currCitizen.citizenId, currCitizen?.submissionData]);
 
@@ -129,7 +137,7 @@ const CitizenSurveyPage = ({ params, props }) => {
 			capturedAt: moment().utc(),
 			time: new Date().toISOString()
 		});
-	}, [_currLocation.villageCode, _currLocation.villageName, user?.username]);
+	}, []);
 
 	/* Util Functions */
 
@@ -149,7 +157,7 @@ const CitizenSurveyPage = ({ params, props }) => {
 			showSubmittedModal(true);
 			const capturedAt = moment().utc();
 			const newLandImages = filter(landImages, (lImg) => typeof lImg !== 'string');
-			const newRorImages = filter(rorImages, (lImg) => typeof lImg !== 'string');
+			var newRorImages = filter(rorImages, (lImg) => typeof lImg !== 'string');
 			setTotalSteps((newLandImages?.length || 0) + (newRorImages?.length || 0));
 
 			for (const el in newLandImages) {
@@ -186,6 +194,8 @@ const CitizenSurveyPage = ({ params, props }) => {
 				showSubmittedModal(false);
 				return;
 			}
+
+			newRorImages = [...newRorImages, ...(rorPdfs?.filter(el => el?.file != null)?.map(x => x?.file) || [])]
 
 			if (newLandImages?.length)
 				await storeImages(
@@ -420,7 +430,10 @@ const CitizenSurveyPage = ({ params, props }) => {
 	// ]);
 	const handleSubmit = async () => {
 		if (loading) return;
+		let newFormState;
 		try {
+			const indexDbStats = await getStorageQuota();
+
 			logEvent(analytics, 'form-filling_time', {
 				user_id: user?.username,
 				villageId: _currLocation.villageCode,
@@ -428,50 +441,96 @@ const CitizenSurveyPage = ({ params, props }) => {
 			});
 			setLoading(true);
 			showSubmittedModal(true);
-			const capturedAt = moment().utc();
-			setTotalSteps((landImages?.length || 0) + (rorImages?.length || 0));
-			Object.values(landImages).forEach(async (image, index) => {
-				const compressedImg = await compressImage(image.file);
-				setActiveStep(index + 1);
-				landImages[index] = compressedImg;
-			});
+			let capturedAt = moment().utc();
+			setTotalSteps((landImages?.length || 0) + (rorImages?.length || 0))
 
-			Object.values(rorImages).forEach(async (image, index) => {
-				const compressedImg = await compressImage(image.file);
-				setActiveStep((landImages?.length || 0) + index + 1);
-				rorImages[index] = compressedImg;
-			});
+			newFormState = sanitizeForm({ ...formState });
 
-			if (landImages?.length)
-				await storeImages({
+			console.log("SANITIZED FORM ---->", newFormState)
+			// newFormState['landRecords'] = landImages;
+			// newFormState['rorRecords'] = rorImages;
+			newFormState['imageUploaded'] = false;
+
+			// Fetch aadhar vault reference if aadhaar available
+			if (newFormState?.isAadhaarAvailable) {
+				const config = {
+					method: "POST",
+					url: `https://adv.odisha.gov.in/AadhaarVaultEncryption/rest/getRefFromAadhaar`,
+					data: {
+						aadhaarNo: newFormState?.aadharNumber,
+						schemeId: 17
+					}
+				};
+
+				const res = await sendRequest(config);
+				const vaultReference = res?.aadhaarDetails?.referenceNo;
+				console.log("Res --->", vaultReference)
+
+				if (!vaultReference) {
+					toast.info("Cannot assign Aadhaar vault reference as you're offline right now. Your request has been saved");
+					// return;
+				} else newFormState['aadhaarVaultReference'] = vaultReference;
+			}
+
+			if (!newFormState?.isAadhaarAvailable) {
+				delete newFormState?.aadharNumber;
+			}
+			if (!newFormState?.rorUpdated) {
+				delete newFormState?.khataNumber;
+				delete newFormState?.landImages;
+			}
+			if (!newFormState?.coClaimantAvailable) {
+				delete newFormState?.coClaimantName;
+			}
+
+
+			for (let el in landImages) {
+				const compressedImg = await compressImage(landImages[el].file, usemainworker, disableuserlogs);
+				setActiveStep(Number(el) + 1);
+				landImages[el] = compressedImg;
+			}
+
+			for (let el in rorImages) {
+				const compressedImg = await compressImage(rorImages[el].file, usemainworker, disableuserlogs);
+				setActiveStep((landImages?.length || 0) + Number(el) + 1);
+
+				rorImages[el] = compressedImg;
+			}
+			const newRorImages = [...rorImages, ...rorPdfs?.map(el => el?.file)];
+
+			if (!indexDbStats.isAvailable) {
+				toast.error("Device space full, please make space before continuing");
+				setLoading(false);
+				showSubmittedModal(false);
+				return;
+			}
+
+			if (!landImages?.length) {
+				toast.error("Land images cannot be empty!");
+				setLoading(false);
+				showSubmittedModal(false);
+				return;
+			}
+
+			if (landImages?.length) await storeImages(
+				{
 					citizenId: currCitizen.citizenId,
 					images: landImages,
 					isLandRecord: true,
 					villageId: _currLocation.villageCode
-				});
-			if (rorImages?.length)
-				await storeImages({
+				},
+				disableuserlogs
+			);
+			if (newRorImages?.length) await storeImages(
+				{
 					citizenId: currCitizen.citizenId,
-					images: rorImages,
+					images: newRorImages,
 					isLandRecord: false,
 					villageId: _currLocation.villageCode
-				});
+				},
+				disableuserlogs
+			);
 
-			const newFormState = sanitizeForm({ ...formState });
-
-			newFormState.imageUploaded = false;
-			if (!formState?.isAadhaarAvailable) {
-				delete formState?.aadharNumber;
-			}
-			if (!formState?.rorUpdated) {
-				delete formState?.khataNumber;
-				delete formState?.landImages;
-			}
-			if (!formState?.coClaimantAvailable) {
-				delete formState?.coClaimantName;
-			}
-
-			console.log('hola:', { formState, landImages, rorImages });
 			dispatch(
 				saveCitizenFormData({
 					submissionData: newFormState,
@@ -484,38 +543,60 @@ const CitizenSurveyPage = ({ params, props }) => {
 			).then(async (res) => {
 				if (res?.type?.includes('fulfilled')) {
 					setSaveSuccess(true);
-					logEvent(analytics, 'form_saved', {
+					logEvent(analytics, "form_saved", {
 						villageId: _currLocation.villageCode,
 						villageName: _currLocation.villageName,
 						user_id: user?.username,
 						app_status: navigator.onLine ? 'online' : 'offline',
-						capturedAt
+						capturedAt: capturedAt
 					});
-				} else {
-					await sendLogs(res, user2);
-					toast.warn(`Something went wrong while saving form, ${JSON.stringify(res?.error)}`);
+				}
+				else {
+					sendLogs({
+						meta: 'at handleSubmit citizenSurvey inside try', gpId: user2?.user?.username, error: res?.error || JSON.stringify(res), currentForm: newFormState
+					}, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username) : true);
+					toast.warn("Something went wrong while saving form, " + JSON.stringify(res?.error));
 					removeCitizenImageRecord(currCitizen.citizenId);
 					setLoading(false);
-					showSubmittedModal(false);
-					logEvent(analytics, 'unable_to_save_form', {
+					showSubmittedModal(false)
+					logEvent(analytics, "unable_to_save_form", {
 						villageId: _currLocation.villageCode,
 						villageName: _currLocation.villageName,
 						user_id: user?.username,
 						app_status: navigator.onLine ? 'online' : 'offline',
-						capturedAt,
+						capturedAt: capturedAt,
 						res: JSON.stringify(res)
 					});
-					Sentry.captureException({ err: res?.error, user });
+					Sentry.captureException({ err: res?.error || JSON.stringify(res), user });
 				}
-			});
+			})
 			// }
 
 			setLoading(false);
+
 		} catch (err) {
-			Sentry.captureException({ err, user });
-			toast.error('An error occurred while saving', err?.message || err?.toString());
+			if (err?.message == 'Invalid File Type' || err == 'Invalid File Type') {
+				toast.error(`Please check your media files, some of the files may be corrupt or invalid.`)
+			} else {
+				Sentry.captureException({ err: err?.message || err?.toString(), user });
+				toast.error(`An error occurred while saving: ${err?.message || err?.toString()}`)
+				// sendLogs({
+				//   meta: 'at handleSubmit citizenSurveyPage inside catch',
+				//   gpId: user2?.user?.username,
+				//   error: err?.message || err?.toString(),
+				//   currentForm: newFormState
+				// }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username) : true)
+				return;
+			}
+			// sendLogs({
+			//   meta: 'at handleSubmit citizenSurveyPage inside catch after else',
+			//   gpId: user2?.user?.username,
+			//   error: err?.message || err?.toString(),
+			//   currentForm: newFormState
+			// }, disableuserlogs?.enabled ? disableuserlogs?.value?.split(',')?.includes(user2?.user?.username) : true)
 			console.log(err);
 			setLoading(false);
+			showSubmittedModal(false);
 		}
 	};
 
@@ -552,13 +633,15 @@ const CitizenSurveyPage = ({ params, props }) => {
 						(currCitizen?.status === 'FLAGGED'
 							? false
 							: currCitizen?.submissionData &&
-							  Object?.keys(currCitizen?.submissionData)?.length > 0 &&
-							  currCitizen?.status !== 'SUBMITTED') || false
+							Object?.keys(currCitizen?.submissionData)?.length > 0 &&
+							currCitizen?.status !== 'SUBMITTED') || false
 					}
 					rorImages={rorImages}
 					setRorImages={setRorImages}
 					landImages={landImages}
 					setLandImages={setLandImages}
+					rorPdfs={rorPdfs}
+					setRorPdfs={setRorPdfs}
 				/>
 
 				{submittedModal && (
