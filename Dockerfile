@@ -1,13 +1,13 @@
 #get the latest alpine image from node registry
 FROM node:16-alpine AS dependencies
-RUN npm i -g pnpm
+RUN npm i -g pnpm@8.7.5
 #set the working directory
 WORKDIR /app
 
 #copy the package and package lock files
 #from local to container work directory /app
 COPY package.json /app/
-# COPY pnpm-lock.yaml /app/
+COPY pnpm-lock.yaml /app/
 
 #Run command npm install to install packages
 RUN pnpm install
