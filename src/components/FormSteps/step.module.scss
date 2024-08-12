@@ -1,0 +1,155 @@
+.userForm {
+	// width: 120%;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	position: relative;
+	height: 100%;
+	margin-bottom: 5rem;
+
+	.submitBtn {
+		position: absolute;
+		bottom: 0;
+		background: #017922;
+		width: 70%;
+		margin-bottom: 4rem;
+		height: 3.5rem;
+		border-radius: 0.75rem;
+	}
+
+	.btnContainer {
+		width: 100%;
+		display: flex;
+		flex-direction: row;
+		gap: 1rem;
+		padding: 0rem 2rem;
+	}
+
+	.uploadImageWrapper {
+		display: flex;
+		width: 80%;
+		flex-direction: column;
+	}
+
+	.imagePreviewContainer {
+		display: flex;
+		flex-direction: row;
+		gap: 1rem;
+		flex-wrap: wrap;
+		padding: 2rem 0rem;
+	}
+
+	.imageRecordContainer {
+		display: flex;
+		overflow-x: scroll;
+		width: 95vw;
+		padding: 0.5rem;
+		margin-bottom: 1rem;
+		background: #ededed;
+		border-radius: 10px;
+
+		/* Track */
+		&::-webkit-scrollbar {
+			width: 100vw;
+			height: 8px;
+		}
+
+		/* Track */
+		&::-webkit-scrollbar-track {
+			background: #cdf7d9;
+		}
+
+		/* Handle */
+		&::-webkit-scrollbar-thumb {
+			background-color: #017922;
+			border: 1px solid transparent;
+			border-radius: 9px;
+			background-clip: content-box;
+		}
+
+		/* Handle on hover */
+		&::-webkit-scrollbar-thumb:hover {
+			background: #555;
+		}
+	}
+}
+
+.picker {
+	border: none;
+	border-bottom: 1px solid gray;
+	width: 70vw;
+	margin-bottom: 20px !important;
+	background: transparent;
+
+	.react-datepicker-wrapper input {
+		padding: 9px 14px 8px 33px !important;
+	}
+}
+
+.imageItem {
+	position: relative;
+}
+
+.removeBtn {
+	background-color: rgba(181, 15, 15, 0.9);
+	padding: 0;
+	border-radius: 50%;
+	position: absolute;
+	top: -15px;
+	right: -15px;
+}
+
+.disabledPicker {
+	border: none;
+	border-bottom: 1px solid lightgray;
+	color: gray;
+	width: 70vw;
+	margin-bottom: 20px !important;
+	background: transparent;
+
+	.react-datepicker-wrapper input {
+		padding: 9px 14px 8px 33px !important;
+	}
+}
+
+
+.pdfContainer {
+	display: flex;
+	flex-direction: row;
+	gap: 2rem;
+	width: 100%;
+	overflow-x: scroll;
+	height: 22vh;
+	padding: 0rem 2rem;
+}
+
+.pdfItem {
+	width: 15vw;
+	height: 12vh;
+	cursor: pointer;
+}
+
+.pdfView {
+	width: 15vw;
+	height: 10vh;
+	cursor: pointer;
+}
+
+.goBackBtn {
+	position: absolute;
+	bottom: 10px;
+	padding: 1rem 0rem;
+	width: 22rem;
+	text-align: center;
+	border-radius: 0.5rem;
+	font-size: 1.5rem;
+	font-weight: 500;
+	left: 50%;
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	cursor: pointer;
+	backdrop-filter: blur(5px);
+	color: rgba($color: #000, $alpha: 0.85);
+	background: rgba($color: #000000, $alpha: 0.1);
+}
