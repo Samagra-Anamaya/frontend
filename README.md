@@ -16,6 +16,12 @@ User can then proceed to click on any of the village name to:
 - Viewing request status shows a queue of submissions currently being synced to the server.
 - Viewing flagged titles shows submissions that have been flagged for correction by the admin.
 
+### Offline handling:
+
+[offline-sync-handler-test](https://www.npmjs.com/package/offline-sync-handler-test) package manages the sync of submissions if the device is offline.
+
+Requests are sent via this package. If the user is offline, the requests are saved and synced once the user returns online.
+
 ## Installation
 
 Install the application dependencies by running:
