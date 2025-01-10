@@ -20,7 +20,7 @@ User can then proceed to click on any of the village name to:
 
 [offline-sync-handler-test](https://www.npmjs.com/package/offline-sync-handler-test) package manages the sync of submissions if the device is offline.
 
-Requests are sent via this package. If the user is offline, the requests are saved and synced once the user returns online.
+The Offline Sync Provider works by intercepting API requests and storing them in offline storage (using **localforage**) when the device is offline. It queues these requests and retries them automatically upon reconnection, ensuring seamless data synchronization with the server. Leveraging **axios** for API handling, the module provides robust error handling and retry mechanisms. The package also allows tracking of online/offline status, enabling developers to customize UI components or trigger specific actions based on connectivity changes. Additionally, it supports toast notifications to inform users about the sync status, ensuring a smooth and transparent user experience.
 
 ## Installation
 
